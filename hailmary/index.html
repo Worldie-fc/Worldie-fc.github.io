@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Hail Mary: a daily football rarity game. Seven prompts, 25 seconds each. The rarer your answer, the more yards you gain.">
+<meta name="theme-color" content="#090b10">
+<meta property="og:title" content="Hail Mary">
+<meta property="og:description" content="The daily football deep cut. Seven prompts on the play clock. Find the Hail Mary.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6' shape-rendering='crispEdges'%3E%3Crect width='6' height='6' fill='%23090b10'/%3E%3Cpath d='M1 1h1v1h-1zM2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM0 3h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1z' fill='%238a4a22'/%3E%3Cpath d='M1 2h1v1h-1zM3 2h1v1h-1z' fill='%23f4f1e8'/%3E%3C/svg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Hail Mary</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sixtyfour&family=VT323&display=swap">
+<style>
+/* Layout: a full-bleed pixel stadium (SVG) sits behind every screen: light towers, crowd and a 100-yard field the player runs up. A centred CRT-style UI column swaps over it. Single dark look by design. */
+:root{
+  --bg:#090b10; --panel:#141a24; --panel2:#19202b; --edge:#34404f; --text:#f5f3ec; --dim:#a2adbb;
+  --blue:#4fb3ff; --hot:#ff5a3c; --orange:#ffcc33; --gold:#ffd166; --red:#ff5d6c;
+  --t0:#4d5868; --t1:#c3cad4; --t2:#ff9a3c; --t3:#5fd38d; --t4:#4fb3ff; --t5:#c08cff; --t6:#ffd166;
+  --pix:"Sixtyfour","VT323",ui-monospace,monospace; --mono:"VT323",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html.cb{--dim:#cfc2e6; --t1:#ffffff; --t2:#e69f00; --t3:#2fd39f; --t4:#56b4e9; --t5:#e48ad0; --t6:#f0e442}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:20px/1.25 var(--mono);overflow:hidden}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.5))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+[data-t="0"]{--tc:var(--t0)}[data-t="1"]{--tc:var(--t1)}[data-t="2"]{--tc:var(--t2)}[data-t="3"]{--tc:var(--t3)}[data-t="4"]{--tc:var(--t4)}[data-t="5"]{--tc:var(--t5)}[data-t="6"]{--tc:var(--t6)}
+.px{shape-rendering:crispEdges;image-rendering:pixelated}
+
+/* scene */
+#scn{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+.star{animation:tw 3s steps(2,end) infinite}
+.crowd{animation:crowd 1.6s steps(2,end) infinite}
+.lamp{animation:lampOn 1.4s steps(1,end) .2s backwards}
+@keyframes tw{50%{opacity:.2}}
+@keyframes crowd{50%{transform:translateY(1px)}}
+@keyframes lampOn{0%{opacity:.1}12%{opacity:1}18%{opacity:.2}30%{opacity:1}36%{opacity:.4}50%{opacity:1}}
+#pl .fA{animation:fA .26s steps(1,end) infinite}#pl .fB{animation:fB .26s steps(1,end) infinite}
+#pl:not(.run) .fB{display:none}#pl:not(.run) .fA{animation:bob 1.2s steps(2,end) infinite}
+@keyframes fA{50%{opacity:0}}@keyframes fB{0%{opacity:0}50%{opacity:1}}@keyframes bob{50%{transform:translateY(-1px)}}
+.ln *{vector-effect:non-scaling-stroke}
+.beam{transform-box:fill-box;transform-origin:50% 0;animation:sway 9s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+.mk{animation:mkIn .35s ease-out backwards}
+@keyframes mkIn{from{opacity:0;transform:translateY(8px)}}
+
+/* chrome */
+.scr{position:fixed;inset:0;z-index:5;display:none}
+.scr.on{display:block}
+.page{overflow-y:auto;background:rgba(9,11,16,.95);-webkit-overflow-scrolling:touch}
+.col{max-width:620px;margin:0 auto;padding:calc(62px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(48px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.ic{width:36px;height:36px;background:var(--panel2);border:2px solid var(--edge);color:var(--dim);display:grid;place-items:center;font-size:22px;padding:0}
+.ic:hover{color:var(--text);border-color:var(--dim)}
+#mb{position:fixed;z-index:40;top:calc(10px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px))}
+.tr{position:fixed;z-index:40;top:calc(10px + env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));display:grid;gap:6px}
+.logo{font-family:var(--pix);font-weight:400;color:#fff;letter-spacing:.04em;line-height:1.15;margin:0;text-shadow:3px 0 0 var(--hot),-3px 0 0 var(--blue),0 0 24px rgba(255,90,60,.35);animation:glitch 6s steps(1,end) infinite}
+@keyframes glitch{0%,92%,100%{text-shadow:3px 0 0 var(--hot),-3px 0 0 var(--blue),0 0 24px rgba(255,90,60,.35)}93%{text-shadow:-4px 1px 0 var(--hot),5px -1px 0 var(--blue),0 0 24px rgba(255,90,60,.35)}95%{text-shadow:6px 0 0 var(--hot),-2px 0 0 var(--blue),0 0 24px rgba(255,90,60,.35)}}
+.logo.sm{font-size:14px;text-shadow:2px 0 0 var(--hot),-2px 0 0 var(--blue);animation:none}
+.eyebrow{font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--orange)}
+.dim{color:var(--dim)}
+
+/* home */
+.hero{position:absolute;left:0;right:0;top:calc(13vh + env(safe-area-inset-top,0px));text-align:center;padding-inline:16px;pointer-events:none}
+.hero .logo{font-size:clamp(34px,10.5vw,84px)}
+.tagline{margin-top:18px;color:var(--blue);font-size:clamp(20px,4.4vw,30px);letter-spacing:.32em;text-shadow:0 2px 0 rgba(9,11,16,.5),0 0 12px rgba(79,179,255,.5)}
+.sub{margin-top:10px;color:var(--text);opacity:.8;font-size:clamp(17px,3.6vw,21px);letter-spacing:.06em;text-shadow:0 1px 0 #000}
+.dock{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(480px,calc(100% - 32px));display:grid;gap:10px}
+.howto{background:rgba(9,11,16,.78);border:1px solid var(--edge);padding:4px 12px}
+.howto summary{cursor:pointer;font-size:15px;letter-spacing:.2em;color:var(--dim);list-style:none;padding:4px 0}
+.howto summary::-webkit-details-marker{display:none}
+.howto ol{margin:4px 0 8px;padding:0;list-style:none;display:grid;gap:4px;font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.party{position:relative;display:flex;align-items:center;gap:12px;width:100%;background:var(--panel);border:2px solid var(--blue);padding:14px 14px 10px;text-align:left;font-size:24px;letter-spacing:.16em}
+.party .tag{position:absolute;top:-10px;left:12px;background:var(--blue);color:var(--bg);font-size:13px;letter-spacing:.12em;padding:0 6px}
+.party small{margin-left:auto;font-size:14px;color:var(--dim);letter-spacing:.08em}
+.cta{display:block;width:100%;background:var(--panel2);border:2px solid var(--blue);box-shadow:inset 0 0 0 2px var(--bg),0 0 20px rgba(79,179,255,.22);font-size:clamp(24px,5vw,30px);letter-spacing:.16em;padding:14px 10px;transition:box-shadow .2s,transform .12s}
+.cta:hover{box-shadow:inset 0 0 0 2px var(--bg),0 0 30px rgba(79,179,255,.45)}
+.cta:active{transform:translateY(1px)}
+.cta.pink{border-color:var(--hot);background:var(--hot);color:var(--bg);box-shadow:0 0 22px rgba(255,90,60,.3)}
+.dockrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px;letter-spacing:.14em;color:var(--dim)}
+.mini{background:var(--panel);border:1px solid var(--edge);color:var(--dim);font-size:15px;letter-spacing:.12em;padding:4px 10px}
+.mini:hover{color:var(--text);border-color:var(--dim)}
+.links{display:flex;gap:6px;flex-wrap:wrap}
+
+/* modals */
+.modal{position:fixed;inset:0;z-index:70;background:rgba(4,5,8,.8);display:grid;place-items:center;padding:16px;animation:fadeIn .18s ease-out}
+.mbox{position:relative;width:min(380px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--panel);border:2px solid var(--edge);box-shadow:0 0 34px rgba(79,179,255,.14);padding:18px}
+.mbox .x{position:absolute;top:12px;right:12px}
+.mtitle{font-family:var(--pix);font-weight:400;font-size:19px;color:#fff;margin:6px 0 16px;text-shadow:2px 0 0 var(--hot),-2px 0 0 var(--blue)}
+.sect{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:.2em;color:var(--dim);margin:6px 0 10px}
+.sect::after{content:"";flex:1;border-top:1px solid var(--edge)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--panel2);border:2px solid var(--edge);padding:12px 6px 10px;display:grid;justify-items:center;gap:6px;font-size:16px;letter-spacing:.14em;color:var(--dim)}
+.tile b{font-weight:400;font-size:22px;color:var(--text);line-height:1}
+.tile:hover,.tile.cur{border-color:var(--hot);color:var(--hot)}
+.mfoot{margin-top:14px;padding-top:10px;border-top:1px solid var(--edge);font-size:14px;color:var(--dim);letter-spacing:.08em}
+.opt{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--edge)}
+.opt b{font-weight:400;font-size:18px;letter-spacing:.12em}
+.opt span{grid-column:1;font-size:15px;color:var(--dim)}
+.sw{grid-row:1 / span 2;grid-column:2;width:62px;height:28px;background:var(--bg);border:2px solid var(--edge);padding:2px;display:flex}
+.sw i{width:50%;display:grid;place-items:center;font-style:normal;font-size:13px;background:var(--edge);color:var(--dim);transition:transform .15s}
+.sw[aria-checked="true"]{border-color:var(--blue)}
+.sw[aria-checked="true"] i{transform:translateX(100%);background:var(--blue);color:var(--bg)}
+@keyframes fadeIn{from{opacity:0}}
+</style>
+<style>
+/* game */
+.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;align-items:flex-start;gap:clamp(8px,7vw,110px);padding:calc(6px + env(safe-area-inset-top,0px)) 56px 0;pointer-events:none}
+.hb{min-width:78px;background:rgba(9,11,16,.94);border:1px solid var(--edge);padding:1px 10px 3px}
+.hb small,.hc small{display:block;font-size:13px;letter-spacing:.2em;color:var(--dim);white-space:nowrap}
+.hb b{font-weight:400;font-size:28px;line-height:1;color:var(--orange);font-variant-numeric:tabular-nums}
+.hb.r{text-align:right}.hb.r b{color:var(--hot)}
+.hc{text-align:center;padding:5px 10px 3px;background:rgba(9,11,16,.88);border:1px solid var(--edge)}
+.sqs{display:flex;gap:3px;justify-content:center;margin-bottom:3px}
+.sqs i{width:11px;height:11px;background:var(--edge);display:block}
+.sqs i.cur{background:var(--hot);animation:tw 1s steps(2,end) infinite}
+.sqs i[data-t]{background:var(--tc)}
+.pp{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));background:rgba(14,18,26,.86);border:1px solid var(--edge);padding:10px 16px 12px;animation:ppIn .35s ease-out}
+.pq{font-size:clamp(26px,5.6vw,38px);line-height:1.05;margin:6px 0 6px;text-wrap:balance}
+.pph{font-size:15px;color:var(--dim);letter-spacing:.1em}
+@keyframes ppIn{from{opacity:0;transform:translate(-50%,-8px)}}
+.bar{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(540px,calc(100% - 24px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.fb{min-height:30px;display:grid;align-items:end;justify-items:center;margin-bottom:8px}
+.fb>*{animation:ppIn2 .25s ease-out}
+@keyframes ppIn2{from{opacity:0;transform:translateY(6px)}}
+.warm{font-size:18px;letter-spacing:.14em;color:var(--dim);background:rgba(9,11,16,.75);padding:2px 10px}
+.nope{font-size:19px;color:var(--hot);background:rgba(9,11,16,.8);padding:2px 10px;text-align:center}
+.fix{background:rgba(20,26,36,.95);border:1px solid var(--orange);padding:6px 12px;text-align:center;font-size:19px}
+.fix .to{color:var(--orange)}
+.fix small{display:block;font-size:15px;color:var(--dim);letter-spacing:.08em}
+.fix .opts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.fix .opts button{background:var(--orange);color:var(--bg);border:0;padding:3px 10px;font-size:18px}
+form.af{display:flex;gap:8px;align-items:center}
+.dial{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--orange) calc(var(--f,1)*360deg),rgba(255,204,51,.12) 0);position:relative}
+.dial::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 1px rgba(255,204,51,.35)}
+.dial span{position:relative;font-size:24px;color:var(--orange);font-variant-numeric:tabular-nums}
+.dial.low span{color:var(--hot);animation:tw .5s steps(2,end) infinite}
+.af input{flex:1;min-width:0;height:52px;background:rgba(9,11,16,.92);border:2px solid var(--orange);color:var(--text);font:26px var(--mono);padding:0 12px}
+.af input:disabled{opacity:.55}
+.af input::placeholder{color:var(--dim)}
+.shoot{height:52px;background:var(--orange);color:var(--bg);border:0;font-size:22px;letter-spacing:.12em;padding:0 16px}
+.shoot:disabled{opacity:.5}
+.tbar{height:3px;background:rgba(255,204,51,.18);margin:6px 0 0 60px}
+.tbar i{display:block;height:100%;background:var(--orange);transform-origin:left;transform:scaleX(var(--f,1))}
+.rv{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(420px,calc(100% - 32px));background:rgba(9,11,16,.9);border:1px solid var(--tc);box-shadow:0 0 34px -6px var(--tc);padding:16px 16px 14px;text-align:center;animation:rvIn .4s cubic-bezier(.34,1.56,.64,1)}
+.rv .ico{width:52px;height:52px;margin:0 auto 6px;filter:drop-shadow(0 0 10px var(--tc))}
+.rv h2{margin:0;font-family:var(--pix);font-weight:400;font-size:clamp(15px,4.4vw,21px);line-height:1.35;letter-spacing:.06em;color:var(--tc);text-transform:uppercase}
+.rv .ans{font-size:24px;margin:8px 0 4px}
+.rv .pts{font-size:22px}.rv .pts b{font-weight:400;color:var(--tc)}
+.rv p{margin:8px 0 0;font-size:16px;color:var(--dim);letter-spacing:.04em}
+@keyframes rvIn{from{opacity:0;transform:translate(-50%,10px) scale(.94)}}
+.next{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);min-width:220px;background:var(--panel2);border:2px solid var(--hot);font-size:24px;letter-spacing:.16em;padding:10px 22px;animation:ppIn2 .3s ease-out .2s backwards}
+.next:hover{box-shadow:0 0 20px rgba(255,90,60,.35)}
+.lbl{font:16px var(--mono);letter-spacing:.12em}
+
+/* results and pages */
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:15px;letter-spacing:.18em;color:var(--dim)}
+.big{display:flex;align-items:baseline;gap:10px;margin:16px 0 4px;flex-wrap:wrap}
+.big b{font-family:var(--pix);font-size:clamp(44px,12vw,66px);line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
+.big span{color:var(--dim);font-size:22px}.big em{font-style:normal;color:var(--blue);font-size:22px}
+.chart{display:block;width:100%;height:auto;overflow:visible}
+.cy{color:var(--blue);font-size:18px;letter-spacing:.12em;margin:6px 0 4px}
+h3.sec{font-weight:400;font-size:17px;letter-spacing:.2em;margin:30px 0 10px;color:var(--text)}
+h3.sec small{font-size:15px;color:var(--dim);margin-left:8px}
+.scout{display:grid;gap:0}
+.scout div{display:grid;grid-template-columns:26px 82px 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--edge);font-size:17px;color:var(--dim)}
+.scout div.me{color:var(--text)}.scout div.me b{color:var(--tc)}
+.scout b{font-weight:400;font-variant-numeric:tabular-nums}
+.copyrow{display:flex;gap:8px;margin-top:22px}
+.box{border-top:1px solid var(--edge)}
+.brow{width:100%;display:grid;grid-template-columns:20px 24px 1fr auto 16px;gap:8px;align-items:center;background:none;border:0;border-bottom:1px solid var(--edge);padding:9px 0;text-align:left}
+.brow small{display:block;font-size:14px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.brow span.a{font-size:21px}
+.brow .p{color:var(--tc);font-size:20px;font-variant-numeric:tabular-nums}
+.all{margin:0;padding:4px 0 8px 52px;list-style:none;display:grid;gap:2px;border-bottom:1px solid var(--edge)}
+.all li{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;font-size:18px}
+.all li.me{background:rgba(79,179,255,.08)}
+.all li em{font-style:normal;color:var(--blue);font-size:14px;margin-left:6px}
+.all li b{font-weight:400;color:var(--tc);font-size:16px}
+.ph{text-align:center;margin-bottom:22px}
+.ph .logo{font-size:clamp(22px,6.2vw,38px)}
+.ph p{margin:10px 0 0;color:var(--dim);letter-spacing:.14em;font-size:17px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+.btn2{background:var(--panel);border:1px solid var(--edge);font-size:17px;letter-spacing:.14em;padding:8px 14px;color:var(--text)}
+.btn2:hover{border-color:var(--blue)}
+.pack{display:block;width:100%;text-align:left;background:var(--panel);border:2px solid var(--edge);padding:0;margin-bottom:14px}
+.pack:hover{border-color:var(--blue)}
+.pack svg{display:block;width:100%;height:118px}
+.pack div{padding:10px 14px 12px}
+.pack h4{margin:0;font-family:var(--pix);font-weight:400;font-size:15px;letter-spacing:.04em;line-height:1.5}
+.pack p{margin:4px 0 8px;font-size:16px;color:var(--dim)}
+.pack .go{display:block;text-align:right;font-size:16px;letter-spacing:.16em;color:var(--orange)}
+.pack.soon{opacity:.6;cursor:default}
+.arow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--edge);font-size:19px}
+.arow small{display:block;font-size:14px;color:var(--dim);letter-spacing:.1em}
+.arow b{font-weight:400;color:var(--hot);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border:1px solid var(--edge);padding:10px;text-align:center}
+.stat b{display:block;font-family:var(--pix);font-weight:400;font-size:19px;line-height:1.6;color:var(--blue)}
+.stat small{font-size:14px;letter-spacing:.14em;color:var(--dim)}
+.tdist{display:grid;gap:6px}
+.tdist div{display:grid;grid-template-columns:24px 110px 1fr 34px;gap:8px;align-items:center;font-size:16px}
+.tdist i{display:block;height:10px;background:var(--tc);min-width:2px}
+.faq h4{margin:22px 0 6px;font-weight:400;font-size:19px;letter-spacing:.14em;color:var(--blue)}
+.faq p{margin:0;font-size:19px;line-height:1.35;color:var(--text);opacity:.9}
+.field{display:flex;gap:6px;margin-bottom:6px}
+.field input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--edge);color:var(--text);font:22px var(--mono);padding:6px 10px}
+.field button{background:var(--panel2);border:1px solid var(--edge);color:var(--dim);padding:0 12px}
+.ku{position:relative;height:150px;margin:6px 0 10px}
+.ku .kball{position:absolute;left:50%;top:0;width:34px;height:34px;margin-left:-17px;animation:keepy var(--kt,.7s) cubic-bezier(.5,0,.5,1) infinite alternate}
+@keyframes keepy{to{transform:translateY(78px)}}
+.ku .kball.drop{animation:drop .9s cubic-bezier(.3,0,.7,1) forwards}
+@keyframes drop{to{transform:translate(150px,104px) rotate(320deg);opacity:.35}}
+.ku .who{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:30px;letter-spacing:.12em;color:var(--orange)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--edge);background:var(--panel);padding:2px 8px;font-size:17px}
+.chip.out{opacity:.45;text-decoration:line-through}
+.chip.on{border-color:var(--orange);color:var(--orange)}
+.chip .hl{color:var(--hot);margin-left:6px;letter-spacing:.12em;font-weight:400}
+.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+html.low .star,html.low .crowd,html.low .logo,html.low .lamp,html.low .beam{animation:none}
+@media (max-width:440px){.hud{padding-inline:50px;gap:6px}.hb{min-width:62px;padding-inline:6px}.hb b{font-size:24px}.hc small{letter-spacing:.08em}.scout div{grid-template-columns:22px 70px 1fr}
+  .dockrow{flex-direction:column;align-items:stretch;text-align:center}.links{justify-content:space-between}.mini{padding:4px 6px;font-size:14px;letter-spacing:.06em}}
+@media (max-width:700px){.rhead{padding-right:38px}}
+.hero .logo{font-size:clamp(24px,7.4vw,64px)}.logo.sm{font-size:12px}.mtitle{font-size:17px}.rv h2{font-size:clamp(13px,3.9vw,19px)}.big b{font-size:clamp(40px,11vw,60px)}.ph .logo{font-size:clamp(18px,5.2vw,32px)}.pack h4{font-size:13px}.stat b{font-size:17px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg id="scn" class="px" aria-hidden="true"></svg>
+<canvas id="fx" class="fx" aria-hidden="true" hidden></canvas>
+
+<button class="ic" id="mb" aria-label="Open menu">☰</button>
+<div class="tr">
+  <button class="ic" id="snd" aria-label="Mute sound">♪</button>
+  <button class="ic" id="gear" aria-label="Open settings">⚙&#xFE0E;</button>
+</div>
+
+<section class="scr" id="home">
+  <div class="hero">
+    <h1 class="logo">HAIL MARY</h1>
+    <div class="tagline">BEAT THE PLAY CLOCK</div>
+    <div class="sub">7 prompts · 25 seconds each · rarer answers gain more yards</div>
+  </div>
+  <div class="dock">
+    <details class="howto">
+      <summary>► HOW TO PLAY</summary>
+      <ol>
+        <li>7 prompts a day. Same for everyone.</li>
+        <li>25 seconds on the play clock to name one thing.</li>
+        <li>Rare answers score big. Obvious ones are handoffs.</li>
+        <li>The pick that feels clever? A flea flicker. The whole defense saw it coming.</li>
+        <li>Every point gains a seventh of a yard. 700 is a touchdown.</li>
+        <li>One game per day. No replays.</li>
+      </ol>
+    </details>
+    <button class="party" data-go="party"><span class="tag">BETA · PASS &amp; PLAY</span><svg width="30" height="30" viewBox="0 0 8 8" class="px" id="partyball"></svg>FOURTH DOWN<small>2–8 players</small></button>
+    <button class="cta" id="kick">► KICKOFF ◄</button>
+    <div class="dockrow"><span id="mdinfo">GAME #1 · STREAK 0</span>
+      <span class="links"><button class="mini" data-go="archive">ARCHIVE ⟲</button><button class="mini" data-go="packs">THEMED PACKS</button><button class="mini" data-go="unlimited">UNLIMITED ∞</button></span></div>
+  </div>
+</section>
+
+<section class="scr" id="game">
+  <div class="hud">
+    <div class="hb"><small>YARDS</small><b id="hm">0.0</b></div>
+    <div class="hc"><div class="sqs" id="sq"></div><small id="hr">ROUND 1 OF 7</small></div>
+    <div class="hb r"><small>SCORE</small><b id="hs">0</b></div>
+  </div>
+  <div class="pp" id="pp"><div class="eyebrow" id="ppr">ROUND 1 OF 7</div><div class="pq" id="ppq"></div><div class="pph">► rarer answers gain more yards ►</div></div>
+  <div class="rv" id="rv" hidden></div>
+  <div class="bar" id="bar">
+    <div class="fb" id="fb" aria-live="polite"></div>
+    <form class="af" id="af" autocomplete="off">
+      <div class="dial" id="dial"><span id="dn">25</span></div>
+      <input id="ai" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="type one answer…" aria-label="Your answer">
+      <button class="shoot" id="shoot">SHOOT</button>
+    </form>
+    <div class="tbar"><i id="tb"></i></div>
+  </div>
+  <button class="next" id="next" hidden>NEXT SNAP →</button>
+</section>
+
+<section class="scr page" id="results"><div class="col" id="rcol"></div></section>
+<section class="scr page" id="page"><div class="col" id="pg"></div></section>
+
+<div class="modal" id="menu" hidden>
+  <div class="mbox" role="dialog" aria-label="Menu">
+    <button class="ic x" data-close aria-label="Close menu">X</button>
+    <div class="eyebrow" style="color:var(--blue)">HAIL MARY</div>
+    <div class="mtitle">MENU</div>
+    <div class="sect">KICKOFF</div>
+    <div class="tiles">
+      <button class="tile" data-go="home"><b>▼</b>DAILY GAME</button>
+      <button class="tile" data-go="unlimited"><b>∞</b>UNLIMITED</button>
+      <button class="tile" data-go="party"><b>◉</b>FOURTH DOWN</button>
+      <button class="tile" data-go="archive"><b>⟲</b>ARCHIVE</button>
+      <button class="tile" data-go="packs"><b>▦</b>THEMED PACKS</button>
+      <button class="tile" data-go="stats"><b>☻</b>MY HAIL MARY</button>
+      <button class="tile" data-act="settings"><b>⚙&#xFE0E;</b>SETTINGS</button>
+      <button class="tile" data-go="faq"><b>?</b>FAQ</button>
+    </div>
+    <div class="sect" style="margin-top:16px">MORE GAMES</div>
+    <div class="tiles"><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/"><b>WORLDIE</b>SOCCER</a><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/buzzer/"><b>BUZZER</b>BASKETBALL</a><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/walkoff/"><b>WALKOFF</b>BASEBALL</a><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/hattrick/"><b>HAT TRICK</b>HOCKEY</a></div>
+    <div class="mfoot">find the hail mary.</div>
+  </div>
+</div>
+
+<div class="modal" id="set" hidden>
+  <div class="mbox" role="dialog" aria-label="Settings">
+    <button class="ic x" data-close aria-label="Close settings">X</button>
+    <div class="mtitle">SETTINGS</div>
+    <div class="opt"><b>SOUND</b><span>Whistles, horns and the crowd.</span><button class="sw" role="switch" data-k="snd" aria-label="Sound"><i>OFF</i></button></div>
+    <div class="opt"><b>LOW-POWER MODE</b><span>Lighter graphics and fewer background animations.</span><button class="sw" role="switch" data-k="low" aria-label="Low-power mode"><i>OFF</i></button></div>
+    <div class="opt"><b>COLORBLIND MODE</b><span>Brighter text and more separated tier colors.</span><button class="sw" role="switch" data-k="cb" aria-label="Colorblind mode"><i>OFF</i></button></div>
+    <div class="opt"><b>ANSWER CORRECTIONS</b><span>Preview corrected answers before scoring. Off accepts them immediately.</span><button class="sw" role="switch" data-k="corr" aria-label="Answer corrections"><i>OFF</i></button></div>
+    <div class="opt"><b>CLEAR REJECTED ENTRIES</b><span>Empty the answer box after an incompletion.</span><button class="sw" role="switch" data-k="clr" aria-label="Clear rejected entries"><i>OFF</i></button></div>
+    <div class="btnrow"><button class="btn2" data-go="stats">MY HAIL MARY →</button><button class="btn2" data-go="faq">FAQ</button></div>
+  </div>
+</div>
+<script>
+// Answer sets. "Name|rarity 1-5|aliases". "*" marks the top-tier answer (one per prompt), "~" marks the clever pick that isn't.
+const RAW=[
+{k:"mvp00",pk:"nfl",q:"Name an NFL MVP since 2000",h:"AP MVP winners for the 2000–2025 seasons; co-winners count",f:"Steve McNair shared the 2003 award with Peyton Manning, the last time the MVP was split.",a:
+ "Peyton Manning|1|peyton,manning;Tom Brady|1|brady;Aaron Rodgers|1|rodgers;Patrick Mahomes|1|mahomes;Lamar Jackson|1|lamar,jackson;Josh Allen|2|allen;Matthew Stafford|2|stafford,matt stafford;Cam Newton|2|newton;Adrian Peterson|2|peterson,ap;Matt Ryan|2|ryan,matty ice;LaDainian Tomlinson|3|tomlinson,lt,ladainian;Shaun Alexander|3|alexander;Kurt Warner|3|warner;Marshall Faulk|3|faulk;Rich Gannon|4|gannon;*Steve McNair|4|mcnair,air mcnair"},
+{k:"opoy",pk:"nfl",q:"Name an NFL Offensive Player of the Year since 2000",h:"AP award winners for the 2000–2025 seasons",f:"Undrafted out of Texas in 1997, Priest Holmes won the 2002 award after scoring 24 touchdowns for the Chiefs.",a:
+ "Peyton Manning|1|peyton,manning;Tom Brady|1|brady;Patrick Mahomes|1|mahomes;Drew Brees|1|brees;Adrian Peterson|1|peterson,ap;Derrick Henry|2|henry;Christian McCaffrey|2|mccaffrey,cmc;Saquon Barkley|2|barkley,saquon;Justin Jefferson|2|jefferson;Cam Newton|2|newton;Matt Ryan|2|ryan;LaDainian Tomlinson|2|tomlinson,lt;Cooper Kupp|2|kupp;Jaxon Smith-Njigba|3|smith-njigba,jsn;Todd Gurley|3|gurley;Michael Thomas|3|thomas;Marshall Faulk|3|faulk;Shaun Alexander|3|alexander;DeMarco Murray|3|murray;Chris Johnson|3|johnson,cj2k;Jamal Lewis|4|lewis;*Priest Holmes|4|holmes"},
+{k:"dpoy",pk:"nfl",q:"Name an NFL Defensive Player of the Year since 2000",h:"AP award winners for the 2000–2025 seasons",f:"Colts safety Bob Sanders won the 2007 award, one season after Indianapolis won Super Bowl XLI.",a:
+ "Aaron Donald|1|donald;J.J. Watt|1|jj watt;T.J. Watt|1|tj watt;Ray Lewis|1|lewis;Myles Garrett|1|garrett;Michael Strahan|2|strahan;Ed Reed|2|reed;Troy Polamalu|2|polamalu;Nick Bosa|2|bosa;Khalil Mack|2|mack;Luke Kuechly|2|kuechly;Brian Urlacher|2|urlacher;Charles Woodson|2|woodson;Derrick Brooks|3|brooks;Terrell Suggs|3|suggs;Patrick Surtain II|3|surtain,pat surtain,patrick surtain;Stephon Gilmore|3|gilmore;James Harrison|3|harrison;Jason Taylor|3|taylor;*Bob Sanders|4|sanders"},
+{k:"oroy",pk:"nfl",q:"Name an NFL Offensive Rookie of the Year since 2010",h:"AP award winners for the 2010–2025 seasons",f:"Eddie Lacy won the 2013 award for Green Bay after being offensive MVP of Alabama’s BCS title game win.",a:
+ "Justin Herbert|1|herbert;Ja'Marr Chase|1|chase,jamarr chase;C.J. Stroud|1|stroud,cj stroud;Jayden Daniels|1|daniels;Saquon Barkley|1|barkley,saquon;Dak Prescott|1|dak,prescott;Cam Newton|1|newton;Odell Beckham Jr.|2|odell,beckham,obj,odell beckham;Kyler Murray|2|kyler,murray;Robert Griffin III|2|rg3,rgiii,griffin;Alvin Kamara|2|kamara;Todd Gurley|2|gurley;Sam Bradford|3|bradford;Garrett Wilson|3|wilson;Tetairoa McMillan|3|mcmillan;*Eddie Lacy|4|lacy"},
+{k:"droy",pk:"nfl",q:"Name an NFL Defensive Rookie of the Year since 2010",h:"AP award winners for the 2010–2025 seasons",f:"Carson Schwesinger, a former UCLA walk-on, won the 2025 award as a Browns rookie linebacker.",a:
+ "Aaron Donald|1|donald;Von Miller|1|miller,von;Micah Parsons|1|parsons;Nick Bosa|1;Luke Kuechly|1|kuechly;Joey Bosa|2;Ndamukong Suh|2|suh;Sauce Gardner|2|sauce,gardner,ahmad gardner;Chase Young|2|young;Will Anderson Jr.|2|will anderson,anderson;Marcus Peters|3|peters;Marshon Lattimore|3|lattimore;Darius Leonard|3|shaquille leonard,shaq leonard,leonard;Jared Verse|3|verse;Sheldon Richardson|4|richardson;*Carson Schwesinger|4|schwesinger"},
+{k:"coy",pk:"nfl",q:"Name an NFL Coach of the Year since 2000",h:"AP award winners for the 2000–2025 seasons",f:"Jim Haslett won in 2000, his first season in New Orleans, as the Saints won their first playoff game ever.",a:
+ "Bill Belichick|1|belichick;Andy Reid|1|reid;Sean McVay|1|mcvay;Sean Payton|1|payton;John Harbaugh|2;Jim Harbaugh|2;Mike Vrabel|2|vrabel;Kevin Stefanski|2|stefanski;Bruce Arians|2|arians;Ron Rivera|2|rivera;Brian Daboll|2|daboll;Kevin O'Connell|2|oconnell;Jason Garrett|3|garrett;Matt Nagy|3|nagy;Lovie Smith|3|lovie;Marty Schottenheimer|3|schottenheimer,marty;Marvin Lewis|3|lewis;Mike Smith|4;Dick Jauron|5|jauron;*Jim Haslett|5|haslett"},
+{k:"no1",pk:"nfl",q:"Name a No. 1 overall NFL draft pick since 2000",h:"First picks of the 2000–2026 drafts",f:"Penn State end Courtney Brown went first to Cleveland in 2000, a year after the Browns took Tim Couch No. 1.",a:
+ "Joe Burrow|1|burrow;Trevor Lawrence|1|lawrence;Caleb Williams|1|caleb;Eli Manning|1|eli,manning;Cam Newton|1|newton;Andrew Luck|1|luck;Matthew Stafford|1|stafford,matt stafford;Baker Mayfield|1|baker,mayfield;Kyler Murray|1|kyler,murray;Myles Garrett|1|garrett;Michael Vick|2|vick;Bryce Young|2|bryce,young;Jared Goff|2|goff;Jameis Winston|2|jameis,winston;Carson Palmer|2|palmer;Alex Smith|2|smith;Cam Ward|2|ward;Fernando Mendoza|2|mendoza;Sam Bradford|2|bradford;Jadeveon Clowney|2|clowney;~JaMarcus Russell|2|jamarcus,russell;Travon Walker|3|walker;David Carr|3|carr;Mario Williams|3;Jake Long|4|long;Eric Fisher|4|fisher;*Courtney Brown|5|brown"},
+{k:"rush",pk:"nfl",q:"Name an NFL rushing yards leader since 2000",h:"Season rushing leaders, 2000–2025",f:"Kareem Hunt won the 2017 rushing title as a rookie with 1,327 yards, the lowest leading total since 2000.",a:
+ "Derrick Henry|1|henry;Adrian Peterson|1|peterson,ap;LaDainian Tomlinson|1|tomlinson,lt;Saquon Barkley|1|barkley,saquon;Christian McCaffrey|1|mccaffrey,cmc;Ezekiel Elliott|1|zeke,elliott;Jonathan Taylor|2|taylor;Chris Johnson|2|johnson,cj2k;Shaun Alexander|2|alexander;Josh Jacobs|2|jacobs;James Cook|2|cook;DeMarco Murray|2|murray;LeSean McCoy|2|mccoy,shady;Maurice Jones-Drew|2|mjd,jones-drew;Arian Foster|3|foster;Ricky Williams|3|ricky,williams;Jamal Lewis|3|lewis;Edgerrin James|3|edgerrin,edge;Curtis Martin|3|martin;Priest Holmes|4|holmes;*Kareem Hunt|4|hunt"},
+{k:"recyd",pk:"nfl",q:"Name an NFL receiving yards leader since 2000",h:"Season receiving leaders, 2000–2025",f:"Muhsin Muhammad led the NFL with 1,405 receiving yards for Carolina in 2004.",a:
+ "Calvin Johnson|1|calvin,megatron;Antonio Brown|1|brown,ab;Julio Jones|1|julio,jones;Justin Jefferson|1|jefferson;Tyreek Hill|1|tyreek,hill;Ja'Marr Chase|1|chase,jamarr chase;Cooper Kupp|1|kupp;Marvin Harrison|2|harrison;Andre Johnson|2|andre;Chad Johnson|2|ochocinco,chad ochocinco;Steve Smith Sr.|2|steve smith,smith;Reggie Wayne|2|wayne;Michael Thomas|2|thomas;Stefon Diggs|2|diggs;Jaxon Smith-Njigba|2|smith-njigba,jsn;Torry Holt|3|holt;Josh Gordon|3|gordon;T.Y. Hilton|3|ty hilton,hilton;David Boston|4|boston;Brandon Lloyd|4|lloyd;*Muhsin Muhammad|4|muhammad,moose"},
+{k:"sack",pk:"nfl",q:"Name an NFL sack leader since 2000",h:"Season sack leaders, 2000–2025",f:"Saints tackle La’Roi Glover led the NFL with 17 sacks in 2000.",a:
+ "Myles Garrett|1|garrett;T.J. Watt|1|tj watt;J.J. Watt|1|jj watt;Aaron Donald|1|donald;Michael Strahan|1|strahan;Nick Bosa|2|bosa;DeMarcus Ware|2|ware;Jared Allen|2|allen;Jason Taylor|2|taylor;Dwight Freeney|2|freeney;Justin Houston|3|houston;Chandler Jones|3|jones;Robert Mathis|3|mathis;Elvis Dumervil|3|dumervil;Shawne Merriman|3|merriman,lights out;Trey Hendrickson|3|hendrickson;Shaquil Barrett|3|barrett,shaq barrett;Vic Beasley|4|beasley;Derrick Burgess|5|burgess;*La'Roi Glover|5|laroi glover,glover"},
+{k:"passyd",pk:"nfl",q:"Name an NFL passing yards leader since 2000",h:"Season passing leaders, 2000–2025; the 2014 tie counts",f:"Houston’s Matt Schaub led the NFL with 4,770 passing yards in 2009.",a:
+ "Tom Brady|1|brady;Drew Brees|1|brees;Peyton Manning|1|peyton,manning;Patrick Mahomes|1|mahomes;Joe Burrow|2|burrow;Matthew Stafford|2|stafford,matt stafford;Ben Roethlisberger|2|roethlisberger,big ben;Philip Rivers|2|rivers;Kurt Warner|2|warner;Jameis Winston|3|jameis,winston;Tua Tagovailoa|3|tua,tagovailoa;Deshaun Watson|3|watson;Rich Gannon|3|gannon;Daunte Culpepper|4|culpepper;*Matt Schaub|4|schaub"},
+{k:"sk20",pk:"nfl",q:"Name a player with a 20-sack season",h:"Official sacks (since 1982), through the 2025 season",f:"Vikings end Chris Doleman recorded 21 sacks in 1989.",a:
+ "Myles Garrett|1|garrett;T.J. Watt|1|tj watt;J.J. Watt|1|jj watt;Aaron Donald|1|donald;Michael Strahan|1|strahan;Reggie White|2|white;Lawrence Taylor|2|taylor,lt;DeMarcus Ware|2|ware;Jared Allen|2|allen;Justin Houston|3|houston;Derrick Thomas|3|thomas;Mark Gastineau|3|gastineau;*Chris Doleman|4|doleman"},
+{k:"pass5k",pk:"nfl",q:"Name a QB with a 5,000-yard passing season",h:"NFL regular season, all seasons through 2025",f:"Jameis Winston threw for 5,109 yards in 2019 and became the first QB with 30 TD passes and 30 interceptions in one season.",a:
+ "Drew Brees|1|brees;Peyton Manning|1|peyton,manning;Tom Brady|1|brady;Patrick Mahomes|1|mahomes;Dan Marino|2|marino;Ben Roethlisberger|2|roethlisberger,big ben;Matthew Stafford|3|stafford,matt stafford;Justin Herbert|3|herbert;*Jameis Winston|4|jameis,winston"},
+{k:"rush2k",pk:"nfl",q:"Name a player with a 2,000-yard rushing season",h:"NFL regular season, all seasons through 2025",f:"Jamal Lewis ran for 2,066 yards in 2003, including a then-record 295 in one game against Cleveland.",a:
+ "Adrian Peterson|1|peterson,ap;Eric Dickerson|1|dickerson;Barry Sanders|1|sanders,barry;Saquon Barkley|1|barkley,saquon;Derrick Henry|1|henry;O.J. Simpson|2|oj simpson,simpson,oj;Terrell Davis|2|davis,td;Chris Johnson|3|johnson,cj2k;*Jamal Lewis|4|lewis"},
+{k:"td400",pk:"nfl",q:"Name a QB with 400 career touchdown passes",h:"NFL regular season, through the 2025 season",f:"Philip Rivers came out of retirement at 44 to play for the Colts in December 2025.",a:
+ "Tom Brady|1|brady;Drew Brees|1|brees;Peyton Manning|1|peyton,manning;Aaron Rodgers|1|rodgers;Brett Favre|1|favre;Dan Marino|2|marino;Ben Roethlisberger|2|roethlisberger,big ben;Matthew Stafford|2|stafford,matt stafford;*Philip Rivers|3|rivers"},
+{k:"qb18",pk:"nfl",q:"Name a QB taken in the first round of the 2018 NFL draft",h:"2018 draft, round 1 only",f:"Sam Darnold, the No. 3 pick, won Super Bowl LX with Seattle, his fifth NFL team.",a:
+ "Josh Allen|1|allen;Lamar Jackson|1|lamar,jackson;Baker Mayfield|1|baker,mayfield;*Sam Darnold|2|darnold;~Josh Rosen|3|rosen"},
+{k:"qb21",pk:"nfl",q:"Name a QB taken in the first round of the 2021 NFL draft",h:"2021 draft, round 1 only",f:"San Francisco traded three first-round picks to move up to No. 3 for Trey Lance.",a:
+ "Trevor Lawrence|1|lawrence;Justin Fields|1|fields;Mac Jones|2|mac,jones;~Zach Wilson|2|wilson;*Trey Lance|3|lance"},
+{k:"qb24",pk:"nfl",q:"Name a QB taken in the first round of the 2024 NFL draft",h:"2024 draft, round 1 only",f:"Atlanta took Michael Penix Jr. eighth overall weeks after signing Kirk Cousins.",a:
+ "Caleb Williams|1|caleb,williams;Jayden Daniels|1|daniels;Drake Maye|1|maye;Bo Nix|2|nix;J.J. McCarthy|2|jj mccarthy,mccarthy;*Michael Penix Jr.|3|michael penix,penix"},
+{k:"qb04",pk:"nfl",q:"Name a QB taken in the first round of the 2004 NFL draft",h:"2004 draft, round 1 only",f:"Buffalo traded up with Dallas to No. 22 for Tulane’s J.P. Losman.",a:
+ "Eli Manning|1|eli,manning;Ben Roethlisberger|1|roethlisberger,big ben;Philip Rivers|1|rivers;*J.P. Losman|4|jp losman,losman"},
+{k:"qb99",pk:"nfl",q:"Name a QB taken in the first round of the 1999 NFL draft",h:"1999 draft, round 1 only",f:"UCLA’s Cade McNown went 12th to Chicago, one pick after Daunte Culpepper.",a:
+ "Donovan McNabb|1|mcnabb;Tim Couch|2|couch;Daunte Culpepper|2|culpepper;~Akili Smith|3|akili,smith;*Cade McNown|4|mcnown"},
+{k:"afl",pk:"nfl",q:"Name a franchise that played in the AFL",h:"American Football League, 1960–1969; current names count",f:"Founded by Paul Brown, the Bengals joined the AFL in 1968 and played two seasons before the merger.",a:
+ "Kansas City Chiefs|1|chiefs,kansas city,dallas texans;Las Vegas Raiders|1|raiders,oakland raiders,oakland,las vegas;New York Jets|1|jets,new york titans,titans of new york;Buffalo Bills|1|bills,buffalo;Denver Broncos|1|broncos,denver;Miami Dolphins|2|dolphins,miami;New England Patriots|2|patriots,pats,boston patriots,new england;Los Angeles Chargers|2|chargers,san diego chargers,san diego;Tennessee Titans|3|titans,houston oilers,oilers,tennessee;*Cincinnati Bengals|4|bengals,cincinnati"},
+{k:"moved",pk:"nfl",q:"Name an NFL franchise that changed cities since 1960",h:"Moves to a new metro area, 1960–2026; the 1996 Browns move to Baltimore counts as the Ravens",f:"The Chiefs began as the AFL’s Dallas Texans and moved to Kansas City in 1963.",a:
+ "Las Vegas Raiders|1|raiders,oakland raiders,los angeles raiders;Los Angeles Rams|1|rams,st louis rams;Los Angeles Chargers|1|chargers,san diego chargers;Indianapolis Colts|1|colts,baltimore colts;Tennessee Titans|2|titans,houston oilers,oilers;Arizona Cardinals|2|cardinals,st louis cardinals,phoenix cardinals;Baltimore Ravens|2|ravens;*Kansas City Chiefs|3|chiefs,dallas texans"},
+{k:"nfc",pk:"nfl",q:"Name a team in the NFC",h:"National Football Conference members, 2002–2026 alignment",f:"The Cardinals, founded in Chicago in 1898, are the oldest continuously run pro football franchise in the U.S.",a:
+ "Dallas Cowboys|1|cowboys,dallas;Green Bay Packers|1|packers,green bay;Philadelphia Eagles|1|eagles,philadelphia,philly;San Francisco 49ers|1|49ers,niners,san francisco;Chicago Bears|1|bears,chicago;New York Giants|1|giants;Seattle Seahawks|1|seahawks,seattle;Minnesota Vikings|1|vikings,minnesota;Detroit Lions|1|lions,detroit;Los Angeles Rams|1|rams;New Orleans Saints|2|saints,new orleans;Tampa Bay Buccaneers|2|buccaneers,bucs,tampa bay;Atlanta Falcons|2|falcons,atlanta;Carolina Panthers|2|panthers,carolina;Washington Commanders|2|commanders,washington,redskins;*Arizona Cardinals|3|cardinals,arizona"},
+{k:"afc",pk:"nfl",q:"Name a team in the AFC",h:"American Football Conference members, 2002–2026 alignment",f:"The Texans began play in 2002, making them the NFL’s newest franchise.",a:
+ "Kansas City Chiefs|1|chiefs,kansas city;New England Patriots|1|patriots,pats,new england;Pittsburgh Steelers|1|steelers,pittsburgh;Buffalo Bills|1|bills,buffalo;Baltimore Ravens|1|ravens,baltimore;Denver Broncos|1|broncos,denver;Miami Dolphins|1|dolphins,miami;Las Vegas Raiders|1|raiders,las vegas;Cleveland Browns|1|browns,cleveland;Cincinnati Bengals|1|bengals,cincinnati;New York Jets|1|jets;Los Angeles Chargers|2|chargers;Indianapolis Colts|2|colts,indianapolis;Tennessee Titans|2|titans,tennessee;Jacksonville Jaguars|2|jaguars,jags,jacksonville;*Houston Texans|3|texans,houston"},
+
+{k:"sbwin",pk:"sb",q:"Name a franchise that has won the Super Bowl",h:"Super Bowls I–LX (1967–2026); former names count",f:"The Jets’ lone title came in Super Bowl III, after Joe Namath guaranteed a win over the Colts.",a:
+ "New England Patriots|1|patriots,pats,new england;Pittsburgh Steelers|1|steelers,pittsburgh;San Francisco 49ers|1|49ers,niners,san francisco;Dallas Cowboys|1|cowboys,dallas;Kansas City Chiefs|1|chiefs,kansas city;Green Bay Packers|1|packers,green bay;New York Giants|1|giants;Philadelphia Eagles|1|eagles,philadelphia,philly;Seattle Seahawks|1|seahawks,seattle;Denver Broncos|1|broncos,denver;Las Vegas Raiders|2|raiders,oakland raiders,los angeles raiders;Washington Commanders|2|commanders,washington,redskins,washington redskins;Los Angeles Rams|2|rams,st louis rams;Miami Dolphins|2|dolphins,miami;Indianapolis Colts|2|colts,baltimore colts;Tampa Bay Buccaneers|2|buccaneers,bucs,tampa bay;Baltimore Ravens|2|ravens;Chicago Bears|2|bears,chicago;New Orleans Saints|2|saints,new orleans;*New York Jets|3|jets"},
+{k:"sbnone",pk:"sb",q:"Name a team that has never won the Super Bowl",h:"Current franchises, Super Bowls I–LX (1967–2026)",f:"As the Titans, they reached Super Bowl XXXIV and were stopped one yard short on the final play against the Rams.",a:
+ "Buffalo Bills|1|bills,buffalo;Minnesota Vikings|1|vikings,minnesota;Detroit Lions|1|lions,detroit;Cleveland Browns|1|browns,cleveland;Cincinnati Bengals|1|bengals,cincinnati;Atlanta Falcons|2|falcons,atlanta;Los Angeles Chargers|2|chargers,san diego chargers;Houston Texans|2|texans,houston;Jacksonville Jaguars|2|jaguars,jags,jacksonville;Carolina Panthers|2|panthers,carolina;Arizona Cardinals|2|cardinals,arizona;*Tennessee Titans|3|titans,tennessee,houston oilers,oilers"},
+{k:"sbnever",pk:"sb",q:"Name a team that has never played in a Super Bowl",h:"Current franchises, Super Bowls I–LX (1967–2026)",f:"The Jaguars reached the AFC Championship Game in just their second season, 1996.",a:
+ "Detroit Lions|1|lions,detroit;Cleveland Browns|1|browns,cleveland;Houston Texans|2|texans,houston;*Jacksonville Jaguars|2|jaguars,jags,jacksonville"},
+{k:"sbperf",pk:"sb",q:"Name a team that is unbeaten in the Super Bowl",h:"At least one win and no losses, Super Bowls I–LX (1967–2026)",f:"The Saints won Super Bowl XLIV after Sean Payton’s surprise onside kick to open the second half.",a:
+ "Baltimore Ravens|2|ravens,baltimore;Tampa Bay Buccaneers|2|buccaneers,bucs,tampa bay;New York Jets|3|jets;*New Orleans Saints|2|saints,new orleans"},
+{k:"sbb2b",pk:"sb",q:"Name a team that won back-to-back Super Bowls",h:"Consecutive titles, Super Bowls I–LX (1967–2026)",f:"John Elway retired after Denver’s second straight title, won in Super Bowl XXXIII.",a:
+ "New England Patriots|1|patriots,pats,new england;Kansas City Chiefs|1|chiefs,kansas city;Pittsburgh Steelers|1|steelers,pittsburgh;Green Bay Packers|2|packers,green bay;Dallas Cowboys|2|cowboys,dallas;San Francisco 49ers|2|49ers,niners,san francisco;Miami Dolphins|2|dolphins,miami;*Denver Broncos|3|broncos,denver"},
+{k:"sbmvp1",pk:"sb",q:"Name a Super Bowl MVP from Super Bowls I–XXXIII",h:"Super Bowls played 1967–1999",f:"Cowboys linebacker Chuck Howley is the only Super Bowl MVP from a losing team, in Super Bowl V.",a:
+ "Joe Montana|1|montana;Terry Bradshaw|1|bradshaw;Jerry Rice|1|rice;John Elway|1|elway;Troy Aikman|1|aikman;Emmitt Smith|1|emmitt,smith;Steve Young|1|young;Joe Namath|1|namath,broadway joe;Bart Starr|1|starr;Roger Staubach|2|staubach;Terrell Davis|2|davis,td;Lynn Swann|2|swann;Franco Harris|2|franco,harris;Marcus Allen|2|allen;John Riggins|2|riggins;Larry Csonka|2|csonka;Phil Simms|2|simms;Doug Williams|2|williams;Richard Dent|3|dent;Desmond Howard|3|howard;Len Dawson|3|dawson;Jim Plunkett|3|plunkett;Fred Biletnikoff|3|biletnikoff;Mark Rypien|3|rypien;Ottis Anderson|3|anderson;Randy White|3|white;Harvey Martin|4|martin;Jake Scott|4|scott;Larry Brown|4|brown;*Chuck Howley|4|howley"},
+{k:"sbmvp2",pk:"sb",q:"Name a Super Bowl MVP from Super Bowls XXXIV–LX",h:"Super Bowls played 2000–2026",f:"Bucs safety Dexter Jackson intercepted Rich Gannon twice to win Super Bowl XXXVII MVP.",a:
+ "Tom Brady|1|brady;Patrick Mahomes|1|mahomes;Peyton Manning|1|peyton;Eli Manning|1|eli;Aaron Rodgers|1|rodgers;Drew Brees|1|brees;Ray Lewis|1|lewis;Jalen Hurts|1|hurts;Kurt Warner|2|warner;Joe Flacco|2|flacco;Nick Foles|2|foles;Von Miller|2|miller,von;Julian Edelman|2|edelman;Cooper Kupp|2|kupp;Kenneth Walker III|2|kenneth walker,walker;Hines Ward|2|ward;Santonio Holmes|3|holmes;Deion Branch|3|branch;Malcolm Smith|3|smith;*Dexter Jackson|4|jackson"},
+{k:"sbdef",pk:"sb",q:"Name a defensive player who won Super Bowl MVP",h:"Super Bowls I–LX (1967–2026)",f:"Safety Jake Scott was Super Bowl VII MVP as Miami finished its 17–0 season.",a:
+ "Ray Lewis|1|lewis;Von Miller|1|miller,von;Richard Dent|2|dent;Malcolm Smith|2|smith;Randy White|3|white;Harvey Martin|3|martin;Larry Brown|3|brown;Chuck Howley|3|howley;Dexter Jackson|3|jackson;*Jake Scott|4|scott"},
+{k:"sbmvprb",pk:"sb",q:"Name a running back who won Super Bowl MVP",h:"Super Bowls I–LX (1967–2026)",f:"Ottis Anderson was named MVP of Super Bowl XXV as the Giants edged Buffalo 20–19.",a:
+ "Emmitt Smith|1|emmitt,smith;Terrell Davis|1|davis,td;Marcus Allen|1|allen;Kenneth Walker III|1|kenneth walker,walker;Franco Harris|2|franco,harris;John Riggins|2|riggins;Larry Csonka|2|csonka;*Ottis Anderson|3|anderson,oj anderson"},
+{k:"sbmvpwr",pk:"sb",q:"Name a wide receiver who won Super Bowl MVP",h:"Super Bowls I–LX (1967–2026); returner Desmond Howard counts",f:"Raiders receiver Fred Biletnikoff won Super Bowl XI MVP against the Vikings.",a:
+ "Jerry Rice|1|rice;Julian Edelman|1|edelman;Cooper Kupp|1|kupp;Lynn Swann|2|swann;Hines Ward|2|ward;Santonio Holmes|2|holmes;Deion Branch|3|branch;Desmond Howard|3|howard;*Fred Biletnikoff|3|biletnikoff"},
+{k:"sbcoach",pk:"sb",q:"Name a head coach who won a Super Bowl",h:"Super Bowls I–LX (1967–2026)",f:"Don McCafferty won Super Bowl V in his first season as Baltimore Colts head coach.",a:
+ "Bill Belichick|1|belichick;Andy Reid|1|reid;Vince Lombardi|1|lombardi;Bill Walsh|1|walsh;Tom Landry|1|landry;Don Shula|1|shula;Chuck Noll|1|noll;Joe Gibbs|1|gibbs;Sean Payton|1|payton;Sean McVay|1|mcvay;Bill Parcells|1|parcells,tuna;Jimmy Johnson|1|johnson;Mike Tomlin|1|tomlin;Pete Carroll|1|carroll;Tony Dungy|1|dungy;Nick Sirianni|1|sirianni;Mike Shanahan|2|shanahan;Tom Coughlin|2|coughlin;John Harbaugh|2|harbaugh;Mike Ditka|2|ditka;Bill Cowher|2|cowher;Jon Gruden|2|gruden;Mike McCarthy|2|mccarthy;Doug Pederson|2|pederson;Bruce Arians|2|arians;Mike Macdonald|2|macdonald;Mike Holmgren|2|holmgren;John Madden|2|madden;Tom Flores|3|flores;George Seifert|3|seifert;Dick Vermeil|3|vermeil;Brian Billick|3|billick;Gary Kubiak|3|kubiak;Hank Stram|3|stram;Barry Switzer|3|switzer;Weeb Ewbank|4|ewbank;*Don McCafferty|5|mccafferty"},
+{k:"sbco2",pk:"sb",q:"Name a head coach with two or more Super Bowl wins",h:"Super Bowls I–LX (1967–2026)",f:"George Seifert won Super Bowls XXIV and XXIX after succeeding Bill Walsh in San Francisco.",a:
+ "Bill Belichick|1|belichick;Andy Reid|1|reid;Chuck Noll|1|noll;Bill Walsh|1|walsh;Vince Lombardi|1|lombardi;Joe Gibbs|2|gibbs;Tom Landry|2|landry;Don Shula|2|shula;Bill Parcells|2|parcells,tuna;Jimmy Johnson|2|johnson;Mike Shanahan|2|shanahan;Tom Coughlin|2|coughlin;Tom Flores|3|flores;*George Seifert|4|seifert"},
+{k:"sbqbw",pk:"sb",q:"Name a starting QB who won a Super Bowl",h:"Winning starters, Super Bowls I–LX (1967–2026)",f:"Backup Jeff Hostetler replaced the injured Phil Simms and won Super Bowl XXV for the Giants.",a:
+ "Tom Brady|1|brady;Joe Montana|1|montana;Terry Bradshaw|1|bradshaw;Patrick Mahomes|1|mahomes;Peyton Manning|1|peyton;Eli Manning|1|eli;John Elway|1|elway;Troy Aikman|1|aikman;Drew Brees|1|brees;Aaron Rodgers|1|rodgers;Ben Roethlisberger|1|roethlisberger,big ben;Russell Wilson|1|wilson,russ;Joe Namath|1|namath;Bart Starr|1|starr;Roger Staubach|1|staubach;Steve Young|1|young;Brett Favre|1|favre;Jalen Hurts|1|hurts;Matthew Stafford|2|stafford,matt stafford;Joe Flacco|2|flacco;Kurt Warner|2|warner;Nick Foles|2|foles;Sam Darnold|2|darnold;Jim Plunkett|2|plunkett;Phil Simms|2|simms;Bob Griese|2|griese;Johnny Unitas|2|unitas;Len Dawson|2|dawson;Ken Stabler|2|stabler,snake;Jim McMahon|2|mcmahon;Doug Williams|2|williams;Joe Theismann|2|theismann;Mark Rypien|3|rypien;Trent Dilfer|3|dilfer;Brad Johnson|3|johnson;*Jeff Hostetler|4|hostetler"},
+{k:"sbqbl",pk:"sb",q:"Name a QB who started a Super Bowl loss since 2000",h:"Losing starters, Super Bowls XXXIV–LX (2000–2026)",f:"Rex Grossman started Super Bowl XLI for the Bears, a 29–17 loss to the Colts in the Miami rain.",a:
+ "Tom Brady|1|brady;Peyton Manning|1|peyton,manning;Patrick Mahomes|1|mahomes;Cam Newton|1|newton;Matt Ryan|1|ryan;Colin Kaepernick|1|kaepernick,kap;Russell Wilson|1|wilson,russ;Jared Goff|1|goff;Joe Burrow|1|burrow;Jalen Hurts|1|hurts;Brock Purdy|1|purdy;Drake Maye|1|maye;Donovan McNabb|2|mcnabb;Ben Roethlisberger|2|roethlisberger,big ben;Kurt Warner|2|warner;Jimmy Garoppolo|2|garoppolo,jimmy g;Steve McNair|2|mcnair;Rich Gannon|3|gannon;Matt Hasselbeck|3|hasselbeck;Jake Delhomme|3|delhomme;Kerry Collins|3|collins;*Rex Grossman|3|grossman"},
+{k:"sbstate",pk:"sb",q:"Name a state that has hosted a Super Bowl",h:"Host states for Super Bowls I–LX (1967–2026)",f:"Super Bowl XLVIII at MetLife Stadium was the first played outdoors in a cold-weather market.",a:
+ "Florida|1|fl;California|1|ca;Louisiana|1;Texas|1|tx;Arizona|2|az;Georgia|2|ga;Nevada|2|nv;Michigan|3|mi;Minnesota|3|mn;Indiana|4;*New Jersey|3|nj"},
+{k:"sbqb4",pk:"sb",q:"Name a QB who started four or more Super Bowls",h:"Starts in Super Bowls I–LX (1967–2026)",f:"Jim Kelly started four straight Super Bowls for Buffalo, XXV through XXVIII, and lost them all.",a:
+ "Tom Brady|1|brady;Patrick Mahomes|1|mahomes;John Elway|1|elway;Peyton Manning|2|peyton,manning;Joe Montana|2|montana;Terry Bradshaw|2|bradshaw;Roger Staubach|3|staubach;*Jim Kelly|3|kelly"},
+
+{k:"mvpnqb",pk:"legends",q:"Name a non-quarterback who won AP NFL MVP",h:"AP MVP winners for the 1961–2025 seasons",f:"Washington kicker Mark Moseley won the 1982 MVP, the only special teams player ever to win it.",a:
+ "Walter Payton|1|payton,sweetness;Barry Sanders|1|sanders,barry;Adrian Peterson|1|peterson,ap;LaDainian Tomlinson|1|tomlinson,ladainian;Emmitt Smith|1|emmitt,smith;Lawrence Taylor|1;Jim Brown|1;O.J. Simpson|1|oj simpson,simpson,oj;Marshall Faulk|2|faulk;Terrell Davis|2|davis,td;Earl Campbell|2|campbell;Shaun Alexander|2|alexander;Marcus Allen|2|allen;Thurman Thomas|2|thurman,thomas;Alan Page|3|page;Paul Hornung|3|hornung;Jim Taylor|3;Larry Brown|4;*Mark Moseley|4|moseley"},
+{k:"mvp2",pk:"legends",q:"Name a player who won AP NFL MVP more than once",h:"AP MVP and Most Outstanding Player awards, 1957–2025 seasons",f:"Kurt Warner won the MVP in 1999 and 2001, both with the St. Louis Rams.",a:
+ "Peyton Manning|1|peyton,manning;Aaron Rodgers|1|rodgers;Tom Brady|1|brady;Patrick Mahomes|1|mahomes;Lamar Jackson|1|lamar,jackson;Brett Favre|1|favre;Joe Montana|2|montana;Steve Young|2|young;Johnny Unitas|2|unitas;Jim Brown|2|brown;*Kurt Warner|3|warner"},
+{k:"nfl100rb",pk:"legends",q:"Name a running back on the NFL 100 All-Time Team",h:"The 12 running backs chosen in 2019",f:"Earl ‘Dutch’ Clark was one of the 17 charter members of the Pro Football Hall of Fame in 1963.",a:
+ "Jim Brown|1|brown;Walter Payton|1|payton,sweetness;Barry Sanders|1|sanders,barry;Emmitt Smith|1|emmitt,smith;Eric Dickerson|2|dickerson;Gale Sayers|2|sayers;Earl Campbell|2|campbell;O.J. Simpson|2|oj simpson,simpson,oj;Lenny Moore|3|moore;Marion Motley|4|motley;Steve Van Buren|4|van buren;*Dutch Clark|5|earl clark,earl dutch clark,clark"},
+{k:"nfl100qb",pk:"legends",q:"Name a quarterback on the NFL 100 All-Time Team",h:"The 10 quarterbacks chosen in 2019",f:"In 1943 Sammy Baugh led the NFL in passing, punting and interceptions, a feat no one else has matched.",a:
+ "Tom Brady|1|brady;Joe Montana|1|montana;Peyton Manning|1|peyton,manning;Dan Marino|1|marino;John Elway|1|elway;Brett Favre|1|favre;Johnny Unitas|2|unitas;Roger Staubach|2|staubach;Otto Graham|3|graham;*Sammy Baugh|4|baugh,slingin sammy"},
+{k:"nfl100co",pk:"legends",q:"Name a coach on the NFL 100 All-Time Team",h:"The 10 coaches chosen in 2019",f:"Curly Lambeau co-founded the Packers in 1919 and coached them to six NFL titles.",a:
+ "Bill Belichick|1|belichick;Vince Lombardi|1|lombardi;Don Shula|1|shula;Tom Landry|1|landry;Bill Walsh|1|walsh;George Halas|1|halas,papa bear;Chuck Noll|2|noll;Joe Gibbs|2|gibbs;Paul Brown|2|brown;*Curly Lambeau|3|lambeau"},
+{k:"rec15k",pk:"legends",q:"Name a player with 15,000 career receiving yards",h:"NFL regular season, through the 2025 season",f:"Isaac Bruce’s 15,208 career receiving yards rank fifth in NFL history, 81 more than Tony Gonzalez.",a:
+ "Jerry Rice|1|rice;Larry Fitzgerald|1|fitzgerald,fitz;Randy Moss|1|moss;Terrell Owens|1|owens,to;Tony Gonzalez|2|gonzalez;*Isaac Bruce|3|bruce"},
+{k:"rtd100",pk:"legends",q:"Name a player with 100 career rushing touchdowns",h:"NFL regular season, through the 2025 season",f:"Shaun Alexander finished with exactly 100 rushing TDs, one more than Barry Sanders.",a:
+ "Emmitt Smith|1|emmitt,smith;LaDainian Tomlinson|1|tomlinson,lt;Adrian Peterson|1|peterson,ap;Walter Payton|1|payton,sweetness;Derrick Henry|1|henry;Jim Brown|2|brown;Marcus Allen|2|allen;John Riggins|3|riggins;Marshall Faulk|3|faulk;*Shaun Alexander|3|alexander"},
+{k:"int60",pk:"legends",q:"Name a player with 60 career interceptions",h:"NFL regular season, all seasons through 2025",f:"Ken Riley, a college quarterback at Florida A&M, picked off 65 passes for the Bengals and reached the Hall of Fame in 2023.",a:
+ "Charles Woodson|1;Ed Reed|1|reed;Ronnie Lott|1|lott;Rod Woodson|2;Paul Krause|2|krause;Dick Lane|2|night train lane,night train,dick night train lane,lane;Emlen Tunnell|3|tunnell;Darren Sharper|3|sharper;Dick LeBeau|3|lebeau;Dave Brown|4|brown;*Ken Riley|4|riley"},
+{k:"nflch",pk:"legends",q:"Name a team that won an NFL title from 1920 to 1969",h:"Official NFL champions, 1920–1969 seasons; defunct clubs and former names count",f:"The Frankford Yellow Jackets, from a Philadelphia neighborhood, won the 1926 NFL title.",a:
+ "Green Bay Packers|1|packers,green bay;Chicago Bears|1|bears,chicago staleys,staleys;New York Giants|1|giants;Cleveland Browns|1|browns;Detroit Lions|1|lions,detroit;Philadelphia Eagles|2|eagles,philadelphia;Baltimore Colts|2|colts,indianapolis colts;Washington Redskins|2|redskins,washington,commanders,washington commanders;Los Angeles Rams|2|rams,cleveland rams;Chicago Cardinals|3|cardinals,arizona cardinals,st louis cardinals;Minnesota Vikings|3|vikings,minnesota;Canton Bulldogs|4|canton;Akron Pros|4|akron;Providence Steam Roller|5|providence,steam roller;Cleveland Bulldogs|5;*Frankford Yellow Jackets|5|frankford,yellow jackets"},
+{k:"aflch",pk:"legends",q:"Name a franchise that won an AFL championship",h:"AFL title winners, 1960–1969 seasons; current names count",f:"The 1963 Chargers routed Boston 51–10 for the franchise’s only league championship.",a:
+ "Kansas City Chiefs|1|chiefs,dallas texans;New York Jets|2|jets;Las Vegas Raiders|2|raiders,oakland raiders;Buffalo Bills|2|bills,buffalo;Tennessee Titans|3|houston oilers,oilers,titans;*Los Angeles Chargers|4|chargers,san diego chargers,san diego"},
+{k:"qb83",pk:"legends",q:"Name a QB taken in the first round of the 1983 NFL draft",h:"1983 draft, round 1 only",f:"Todd Blackledge went seventh to Kansas City, 20 picks before Dan Marino.",a:
+ "John Elway|1|elway;Dan Marino|1|marino;Jim Kelly|1|kelly;Tony Eason|3|eason;Ken O'Brien|3|obrien;*Todd Blackledge|3|blackledge"},
+{k:"heimvp",pk:"legends",q:"Name a Heisman winner who later won AP NFL MVP",h:"Heisman winners with an AP MVP, through the 2025 season",f:"Paul Hornung won the 1956 Heisman for a 2–8 Notre Dame team and the 1961 NFL MVP with Green Bay.",a:
+ "Lamar Jackson|1|lamar,jackson;Barry Sanders|1|sanders,barry;Cam Newton|1|newton;O.J. Simpson|2|oj simpson,simpson,oj;Marcus Allen|2|allen;Earl Campbell|2|campbell;*Paul Hornung|4|hornung"},
+{k:"heisb",pk:"legends",q:"Name a Heisman winner who later won Super Bowl MVP",h:"Super Bowls I–LX (1967–2026)",f:"Desmond Howard returned a kickoff 99 yards for a touchdown to win Super Bowl XXXI MVP.",a:
+ "Roger Staubach|2|staubach;Marcus Allen|2|allen;Jim Plunkett|3|plunkett;*Desmond Howard|3|howard"},
+{k:"no1sb",pk:"legends",q:"Name a QB taken No. 1 overall who started and won a Super Bowl",h:"NFL draft No. 1 picks (AFL draft excluded); Super Bowls I–LX (1967–2026)",f:"Jim Plunkett, New England’s No. 1 pick in 1971, won two Super Bowls with the Raiders.",a:
+ "Peyton Manning|1|peyton;Eli Manning|1|eli;John Elway|1|elway;Troy Aikman|1|aikman;Terry Bradshaw|1|bradshaw;Matthew Stafford|2|stafford,matt stafford;*Jim Plunkett|3|plunkett"},
+{k:"dol72",pk:"legends",q:"Name a Hall of Famer from the 17–0 1972 Dolphins",h:"Players and head coach of the 1972 team; Hall of Fame classes through 2026",f:"Center Jim Langer was cut by Cleveland in 1970 before becoming a Hall of Famer in Miami.",a:
+ "Don Shula|1|shula;Bob Griese|1|griese;Larry Csonka|1|csonka;Paul Warfield|2|warfield;Nick Buoniconti|2|buoniconti;Larry Little|3|little;*Jim Langer|3|langer"},
+{k:"stl70",pk:"legends",q:"Name a Hall of Famer who played for the 1970s Steelers champions",h:"Players on the Super Bowl IX, X, XIII or XIV teams (1974–1979 seasons); Hall of Fame classes through 2026, any category",f:"Tony Dungy won Super Bowl XIII as a Steelers defensive back and Super Bowl XLI as Colts head coach.",a:
+ "Terry Bradshaw|1|bradshaw;Franco Harris|1|franco,harris;Joe Greene|1|mean joe greene,mean joe,greene;Lynn Swann|1|swann;Jack Lambert|1|lambert;Mel Blount|2|blount;John Stallworth|2|stallworth;Jack Ham|2|ham;Mike Webster|2|webster,iron mike;Donnie Shell|3|shell;*Tony Dungy|5|dungy"},
+{k:"bears85",pk:"legends",q:"Name a Hall of Famer from the 1985 Bears",h:"Players and head coach of the Super Bowl XX champions; classes through 2026",f:"Left tackle Jim Covert was elected with the Hall of Fame’s Centennial Class of 2020.",a:
+ "Walter Payton|1|payton,sweetness;Mike Singletary|1|singletary;Mike Ditka|1|ditka;Richard Dent|2|dent;Dan Hampton|2|hampton,danimal;Steve McMichael|3|mcmichael,mongo;*Jim Covert|4|covert,jimbo covert"},
+{k:"hof2526",pk:"legends",q:"Name a Hall of Fame inductee from the Class of 2025 or 2026",h:"Pro Football Hall of Fame classes elected in 2025 and 2026",f:"Sterling Sharpe played just seven seasons, all with Green Bay, before a neck injury ended his career.",a:
+ "Drew Brees|1|brees;Larry Fitzgerald|1|fitzgerald,fitz;Luke Kuechly|1|kuechly;Adam Vinatieri|1|vinatieri;Antonio Gates|2|gates;Jared Allen|2;Roger Craig|3|craig;Eric Allen|4;*Sterling Sharpe|3|sharpe"},
+
+{k:"hei00",pk:"college",q:"Name a Heisman Trophy winner since 2000",h:"Winners 2000–2025",f:"Chris Weinke won the 2000 Heisman at age 28 after a minor-league baseball career with the Blue Jays.",a:
+ "Tim Tebow|1|tebow;Cam Newton|1|newton;Lamar Jackson|1|lamar,jackson;Joe Burrow|1|burrow;Baker Mayfield|1|baker,mayfield;Kyler Murray|1|kyler,murray;Johnny Manziel|1|manziel,johnny football;Reggie Bush|1|bush;Travis Hunter|1|hunter;Derrick Henry|1|henry;Caleb Williams|1|caleb,williams;Jayden Daniels|1|daniels;Bryce Young|1|bryce,young;Fernando Mendoza|1|mendoza;DeVonta Smith|2|devonta;Jameis Winston|2|jameis,winston;Robert Griffin III|2|rg3,rgiii,griffin;Marcus Mariota|2|mariota;Mark Ingram|2|mark ingram ii,ingram;Sam Bradford|2|bradford;Matt Leinart|2|leinart;Carson Palmer|2|palmer;Troy Smith|3;Eric Crouch|3|crouch;Jason White|4|white;*Chris Weinke|4|weinke"},
+{k:"heisch",pk:"college",q:"Name a school with two or more Heisman winners",h:"Heisman Trophies 1935–2025; Reggie Bush’s reinstated 2005 award counts",f:"Yale’s Larry Kelley (1936) and Clint Frank (1937) won the second and third Heismans ever awarded.",a:
+ "USC|1|southern cal,southern california,trojans;Ohio State|1|osu,buckeyes;Notre Dame|1|fighting irish,irish;Oklahoma|1|ou,sooners;Alabama|1|bama,crimson tide;Florida|2|gators;Florida State|2|fsu,seminoles;Michigan|2|wolverines;Auburn|2|war eagle;LSU|2|louisiana state;Nebraska|2|huskers,cornhuskers;Texas|2|longhorns;Georgia|2|uga;Miami|2|miami fl,hurricanes;Army|3|west point,black knights;Texas A&M|3|texas am,tamu,aggies;Colorado|3|buffaloes,buffs;Navy|3|midshipmen;Wisconsin|3|badgers;*Yale|5|yale bulldogs"},
+{k:"heinqb",pk:"college",q:"Name a non-quarterback who won the Heisman since 1980",h:"Winners 1980–2025 who were not quarterbacks",f:"Colorado’s Rashaan Salaam won in 1994 after rushing for 2,055 yards.",a:
+ "Barry Sanders|1|sanders,barry;Bo Jackson|1|bo,jackson;Herschel Walker|1|herschel,walker;Reggie Bush|1|bush;Derrick Henry|1|henry;Charles Woodson|1|woodson;Travis Hunter|1|hunter;Marcus Allen|1|allen;Desmond Howard|2|howard;Ricky Williams|2|ricky,williams;Eddie George|2;DeVonta Smith|2|devonta,smith;Ron Dayne|2|dayne;Tim Brown|2|brown;Mark Ingram|2|mark ingram ii,ingram;Mike Rozier|3|rozier;George Rogers|3|rogers;*Rashaan Salaam|4|salaam"},
+{k:"hei1",pk:"college",q:"Name a Heisman winner drafted No. 1 overall since 1970",h:"No. 1 picks of the 1970–2026 NFL drafts",f:"George Rogers went No. 1 to the Saints in 1981 and led the NFL in rushing as a rookie.",a:
+ "Joe Burrow|1|burrow;Cam Newton|1|newton;Baker Mayfield|1|baker,mayfield;Kyler Murray|1|kyler,murray;Caleb Williams|1|caleb,williams;Bryce Young|1|bryce,young;Fernando Mendoza|1|mendoza;Jameis Winston|1|jameis,winston;Sam Bradford|2|bradford;Carson Palmer|2|palmer;Bo Jackson|2|bo,jackson;Earl Campbell|2|campbell;Vinny Testaverde|2|testaverde,vinny;Jim Plunkett|3|plunkett;Billy Sims|3|sims;*George Rogers|4|rogers"},
+{k:"heiacad",pk:"college",q:"Name a Heisman winner from Army or Navy",h:"Service academy winners, 1935–2025",f:"Navy halfback Joe Bellino won the 1960 Heisman, three years before Roger Staubach won it for Navy.",a:
+ "Roger Staubach|1|staubach;Doc Blanchard|2|blanchard,mr inside;Glenn Davis|2|davis,mr outside;Pete Dawkins|3|dawkins;*Joe Bellino|3|bellino"},
+{k:"cfpch",pk:"college",q:"Name a College Football Playoff national champion",h:"CFP title game winners, 2014–2025 seasons",f:"Joe Burrow’s 2019 LSU team went 15–0 and beat defending champion Clemson 42–25 in the title game.",a:
+ "Alabama|1|bama,crimson tide;Georgia|1|uga,bulldogs;Ohio State|1|osu,buckeyes;Clemson|1|clemson tigers;Michigan|2|wolverines;Indiana|2|hoosiers,iu;*LSU|2|louisiana state"},
+{k:"cfpgm",pk:"college",q:"Name a school that played in a CFP national title game",h:"Winners or losers, 2014–2025 seasons",f:"TCU reached the 2022 season’s title game but lost 65–7 to Georgia, the most lopsided CFP final.",a:
+ "Alabama|1|bama,crimson tide;Clemson|1|clemson tigers;Ohio State|1|osu,buckeyes;Georgia|1|uga,bulldogs;LSU|2|louisiana state;Michigan|2|wolverines;Indiana|2|hoosiers,iu;Notre Dame|2|irish,fighting irish;Miami|2|miami fl,hurricanes;Oregon|3|ducks;Washington|3|huskies,udub;*TCU|4|horned frogs,texas christian"},
+{k:"cfpco",pk:"college",q:"Name a coach who won a CFP national title",h:"Head coaches of CFP champions, 2014–2025 seasons",f:"Ed Orgeron led LSU to a 15–0 title in 2019, his only national championship as a head coach.",a:
+ "Nick Saban|1|saban;Kirby Smart|1|smart;Dabo Swinney|1|dabo,swinney;Urban Meyer|1|meyer;Jim Harbaugh|1|harbaugh;Ryan Day|2|day;Curt Cignetti|2|cignetti;*Ed Orgeron|3|orgeron,coach o"},
+{k:"bcs",pk:"college",q:"Name a school that won the BCS title game",h:"BCS championship winners, 1998–2013 seasons; USC’s vacated 2004 win counts",f:"Tennessee beat Florida State 23–16 to win the first BCS title game, after the 1998 season.",a:
+ "Alabama|1|bama,crimson tide;Florida|1|gators;LSU|1|louisiana state;Florida State|1|fsu,seminoles;Texas|1|longhorns;Auburn|2|war eagle;Ohio State|2|osu,buckeyes;Miami|2|miami fl,hurricanes;USC|2|southern cal,trojans;Oklahoma|2|ou,sooners;*Tennessee|3|vols,volunteers"},
+{k:"aptit",pk:"college",q:"Name a school with four or more AP national titles",h:"AP poll national champions, 1936–2025 seasons",f:"Minnesota won the first AP national title in 1936 and added more in 1940, 1941 and 1960.",a:
+ "Alabama|1|bama,crimson tide;Notre Dame|1|irish,fighting irish;Ohio State|1|osu,buckeyes;Oklahoma|1|ou,sooners;USC|2|southern cal,trojans;Miami|2|miami fl,hurricanes;Nebraska|2|huskers,cornhuskers;*Minnesota|4|gophers,golden gophers"},
+{k:"rose",pk:"college",q:"Name a school that won the Rose Bowl since 2000",h:"Rose Bowl winners, January 2000–January 2026",f:"Michigan State beat Stanford 24–20 in the 2014 Rose Bowl, its first Rose Bowl win since 1988.",a:
+ "USC|1|southern cal,trojans;Ohio State|1|osu,buckeyes;Oregon|1|ducks;Texas|2|longhorns;Alabama|2|bama,crimson tide;Michigan|2|wolverines;Georgia|2|uga;Stanford|2|cardinal;Wisconsin|2|badgers;Penn State|2|psu,nittany lions;Indiana|2|hoosiers;Washington|3|huskies,udub;Oklahoma|3|sooners;TCU|3|horned frogs;Miami|3|miami fl,hurricanes;*Michigan State|4|msu,spartans"},
+{k:"b1g25",pk:"college",q:"Name a Big Ten football member in 2025",h:"The 18 Big Ten teams of the 2025 season",f:"Rutgers played Princeton in 1869 in what is considered the first college football game.",a:
+ "Ohio State|1|osu,buckeyes;Michigan|1|wolverines;Penn State|1|psu,nittany lions;Oregon|1|ducks;USC|1|southern cal,trojans;Wisconsin|1|badgers;Iowa|1|hawkeyes;Nebraska|1|huskers,cornhuskers;Michigan State|2|msu,spartans;UCLA|2|bruins;Washington|2|huskies,udub;Indiana|2|hoosiers;Minnesota|2|gophers;Illinois|2|illini,fighting illini;Purdue|2|boilermakers;Maryland|3|terps,terrapins;Northwestern|3|wildcats;*Rutgers|3|scarlet knights"},
+{k:"sec25",pk:"college",q:"Name an SEC football member in 2025",h:"The 16 SEC teams of the 2025 season",f:"Vanderbilt is the only private university in the SEC.",a:
+ "Alabama|1|bama,crimson tide;Georgia|1|uga;LSU|1|louisiana state;Texas|1|longhorns;Florida|1|gators;Tennessee|1|vols,volunteers;Auburn|1|war eagle;Texas A&M|1|texas am,tamu,aggies;Oklahoma|1|ou,sooners;Ole Miss|2|mississippi,rebels;Arkansas|2|razorbacks,hogs;South Carolina|2|gamecocks;Missouri|2|mizzou;Kentucky|2|wildcats;Mississippi State|3|miss state;*Vanderbilt|3|vandy,commodores"},
+{k:"b1225",pk:"college",q:"Name a Big 12 football member in 2025",h:"The 16 Big 12 teams of the 2025 season",f:"UCF joined the Big 12 in 2023 along with BYU, Cincinnati and Houston.",a:
+ "Texas Tech|1|red raiders,ttu;BYU|1|brigham young;Utah|1|utes;Colorado|1|buffaloes,buffs;Baylor|1|bears;TCU|1|horned frogs;Kansas State|1|k state;Oklahoma State|1|okie state,osu,cowboys;Iowa State|1|cyclones;Kansas|2|jayhawks;West Virginia|2|wvu,mountaineers;Arizona|2|arizona wildcats;Arizona State|2|asu,sun devils;Houston|2|houston cougars;Cincinnati|2|bearcats;*UCF|3|central florida,knights"},
+{k:"acc25",pk:"college",q:"Name an ACC football member in 2025",h:"The 17 ACC football teams of the 2025 season; Notre Dame was independent",f:"SMU joined the ACC in 2024 and reached the ACC title game in its first season.",a:
+ "Clemson|1|clemson tigers;Florida State|1|fsu,seminoles;Miami|1|miami fl,hurricanes;North Carolina|1|unc,tar heels;Duke|1|blue devils;Virginia Tech|1|hokies,vt;Louisville|1|cardinals;NC State|2|north carolina state,wolfpack;Pittsburgh|2|pitt,panthers;Syracuse|2|orange;Georgia Tech|2|yellow jackets,gt;Virginia|2|cavaliers,wahoos,uva;Wake Forest|2|demon deacons;Boston College|2|bc,eagles;Stanford|2|cardinal;California|3|cal,golden bears;*SMU|3|southern methodist,mustangs"},
+{k:"txfbs",pk:"college",q:"Name an FBS school in Texas",h:"Texas schools in the FBS during the 2025 season",f:"Sam Houston moved up to the FBS in 2023 and joined Conference USA.",a:
+ "Texas|1|longhorns,ut,ut austin;Texas A&M|1|texas am,tamu,aggies;Texas Tech|1|red raiders,ttu;Baylor|1|bears;TCU|1|horned frogs;SMU|2|mustangs,southern methodist;Houston|2|cougars;Rice|2|owls;North Texas|3|unt,mean green;UTSA|3|roadrunners,ut san antonio;UTEP|3|miners,ut el paso;Texas State|3|bobcats;*Sam Houston|4|sam houston state,bearkats"},
+
+{k:"fitz",pk:"journey",q:"Name an NFL team Ryan Fitzpatrick played for",h:"Regular-season or playoff games, 2005–2021",f:"Harvard grad Ryan Fitzpatrick began as a 2005 seventh-round pick of the St. Louis Rams.",a:
+ "Buffalo Bills|1|bills,buffalo;New York Jets|1|jets;Miami Dolphins|1|dolphins,miami;Tampa Bay Buccaneers|2|buccaneers,bucs,tampa bay;Washington Football Team|2|washington,commanders,washington commanders,redskins;Houston Texans|2|texans,houston;Tennessee Titans|2|titans,tennessee;Cincinnati Bengals|3|bengals,cincinnati;*St. Louis Rams|4|rams,los angeles rams,st louis"},
+{k:"mccown",pk:"journey",q:"Name an NFL team Josh McCown played for",h:"NFL regular-season or playoff games, 2002–2019",f:"With the 2006 Lions, McCown also lined up at wide receiver and caught two passes.",a:
+ "Chicago Bears|1|bears,chicago;Cleveland Browns|1|browns,cleveland;New York Jets|1|jets;Arizona Cardinals|1|cardinals,arizona;Tampa Bay Buccaneers|2|buccaneers,bucs,tampa bay;Oakland Raiders|2|raiders,oakland,las vegas raiders;Philadelphia Eagles|2|eagles,philadelphia;Carolina Panthers|3|panthers,carolina;*Detroit Lions|4|lions,detroit"},
+{k:"vinny",pk:"journey",q:"Name an NFL team Vinny Testaverde played for",h:"Regular-season or playoff games, 1987–2007",f:"Testaverde was 44 when his 21-season career ended with the 2007 Panthers.",a:
+ "New York Jets|1|jets;Tampa Bay Buccaneers|1|buccaneers,bucs,tampa bay;Cleveland Browns|2|browns,cleveland;Baltimore Ravens|2|ravens,baltimore;Dallas Cowboys|2|cowboys,dallas;New England Patriots|3|patriots,pats,new england;*Carolina Panthers|3|panthers,carolina"},
+{k:"apeters",pk:"journey",q:"Name an NFL team Adrian Peterson played for",h:"Regular-season or playoff games, 2007–2021",f:"Peterson’s last NFL game came with Seattle in 2021, his seventh team.",a:
+ "Minnesota Vikings|1|vikings,minnesota;Washington Redskins|2|washington,redskins,commanders,washington commanders;New Orleans Saints|2|saints,new orleans;Arizona Cardinals|2|cardinals,arizona;Detroit Lions|2|lions,detroit;Tennessee Titans|3|titans,tennessee;*Seattle Seahawks|4|seahawks,seattle"},
+{k:"favre",pk:"journey",q:"Name an NFL team Brett Favre played for",h:"Regular-season or playoff games, 1991–2010",f:"Favre’s first NFL pass, thrown for the 1991 Falcons, was intercepted by Washington’s Andre Collins.",a:
+ "Green Bay Packers|1|packers,green bay;Minnesota Vikings|1|vikings,minnesota;New York Jets|2|jets;*Atlanta Falcons|3|falcons,atlanta"},
+{k:"moss",pk:"journey",q:"Name an NFL team Randy Moss played for",h:"Regular-season or playoff games, 1998–2012",f:"Moss played for three teams in 2010: New England, Minnesota and Tennessee.",a:
+ "Minnesota Vikings|1|vikings,minnesota;New England Patriots|1|patriots,pats,new england;Oakland Raiders|1|raiders,oakland,las vegas raiders;San Francisco 49ers|2|49ers,niners,san francisco;*Tennessee Titans|3|titans,tennessee"},
+{k:"owens",pk:"journey",q:"Name an NFL team Terrell Owens played for",h:"NFL regular-season or playoff games, 1996–2010",f:"Owens teamed with Chad Ochocinco in 2010, his one season in Cincinnati.",a:
+ "San Francisco 49ers|1|49ers,niners,san francisco;Dallas Cowboys|1|cowboys,dallas;Philadelphia Eagles|1|eagles,philadelphia;Buffalo Bills|2|bills,buffalo;*Cincinnati Bengals|3|bengals,cincinnati"},
+{k:"gore",pk:"journey",q:"Name an NFL team Frank Gore played for",h:"Regular-season or playoff games, 2005–2020",f:"Gore spent his 16th and final season with the 2020 Jets and retired third in career rushing yards.",a:
+ "San Francisco 49ers|1|49ers,niners,san francisco;Indianapolis Colts|2|colts,indianapolis;Buffalo Bills|2|bills,buffalo;Miami Dolphins|2|dolphins,miami;*New York Jets|3|jets"},
+{k:"deion",pk:"journey",q:"Name an NFL or MLB team Deion Sanders played for",h:"Regular-season or postseason games in either league, 1989–2005",f:"Sanders joined baseball’s San Francisco Giants in 1995, months after winning Super Bowl XXIX with the 49ers.",a:
+ "Dallas Cowboys|1|cowboys,dallas;Atlanta Falcons|1|falcons;San Francisco 49ers|1|49ers,niners;Atlanta Braves|1|braves;Baltimore Ravens|2|ravens,baltimore;Washington Redskins|2|redskins,washington,commanders;New York Yankees|2|yankees;Cincinnati Reds|2|reds,cincinnati;*San Francisco Giants|3|sf giants"},
+{k:"bo",pk:"journey",q:"Name a pro team Bo Jackson played for",h:"NFL or MLB regular-season or postseason games, 1986–1994",f:"Bo Jackson’s final MLB season came with the 1994 California Angels.",a:
+ "Los Angeles Raiders|1|raiders,la raiders,oakland raiders,las vegas raiders;Kansas City Royals|1|royals,kansas city;Chicago White Sox|2|white sox;*California Angels|3|angels,anaheim angels,los angeles angels,la angels"}
+];
+const PACKS={
+  nfl:{n:"SUNDAYS",tag:"KICKOFF",d:"NFL champions, MVPs, drafts and records",go:"KICK IT OFF →"},
+  sb:{n:"THE BIG GAME",tag:"SUPER BOWL SUNDAY",d:"Super Bowl winners, MVPs and moments",go:"TAKE THE FIELD →"},
+  legends:{n:"CANTON",tag:"HALL OF FAME",d:"all-time greats, dynasties and the record book",go:"OPEN THE BUSTS →"},
+  college:{n:"SATURDAYS",tag:"COLLEGE FOOTBALL",d:"national champions, Heisman winners and bowl games",go:"RUN THROUGH THE BANNER →"},
+  journey:{n:"JOURNEYMEN",tag:"BAGS PACKED",d:"every team a star suited up for",go:"HIT THE ROAD →"}
+};
+
+const KNOWN_EXTRA="travis kelce|mike evans|davante adams|deandre hopkins|puka nacua|amon-ra st. brown|ceedee lamb|brock bowers|george kittle|mark andrews|jason witten|shannon sharpe|steve largent|don hutson|lance alworth|raymond berry|cris carter|andre reed|james lofton|michael irvin|terry mclaurin|dk metcalf|a.j. brown|a.j. green|keenan allen|kirk cousins|geno smith|derek carr|jordan love|daniel jones|tony romo|warren moon|randall cunningham|boomer esiason|ken anderson|fran tarkenton|dan fouts|sonny jurgensen|bobby layne|drew bledsoe|jeff george|doug flutie|ryan leaf|vince young|jerome bettis|tony dorsett|fred taylor|corey dillon|tiki barber|warrick dunn|clinton portis|steven jackson|marshawn lynch|le'veon bell|matt forte|frank gore|nick chubb|dalvin cook|aaron jones|joe mixon|bijan robinson|jahmyr gibbs|ashton jeanty|bruce smith|deacon jones|kevin greene|julius peppers|john randle|warren sapp|cortez kennedy|dick butkus|ray nitschke|junior seau|patrick willis|bobby wagner|fred warner|maxx crosby|chris jones|cameron jordan|deion sanders|champ bailey|darrelle revis|ty law|sean taylor|brian dawkins|jalen ramsey|richard sherman|earl thomas|justin tucker|morten andersen|gary anderson|harrison butker|kyle shanahan|dan campbell|sean mcdermott|marv levy|bud grant|dan reeves|ryan fitzpatrick|josh mccown|archie griffin|steve spurrier|ty detmer|andre ware|gino torretta|charlie ward|danny wuerffel|arch manning|shedeur sanders|jeremiah smith|bobby bowden|joe paterno|lincoln riley|mack brown|jimbo fisher|pottsville maroons|buffalo all-americans|toronto blue jays|new york mets|chicago cubs|boise state|tulane|memphis|air force|appalachian state|james madison|liberty|marshall|toledo|oregon state|washington state|south florida|florida atlantic|uconn|temple|tulsa|north dakota state|florida a&m|princeton|fresno state|san diego state|miami ohio|archie manning|jim thorpe|red grange|bronko nagurski|sid luckman";
+
+const PARTY={name:"FOURTH DOWN",sub:"pass the ball · beat the hidden clock",lives:4,mark:"●",go:"► KICKOFF ◄",miss:"incomplete",
+  intro:"One phone, 2–8 players. Name an answer and pass before the hidden clock runs out. Whoever's holding the ball burns a down. Use all four and you turn it over. Last one standing wins.",
+  lose:(n,k)=>`time! ${n} burns a down. ${4-k} left.`,out:n=>`turnover on downs. ${n} is out.`,win:"wins the game",last:"turned it over last."};
+</script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ROUND=25,WARM=3,U_PER_PT=100/700; // 700 points is a touchdown
+
+// tiers: 0 delay of game, 1 handoff … 6 hail mary (mirrors the six-step rarity ladder)
+const T=[
+ {n:"Delay of game",p:0,e:"⬛",fl:"Flag on the play. The clock beat you."},
+ {n:"Handoff",p:10,e:"⚪",fl:"The answer the whole stadium shouts."},
+ {n:"Flea flicker",p:15,e:"🟠",fl:"Felt tricky. The defense saw it coming."},
+ {n:"First down",p:30,e:"🟢",fl:"Moves the chains. Makes the highlights."},
+ {n:"Deep ball",p:60,e:"🔵",fl:"Over the top. Not many saw that."},
+ {n:"Touchdown",p:85,e:"🟣",fl:"Deep cut. The sideline is losing it."},
+ {n:"Hail Mary",p:100,e:"🌟",fl:""}];
+const SCOUT=[[0,150,1,"Flag Football","Two-hand touch. Run it back."],[151,250,3,"Friday Night Lights","Small-town hero. The tape holds up."],[251,350,4,"Walk-On","Grinding. Nearly at midfield."],[351,449,5,"Starter","Across midfield and driving. Scouts are watching."],[450,700,6,"Pro Bowl","The whole stadium knows your name."]];
+
+// 8×8 pixel icons per tier
+const ICONS=[
+ "##......|####....|######..|####....|##......|#.......|#.......|#.......",
+ "........|..####..|.######.|########|.######.|..####..|........|........",
+ "...##...|..#..#..|.#....#.|.#......|..#.....|...###..|.....#..|....#...",
+ "#.......|##......|###.....|####....|###.....|##......|#.......|........",
+ "......##|.....###|....#...|...#....|..#.....|.#......|#.......|........",
+ "#......#|#......#|.#.##.#.|..####..|...##...|...##...|..#..#..|.#....#.",
+ "#..#..#.|.#.#.#..|..###...|#######.|..###...|.#.#.#..|#..#..#.|........"];
+function icon(t,cls){const rows=ICONS[t].split("|");let r="";rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==="#")r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}));
+  return `<svg class="px ${cls||""}" viewBox="0 0 8 8" data-t="${t}" style="fill:var(--tc)" aria-hidden="true">${r}</svg>`}
+const BALLMAP="......|.BBBB.|BWBWBB|BBBBBB|.BBBB.|......",BPAL={B:"#8a4a22",W:"#f4f1e8"};function pixels(map,pal,s=1){let r="";map.split("|").forEach((row,y)=>[...row].forEach((c,x)=>{if(pal[c])r+=`<rect x="${x*s}" y="${y*s}" width="${s}" height="${s}" fill="${pal[c]}"/>`}));return r}
+
+// data
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/ø/g,"o").replace(/ß/g,"ss").replace(/&/g,"and").replace(/[^a-z0-9 ]/g," ").replace(/\b(fc|cf|the)\b/g," ").replace(/\s+/g," ").trim();
+const tierOf=(r,gem,clever)=>gem?6:clever?2:r<=1?1:r===2?3:r===3?4:5;
+const P=RAW.map(p=>({...p,a:p.a.split(";").map(s=>{let[n,r,al]=s.split("|");const gem=n[0]==="*",clever=n[0]==="~";if(gem||clever)n=n.slice(1);const t=tierOf(+r,gem,clever);
+  return{name:n,t,p:T[t].p,keys:[n,...(al?al.split(","):[])].map(norm).filter(Boolean)}})}));
+const byK=Object.fromEntries(P.map((p,i)=>[p.k,i]));
+
+// spelling help: edit distance where a swapped pair of letters counts once; gives up past `max`
+function lev(a,b,max=4){const n=a.length,m=b.length;if(Math.abs(n-m)>max)return max+1;
+  let p2=new Array(m+1).fill(0),p1=[...Array(m+1).keys()],c=new Array(m+1);
+  for(let i=1;i<=n;i++){c[0]=i;let lo=i;
+    for(let j=1;j<=m;j++){let v=Math.min(p1[j]+1,c[j-1]+1,p1[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])v=Math.min(v,p2[j-2]+1);c[j]=v;if(v<lo)lo=v}
+    if(lo>max)return max+1;const t=p2;p2=p1;p1=c;c=t}
+  return p1[m]}
+// sound-alike skeleton, so "Kryzewski" and "Krzyzewski" land next to each other
+function sk(s){s=s.replace(/[^a-z]/g,"").replace(/ph/g,"f").replace(/sch|sh/g,"s").replace(/ch|ck|c|q/g,"k").replace(/x/g,"ks").replace(/z/g,"s").replace(/y/g,"i").replace(/w/g,"v").replace(/h/g,"");
+  return s?(s[0]+s.slice(1).replace(/[aeiou]/g,"")).replace(/(.)\1+/g,"$1"):""}
+const tolFor=L=>L<=3?0:L<=5?1:L<=8?2:L<=12?3:4;
+P.forEach(p=>p.a.forEach(a=>a.kx=a.keys.map(k=>({k,ns:k.replace(/ /g,""),sk:sk(k),tk:k.split(" ")}))));
+// real names that aren't answers here should never be "corrected" into one that is
+const KNOWN=new Set([...P.flatMap(p=>p.a.flatMap(a=>a.keys)),...KNOWN_EXTRA.split("|").map(norm)]);
+const STOP=new Set("the new los angeles san saint city state university college of at and de la le el van der von north south east west team club".split(" "));
+// "Texas" is a school of its own, not shorthand for "Texas Western"
+const QUAL=/\b(state|tech|western|eastern|northern|southern|central|commonwealth|dominion|christian|west|a and m)\b/;
+// exact: counts. near: correction preview. vague: too generic. {}: not an answer.
+function match(p,guess){
+  const g=norm(guess);if(!g)return{};
+  const bag=s=>s.split(" ").sort().join(" "),gb=bag(g),gn=g.replace(/ /g,"");
+  for(const a of p.a)if(a.kx.some(x=>x.k===g||x.ns===gn||bag(x.k)===gb))return{exact:a};
+  const gt=g.split(" "),gs=sk(g),gk=KNOWN.has(g),gq=QUAL.test(g);
+  if(gt.every(w=>w.length<3||STOP.has(w)))return p.a.some(a=>a.kx.some(x=>x.tk.some(t=>gt.includes(t))))?{vague:true}:{};
+  const cand=[];
+  for(const a of p.a){let best=9,tokHit=false;
+    for(const x of a.kx){
+      const L=Math.max(gn.length,x.ns.length),tl=tolFor(L);
+      if(tl){const d=lev(gn,x.ns,tl);if(d<=tl)best=Math.min(best,d/L)}
+      if(gs.length>=2&&x.sk.length>=2&&gs[0]===x.sk[0]){const tol=x.sk.length<=3?0:x.sk.length<=6?1:2,ds=lev(gs,x.sk,tol);if(ds<=tol)best=Math.min(best,.12+ds/x.sk.length)}
+      if(gk&&!gq&&QUAL.test(x.k))continue;
+      if(gt.length===1&&x.tk.length>1)for(const t of x.tk){if(t.length<4||STOP.has(t))continue;
+        if(t===g){best=Math.min(best,.1);tokHit=true;continue}
+        const tt=tolFor(t.length),dt=lev(g,t,tt);if(tt&&dt<=tt)best=Math.min(best,.18+dt/t.length);
+        else if(g.length>=5&&g.length>=t.length*.5&&t.startsWith(g))best=Math.min(best,.3)}
+      if(g.length>=5&&gn.length>=x.ns.length*.5&&x.ns.startsWith(gn))best=Math.min(best,.25)}
+    if(best<.6)cand.push({a,s:best,tokHit})}
+  if(!cand.length||(gk&&!cand.some(c=>c.tokHit)))return{};
+  cand.sort((x,y)=>x.s-y.s||x.a.name.localeCompare(y.a.name));
+  const top=cand.filter(c=>c.s<=cand[0].s+.12);
+  return top.length>3?{vague:true}:{near:top.map(c=>c.a),conf:cand[0].s};
+}
+
+// days
+const EPOCH=Date.UTC(2026,10,1);
+const dayNum=()=>Math.max(1,Math.floor((Date.now()-EPOCH)/864e5)+1);
+const dayDate=n=>new Date(EPOCH+(n-1)*864e5).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"});
+function rng(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
+function shuffle(arr,r=Math.random){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const dailyOrder=n=>shuffle(P.map((_,i)=>i),rng(n*7919+13)).slice(0,7);
+
+// settings and saved runs (per-viewer conveniences)
+const SET=Object.assign({snd:true,low:false,cb:false,corr:true,clr:false},LS.get("hm1-set",{}));
+function applySet(){document.documentElement.classList.toggle("low",SET.low);document.documentElement.classList.toggle("cb",SET.cb);
+  $$(".sw").forEach(b=>{const on=!!SET[b.dataset.k];b.setAttribute("aria-checked",on);b.querySelector("i").textContent=on?"ON":"OFF"});
+  $("#snd").textContent=SET.snd?"♪":"×";$("#snd").setAttribute("aria-label",SET.snd?"Mute sound":"Turn sound on")}
+const RUNS=LS.get("hm1-runs",{});
+const saveRuns=()=>LS.set("hm1-runs",RUNS);
+function streak(){let s=0;for(let d=dayNum();d>=1;d--){if(RUNS["d"+d]?.done)s++;else if(d===dayNum())continue;else break}return s}
+
+// sound: tiny synth, starts only after a tap
+const SFX={ctx:null,
+  ok(){if(!SET.snd)return null;try{this.ctx=this.ctx||new (window.AudioContext||window.webkitAudioContext)();if(this.ctx.state==="suspended")this.ctx.resume();return this.ctx}catch(e){return null}},
+  tone(f,d,type="sine",v=.12,f2,at=0){const c=this.ok();if(!c)return;const t=c.currentTime+at,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(c.destination);o.start(t);o.stop(t+d+.02)},
+  noise(d,v=.15,freq=900,at=0){const c=this.ok();if(!c)return;const t=c.currentTime+at,n=c.sampleRate*d,b=c.createBuffer(1,n,c.sampleRate),ch=b.getChannelData(0);for(let i=0;i<n;i++)ch[i]=(Math.random()*2-1)*(1-i/n);
+    const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=b;f.type="bandpass";f.frequency.value=freq;f.Q.value=.7;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+d*.3);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f).connect(g).connect(c.destination);s.start(t)},
+  shot(){this.tone(95,.14,"sine",.35,50);this.noise(.06,.1,1400)},
+  start(){this.whistle(1)},  whistle(n=1){for(let i=0;i<n;i++){this.tone(2900,.22,"square",.035,2700,i*.3);this.tone(2950,.22,"sine",.05,2800,i*.3)}},
+  horn(d=.8){const c=this.ok();if(!c)return;const t=c.currentTime,g=c.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.06,t+.02);g.gain.setValueAtTime(.06,t+d*.85);g.gain.exponentialRampToValueAtTime(.0001,t+d);g.connect(c.destination);
+    [[220,"square",.6],[233,"sawtooth",.5],[440,"square",.2]].forEach(([f,type,v])=>{const o=c.createOscillator(),gg=c.createGain();o.type=type;o.frequency.value=f;gg.gain.value=v;o.connect(gg).connect(g);o.start(t);o.stop(t+d+.02)})},
+  tick(){this.tone(1300,.05,"square",.03)},
+  buzz(){this.tone(150,.2,"sawtooth",.07,110)},
+  blip(){this.tone(880,.08,"triangle",.07,1320)},
+  cheer(t){if(t<3)return;this.noise(.6+t*.25,.05+t*.03,700);if(t>=5)this.noise(1.6,.12,1100,.1);if(t===6)[523,659,784,1047].forEach((f,i)=>this.tone(f,.3,"triangle",.08,0,.15+i*.09))}
+};
+</script>
+<script>
+// ---------- the stadium scene ----------
+const NS="http://www.w3.org/2000/svg";
+const LANDMARKS=[[0,"your goal line"],[20,"your 20"],[40,"your 40"],[50,"MIDFIELD"],[60,"THEIR 40"],[80,"THE RED ZONE"],[100,"THE END ZONE · a perfect game is a touchdown"]];
+const PLAYER={A:"....HHHH....|...HHHHHH...|...HHHHSMM..|...HHHHSM...|.....SS.....|..JJJJJJJJ..|.JJJJNNJJJJ.|.SJJJNNJJJS.|.S.JJJJJJ.S.|...WWWWWW...|...WWWWWW...|...WW..WW...|...KK..KK...|...KK..KK...|..BBB..BBB..",
+  B:"....HHHH....|...HHHHHH...|...HHHHSMM..|...HHHHSM...|.....SS.....|..JJJJJJJJ..|.JJJJNNJJJJ.|.SJJJNNJJJS.|.S.JJJJJJ.S.|...WWWWWW...|...WWWWWW...|...WW..WW...|..KK....KK..|.KK......KK.|BB........BB"};
+const PAL={H:"#1d3b8a",M:"#c9ccd3",S:"#a8704a",J:"#1d3b8a",N:"#fff6e0",W:"#d4b04c",K:"#1d3b8a",B:"#141414"};
+const DIG={0:"###|#.#|#.#|#.#|###",1:".#.|##.|.#.|.#.|###",2:"###|..#|###|#..|###",3:"###|..#|.##|..#|###",4:"#.#|#.#|###|..#|..#",5:"###|#..|###|..#|###"};
+const SC={cam:0,px:0,K:.42,
+  layout(){const W=innerWidth,H=innerHeight;Object.assign(this,{W,H,S:Math.max(11,Math.min(30,W/34)),D:H*.32/53.33,PB:H*.9,OX:W*.16,ps:Math.max(3,Math.min(5,Math.round(H/180)))})},
+  proj(x,y){return[x*this.S+y*this.D*this.K+this.OX,this.PB-y*this.D]},
+  el(tag,attrs,parent,html){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(html)e.innerHTML=html;if(parent)parent.appendChild(e);return e},
+  build(){
+    this.layout();const{W,H,S,D,PB,ps}=this,svg=$("#scn"),el=this.el.bind(this),pts=a=>a.map(p=>p.map(v=>v.toFixed(1)).join(",")).join(" ");
+    svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.innerHTML="";
+    el("defs",{},svg,`<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05070c"/><stop offset=".6" stop-color="#0c1422"/><stop offset="1" stop-color="#16233a"/></linearGradient>
+      <radialGradient id="glow"><stop offset="0" stop-color="#ffe9b8" stop-opacity=".55"/><stop offset="1" stop-color="#ffe9b8" stop-opacity="0"/></radialGradient>
+      <pattern id="crowdA" width="12" height="11" patternUnits="userSpaceOnUse">${pixels("....|.ab.|.cc.",{a:"#3d4a66",b:"#5d6c8f",c:"#262f45"},2)}<g transform="translate(6,5)">${pixels(".dd|.ee",{d:"#8a5a2e",e:"#40301c"},2)}</g></pattern>
+      <pattern id="crowdB" width="17" height="14" patternUnits="userSpaceOnUse"><g transform="translate(3,2)">${pixels("ff|gg",{f:"#7a2a2e",g:"#3a1a1c"},2)}</g><g transform="translate(11,8)">${pixels("hh|ii",{h:"#2e5a8a",i:"#16304a"},2)}</g></pattern>`);
+    el("rect",{width:W,height:H,fill:"url(#sky)"},svg);
+    const stars=el("g",{},svg);for(let i=0;i<40;i++)el("rect",{x:Math.random()*W|0,y:Math.random()*H*.12|0,width:2,height:2,fill:"#b9c6dd",class:"star",style:`animation-delay:${(Math.random()*3).toFixed(2)}s`},stars);
+    const sTop=H*.3,sBot=PB-53.33*D-H*.03;
+    el("rect",{x:0,y:sTop-12,width:W,height:12,fill:"#0a0f1a"},svg);
+    el("rect",{x:0,y:sTop,width:W,height:sBot-sTop,fill:"#0d1320"},svg);
+    this.crowdA=el("rect",{x:-40,y:sTop+10,width:W+80,height:sBot-sTop-16,fill:"url(#crowdA)",class:"crowd",opacity:.5},svg);
+    this.crowdB=el("rect",{x:-40,y:sTop+10,width:W+80,height:sBot-sTop-16,fill:"url(#crowdB)",opacity:.45},svg);
+    for(let y=sTop+18;y<sBot;y+=22)el("rect",{x:0,y,width:W,height:2,fill:"#070b14",opacity:.7},svg);
+    this.flashG=el("g",{},svg);
+    this.towers=el("g",{},svg);
+    for(let x=W*.03;x<W+1400;x+=Math.max(330,W*.88)){const tw=el("g",{},this.towers),nc=W<600?4:6;
+      el("rect",{x:x-3,y:sTop-H*.07,width:6,height:H*.09,fill:"#1a2436"},tw);
+      el("circle",{cx:x,cy:sTop-H*.085,r:H*.09,fill:"url(#glow)",class:"lamp"},tw);
+      const lg=el("g",{class:"lamp"},tw);for(let r=0;r<3;r++)for(let c=0;c<nc;c++)el("rect",{x:x-nc*4.5+c*9,y:sTop-H*.11+r*8,width:7,height:6,fill:r===1?"#fff0c8":"#ffd88a"},lg)}
+    // the field, in yards: 100 between the goal lines, 10-yard end zones, 53.3 wide
+    this.world=el("g",{},svg);const w=this.world;
+    el("rect",{x:-18,y:-7,width:136,height:68,fill:"#14502a"},w);
+    for(let i=0;i<20;i++)el("rect",{x:i*5,y:0,width:5,height:53.33,fill:i%2?"#1d6a38":"#237a42"},w);
+    el("rect",{x:-10,y:0,width:10,height:53.33,fill:"#1f3a7a"},w);el("rect",{x:100,y:0,width:10,height:53.33,fill:"#7a1f2e"},w);
+    const L=el("g",{class:"ln",fill:"none",stroke:"#f4f6f0","stroke-opacity":".9","stroke-width":2.5},w);
+    el("rect",{x:-10,y:0,width:120,height:53.33},L);
+    let yl="";for(let x=0;x<=100;x+=5)yl+=`M${x} 0V53.33`;el("path",{d:yl},L);
+    let hs="";for(let x=1;x<100;x++){if(x%5)hs+=`M${x} .7V1.4M${x} 23.1V23.8M${x} 29.5V30.2M${x} 51.9V52.6`}
+    el("path",{d:hs,"stroke-width":1.5},L);
+    const num=(n,x,y,flip)=>{const s=.45,w2=(7*s)/2,g=el("g",{transform:flip?`translate(${x+w2},${y}) scale(${-s},${s})`:`translate(${x-w2},${y}) scale(${s},${-s})`,fill:"#f4f6f0",opacity:.85},w);
+      String(n).split("").forEach((d,i)=>g.insertAdjacentHTML("beforeend",pixels(DIG[d],{"#":"#f4f6f0"}).replace(/<rect /g,`<rect transform="translate(${i*4},0)" `)))};
+    [10,20,30,40,50,60,70,80,90].forEach(x=>{const n=x>50?100-x:x;num(n,x,11.5,false);num(n,x,44.1,false)});
+    el("ellipse",{cx:50,cy:26.67,rx:4.6,ry:2.6,fill:"#8a4a22",stroke:"#f4f6f0","stroke-width":2,"vector-effect":"non-scaling-stroke"},w);
+    el("path",{d:"M47.6 26.67H52.4M48.4 25.9V27.4M49.2 25.9V27.4M50 25.9V27.4M50.8 25.9V27.4M51.6 25.9V27.4",stroke:"#f4f6f0","stroke-width":1.5,"vector-effect":"non-scaling-stroke",fill:"none"},w);
+    // upright layer: boards, goalposts, captions, markers, player
+    this.up=el("g",{},svg);const up=this.up,bh=Math.max(10,H*.024),[bx0,by]=this.proj(-16,57),[bx1]=this.proj(116,57);
+    el("rect",{x:bx0,y:by-bh,width:bx1-bx0,height:bh,fill:"#111827"},up);
+    for(let x=bx0+10,i=0;x<bx1;x+=220,i++)el("text",{x,y:by-bh*.22,fill:i%2?"#4fb3ff":"#ffcc33","font-family":"VT323,monospace","font-size":bh*.9},up).textContent=i%2?"FIND THE HAIL MARY":"◆ HAIL MARY ◆";
+    const gp=(x,dir)=>{const V=S*.5,P=(xx,yy,h=0)=>{const[a,b]=this.proj(xx,yy);return[a,b-h*V]},g=el("g",{stroke:"#ffcc33","stroke-width":Math.max(3,ps*.8),fill:"none","stroke-linecap":"square"},up);
+      el("polyline",{points:pts([P(x-dir*2,26.67),P(x-dir*2,26.67,3.33),P(x,26.67,3.33)])},g);
+      el("polyline",{points:pts([P(x,23.58,13),P(x,23.58,3.33),P(x,29.75,3.33),P(x,29.75,13)])},g);
+      el("rect",{x:P(x-dir*2,26.67)[0]-ps,y:P(x-dir*2,26.67,1.2)[1],width:ps*2,height:1.2*V,fill:"#1f3a7a",stroke:"none"},g)};
+    gp(-10,1);gp(110,-1);
+    const cap=el("g",{"font-family":"VT323,monospace","font-size":Math.max(15,Math.min(19,H*.022))},up);
+    LANDMARKS.forEach(([x,t],i)=>{const[X,Y]=this.proj(x,57),yy=Y-bh-10-(i%2)*20,big=t===t.toUpperCase();
+      el("line",{x1:X,y1:yy+4,x2:X,y2:Y-bh,stroke:big?"#4fb3ff":"#a2adbb","stroke-dasharray":"2 3",opacity:.8},cap);
+      const tx=el("text",{x:X+4,y:yy,fill:big?"#4fb3ff":"#c9d2de",stroke:"#090b10","stroke-width":3,style:"paint-order:stroke"},cap);tx.textContent="── "+t});
+    this.mk=el("g",{},up);this.lab=el("g",{},up);
+    this.pl=el("g",{id:"pl"},up);
+    el("ellipse",{cx:6*ps,cy:15*ps,rx:5*ps,ry:ps*1.2,fill:"#000",opacity:.35},this.pl);
+    el("g",{class:"fA"},this.pl,pixels(PLAYER.A,PAL,ps));el("g",{class:"fB"},this.pl,pixels(PLAYER.B,PAL,ps));
+    el("g",{transform:`translate(${9.4*ps},${6*ps})`},this.pl,pixels(BALLMAP,BPAL,ps*.6));
+    this.place(this.px);this.setCam(this.cam);
+  },
+  clock(){},
+  camFor(px){return px+(26.67*this.D*this.K+this.OX-this.W*.42)/this.S},
+  setCam(x){this.cam=x;const{S,D,K,OX,PB}=this;this.world.setAttribute("transform",`matrix(${S},0,${K*D},${-D},${OX-x*S},${PB})`);
+    this.up.setAttribute("transform",`translate(${-x*S},0)`);this.towers.setAttribute("transform",`translate(${-x*S*.35},0)`);
+    const o=(-x*S*.5)%24;this.crowdA.setAttribute("x",-40+o);this.crowdB.setAttribute("x",-40+(-x*S*.42)%34)},
+  place(px){this.px=px;const[X,Y]=this.proj(px,26.67);this.pl.setAttribute("transform",`translate(${X-6*this.ps},${Y-15*this.ps})`)},
+  screen(x){const[X,Y]=this.proj(x,26.67);return[X-this.cam*this.S,Y]},
+  async runTo(x1,ms){const x0=this.px;this.pl.classList.add("run");
+    await tween(ms,k=>{const x=x0+(x1-x0)*k;this.place(x);this.setCam(this.camFor(x))},e=>e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2);this.pl.classList.remove("run")},
+  markers(m0){this.mk.innerHTML="";[1,2,3,4,5,6].forEach((t,i)=>{const x=m0+T[t].p*U_PER_PT,[X,Y]=this.proj(x,26.67),top=Y-18*this.ps-18-(i%3)*22;
+    const g=this.el("g",{class:"mk","data-t":t,style:`animation-delay:${i*.05}s`},this.mk);
+    this.el("line",{x1:X,y1:Y,x2:X,y2:top,style:"stroke:var(--tc)","stroke-dasharray":"3 3","stroke-width":1.5},g);
+    this.el("text",{x:X+4,y:top+4,style:"fill:var(--tc);paint-order:stroke",stroke:"#090b10","stroke-width":3,"font-family":"VT323,monospace","font-size":16},g).textContent=`${T[t].n.toUpperCase()} · ${T[t].p}`})},
+  clearMarkers(){this.mk.innerHTML="";this.lab.innerHTML=""},
+  async fly(text,x0,x1,ms){this.lab.innerHTML="";const g=this.el("g",{},this.lab),t=this.el("text",{"font-family":"VT323,monospace","font-size":20,fill:"#fff","text-anchor":"middle"},g);t.textContent=`“${text.toUpperCase()}”`;
+    const w=t.getComputedTextLength?t.getComputedTextLength()+16:text.length*10+20,r=this.el("rect",{x:-w/2,y:-17,width:w,height:24,fill:"#141a24",stroke:"#f5f3ec","stroke-width":1.5},g);g.insertBefore(r,t);t.setAttribute("y",1);
+    await tween(ms,k=>{const[X,Y]=this.proj(x0+(x1-x0)*k,26.67);g.setAttribute("transform",`translate(${X},${Y-18*this.ps-6-Math.sin(k*Math.PI)*26})`);if(Math.random()<.5&&k<1)sparkle(this.screen(x0+(x1-x0)*k))},e=>1-Math.pow(1-e,3))},
+  crowdFlash(n){if(SET.low||RM)return;for(let i=0;i<n;i++){const r=this.el("rect",{x:Math.random()*this.W,y:this.H*.15+Math.random()*(this.PB-53.33*this.D-this.H*.2),width:3,height:3,fill:"#fff"},this.flashG);setTimeout(()=>r.remove(),180+Math.random()*500)}}
+};
+function tween(ms,step,ease=e=>e){return new Promise(res=>{if(RM||ms<=0){step(1);return res()}const t0=performance.now(),f=now=>{const k=Math.min(1,(now-t0)/ms);step(ease(k));if(k<1)requestAnimationFrame(f);else res()};requestAnimationFrame(f)})}
+
+// pixel sparks and confetti on one canvas
+const fx=$("#fx"),fctx=fx.getContext("2d"),parts=[];let fxOn=false,fxLast=0;
+function burst(x,y,colors,n,o={}){if(RM||SET.low&&n>20)n=Math.min(n,12);if(RM)return;const now=performance.now();
+  for(let i=0;i<n;i++){const a=(o.angle??-Math.PI/2)+(Math.random()-.5)*(o.spread??Math.PI*.9),v=(o.speed??8)*(.4+Math.random()*.8);
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:o.gravity??.3,s:(o.size??4)*(.6+Math.random()*.7),c:colors[i%colors.length],born:now,life:(o.life??1500)*(.7+Math.random()*.5)})}
+  if(!fxOn){fxOn=true;fx.hidden=false;const d=Math.min(2,devicePixelRatio||1);fx.width=innerWidth*d;fx.height=innerHeight*d;fctx.setTransform(d,0,0,d,0,0);fxLast=now;requestAnimationFrame(fxTick)}}
+function sparkle([x,y]){burst(x,y-30,["#ffd166","#fff","#4fb3ff"],1,{speed:2,spread:6.3,gravity:.05,life:500,size:3})}
+function fxTick(now){const dt=Math.min(3,Math.max(0,(now-fxLast)/16.67));fxLast=now;fctx.clearRect(0,0,innerWidth,innerHeight);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i],age=now-p.born;if(age>p.life||p.y>innerHeight+20){parts.splice(i,1);continue}
+    p.vy+=p.g*dt;p.vx*=Math.pow(.985,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;fctx.globalAlpha=Math.max(0,Math.min(1,(1-age/p.life)*1.5));fctx.fillStyle=p.c;fctx.fillRect(Math.round(p.x),Math.round(p.y),Math.round(p.s),Math.round(p.s))}
+  if(parts.length)requestAnimationFrame(fxTick);else{fxOn=false;fctx.clearRect(0,0,innerWidth,innerHeight);fx.hidden=true}}
+</script>
+<script>
+// ---------- a match: seven rounds ----------
+let G=LS.get("hm1-cur",null),CLK=null,RES=null;
+const saveG=()=>LS.set("hm1-cur",G);
+const sleep=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
+const total=res=>res.reduce((s,r)=>s+r.p,0);
+
+function startGame(mode,opt={}){
+  let order,key,title,day=null;
+  if(mode==="daily"||mode==="archive"){day=opt.day??dayNum();order=dailyOrder(day);key="d"+day;title="GAME #"+day;
+    if(RUNS[key]?.done){RES=RUNS[key];return go("results")}}
+  else if(mode==="unl"){order=shuffle(P.map((_,i)=>i)).slice(0,7);key="u";title="UNLIMITED"}
+  else{order=shuffle(P.map((_,i)=>i).filter(i=>P[i].pk===opt.pk)).slice(0,7);key="p:"+opt.pk;title=PACKS[opt.pk].n}
+  G={mode,key,day,title,pk:opt.pk||null,order,i:0,res:[],m:0,late:mode==="archive"&&day!==dayNum()};
+  saveG();SC.place(0);SC.setCam(SC.camFor(0));go("play")}
+
+function enterGame(){if(!G)return go("");SC.place(G.m);SC.setCam(SC.camFor(G.m));hud();
+  if(G.res.length>G.i){showReveal(G.res[G.i],false)}else startRound()}
+
+function hud(){$("#hm").textContent=G.m.toFixed(1);$("#hs").textContent=total(G.res);
+  $("#sq").innerHTML=G.order.map((_,k)=>{const r=G.res[k];return r?`<i data-t="${r.t}"></i>`:`<i class="${k===G.i?"cur":""}"></i>`}).join("");
+  $("#hr").textContent=G.i>=G.order.length?"FULL TIME":`ROUND ${G.i+1} OF ${G.order.length}`}
+
+function startRound(){
+  const p=P[G.order[G.i]],ai=$("#ai");stopClock();G.pend=null;
+  $("#rv").hidden=true;$("#next").hidden=true;$("#bar").hidden=false;$("#pp").hidden=false;SC.clearMarkers();
+  $("#ppr").textContent=`ROUND ${G.i+1} OF ${G.order.length}`;$("#ppq").textContent=p.q;
+  $(".pph").textContent=`${p.h} · ► rarer answers gain more yards ►`;
+  const pp=$("#pp");pp.style.animation="none";void pp.offsetWidth;pp.style.animation="";
+  ai.value="";ai.disabled=true;$("#shoot").disabled=true;setDial(1,ROUND);hud();
+  let n=RM?0:WARM;const fb=$("#fb");
+  const warm=()=>{if(!G||$("#game").classList.contains("on")===false)return;
+    if(n>0){fb.innerHTML=`<div class="warm">warming up · kickoff in ${n}</div>`;n--;setTimeout(warm,1000)}
+    else{fb.innerHTML="";SFX.start();ai.disabled=false;$("#shoot").disabled=false;ai.focus({preventScroll:true});startClock()}};
+  warm()}
+
+function setDial(f,secs){const d=$("#dial");d.style.setProperty("--f",f);$("#tb").style.setProperty("--f",f);$("#dn").textContent=Math.max(0,Math.ceil(secs));d.classList.toggle("low",secs<=5);SC.clock(Math.max(0,Math.ceil(secs)))}
+function startClock(){const t0=performance.now();let last=ROUND;
+  CLK=setInterval(()=>{const left=ROUND-(performance.now()-t0)/1000;setDial(Math.max(0,left/ROUND),left);
+    const s=Math.ceil(left);if(s<last&&s<=5&&s>0){SFX.tick()}last=s;if(left<=0)timeout()},100)}
+function stopClock(){clearInterval(CLK);CLK=null}
+
+$("#ai").addEventListener("input",()=>{if(G)G.pend=null;const fb=$("#fb");if(fb.querySelector(".fix,.nope"))fb.innerHTML=""});
+$("#af").addEventListener("submit",e=>{e.preventDefault();if(!G||!CLK)return;
+  const ai=$("#ai"),v=ai.value.trim(),p=P[G.order[G.i]],fb=$("#fb");
+  if(!v)return nudge(ai);
+  if(G.pend&&G.pend.v===v)return lockIn(G.pend.a,v);
+  const m=match(p,v);
+  if(m.exact)return lockIn(m.exact,v);
+  if(m.near){
+    if(!SET.corr&&m.near.length===1)return lockIn(m.near[0],m.near[0].name);
+    SFX.blip();
+    if(m.near.length===1){const a=m.near[0];ai.value=a.name;G.pend={v:a.name,a};
+      fb.innerHTML=`<div class="fix">“${esc(v)}” → <span class="to">“${esc(a.name)}”</span><small>submit again to confirm · or edit</small></div>`}
+    else{fb.innerHTML=`<div class="fix">“${esc(v)}” could be…<div class="opts">${m.near.map((a,i)=>`<button type="button" data-i="${i}">${esc(a.name)}</button>`).join("")}</div><small>tap one to confirm · or edit</small></div>`;
+      fb.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{const a=m.near[+b.dataset.i];ai.value=a.name;lockIn(a,a.name)})}
+    return}
+  SFX.buzz();fb.innerHTML=`<div class="nope">“${esc(v)}”: ${m.vague?"too vague. add more of the name":"incomplete. not on the list"}</div>`;
+  if(SET.clr)ai.value="";else ai.select();nudge(ai)});
+function nudge(el){if(RM)return;el.animate([{transform:"none"},{transform:"translateX(-6px)"},{transform:"translateX(5px)"},{transform:"none"}],{duration:280})}
+
+async function lockIn(a,guess){if(!G||!CLK)return;stopClock();
+  const p=P[G.order[G.i]],x0=G.m,x1=G.m+a.p*U_PER_PT;
+  $("#ai").disabled=true;$("#shoot").disabled=true;$("#fb").innerHTML="";
+  G.res.push({q:p.k,a:a.name,g:guess,t:a.t,p:a.p});G.m=x1;G.pend=null;saveG();
+  SFX.shot();SC.markers(x0);
+  await Promise.all([SC.fly(a.name,x0,x1,1300),sleep(260).then(()=>SC.runTo(x1,1100))]);
+  SFX.cheer(a.t);celebrate(a.t,x1);
+  await sleep(250);SC.clearMarkers();showReveal(G.res[G.i],true)}
+function timeout(){if(!G)return;stopClock();const p=P[G.order[G.i]];
+  G.res.push({q:p.k,a:null,g:$("#ai").value.trim(),t:0,p:0});G.pend=null;saveG();
+  $("#ai").disabled=true;$("#shoot").disabled=true;$("#fb").innerHTML="";SFX.horn(.7);showReveal(G.res[G.i],true)}
+function celebrate(t,x){const[X,Y]=SC.screen(x);
+  if(t>=4)burst(X,Y-40,["#ffd166","#4fb3ff","#fff","#ff5a3c"],t*14,{speed:7});
+  if(t>=5)SC.crowdFlash(t===6?60:25);
+  if(t===6){burst(innerWidth*.15,innerHeight*.5,["#ffd166","#fff"],40,{angle:-Math.PI/3,speed:11});burst(innerWidth*.85,innerHeight*.5,["#ffd166","#fff"],40,{angle:-2*Math.PI/3,speed:11})}}
+
+function showReveal(r,fresh){const rv=$("#rv"),last=G.i>=G.order.length-1;
+  rv.dataset.t=r.t;$("#pp").hidden=true;$("#bar").hidden=true;
+  rv.innerHTML=`${icon(r.t,"ico")}<h2>${T[r.t].n}</h2><div class="ans">${r.a?`“${esc(r.a)}”`:"—"}</div>
+    <div class="pts"><b>+${r.p} PTS</b>${r.p?` · ${(r.p*U_PER_PT).toFixed(1)} yd downfield`:""}</div><p>${esc(r.t===6?P[byK[r.q]].f:T[r.t].fl)}</p>`;
+  rv.hidden=false;if(!fresh)rv.style.animation="none";else rv.style.animation="";
+  hud();$("#hr").textContent=last?"FULL TIME":`ROUND ${G.i+2} OF ${G.order.length}`;
+  const nx=$("#next");nx.textContent=last?"FINAL GUN":"NEXT SNAP →";nx.hidden=false;setTimeout(()=>nx.isConnected&&!nx.hidden&&nx.focus({preventScroll:true}),400)}
+$("#next").onclick=()=>{if(!G)return;G.i++;saveG();if(G.i>=G.order.length)return finish();startRound()};
+
+function finish(){SFX.horn(1.3);
+  const rec={key:G.key,mode:G.mode,day:G.day,pk:G.pk,title:G.title,order:G.order,res:G.res,score:total(G.res),m:G.m,done:true,late:G.late,at:Date.now()};
+  if(G.day&&!RUNS[G.key]?.done){RUNS[G.key]=rec;saveRuns();logRun(rec)}
+  const hist=LS.get("hm1-hist",[]);hist.push(rec.score);LS.set("hm1-hist",hist.slice(-300));
+  LS.set("hm1-last",rec);G=null;LS.set("hm1-cur",null);RES=rec;RES.fresh=true;go("results")}
+
+// ---------- shared stats (optional: db capability) ----------
+let DB=null,UID=null;
+(async()=>{try{if(!window.claude?.use)return;const[db,user]=await Promise.all([claude.use("db"),claude.use("user")]);if(db&&user){const id=await user.id();if(id){DB=db;UID=id}}}catch(e){}})();
+async function logRun(rec){if(!DB||rec.late)return;try{const ref=DB.doc("runs/"+UID),s=await ref.get(),d=s.exists?{...(s.data().d||{})}:{};if(d[rec.day]!=null)return;d[rec.day]=rec.score;await ref.set({d})}catch(e){}}
+async function dayScores(day){if(!DB)return null;try{const q=await DB.collection("runs").get();return q.docs.map(s=>s.data()?.d?.[day]).filter(v=>typeof v==="number")}catch(e){return null}}
+
+// ---------- full time ----------
+function showResults(rec){const s=rec.score,fresh=rec.fresh;rec.fresh=false;
+  const band=SCOUT.find(b=>s>=b[0]&&s<=b[1])||SCOUT[0];
+  const tag=rec.day?`GAME #${rec.day}`:rec.title;
+  $("#rcol").innerHTML=`<div class="rhead"><span class="logo sm">HAIL MARY</span><span>${esc(tag)} — FINAL</span></div>
+  <div class="big"><b id="rs">${fresh&&!RM?0:s}</b><span>/700</span><em>${rec.m.toFixed(1)} yd</em></div>
+  <svg class="chart" id="dist" viewBox="0 0 560 130" role="img" aria-label="Score distribution"></svg><div class="cy" id="dtxt">&nbsp;</div>
+  <h3 class="sec">THE DRIVE CHART <small>FARTHER = RARER</small></h3>${runChart(rec)}
+  <h3 class="sec">THE SCOUTING REPORT</h3><div class="scout">${SCOUT.map(b=>`<div class="${b===band?"me":""}" data-t="${b[2]}">${icon(b[2])}<b>${b[0]}–${b[1]===700?"700":b[1]}</b><span><b>${b[3]}.</b> ${b[4]}</span></div>`).join("")}</div>
+  <div class="copyrow"><button class="cta pink" id="copy">COPY RESULT</button></div><div class="cy" id="cmsg" aria-live="polite"></div>
+  <h3 class="sec">THE GAME BOOK <small>TAP A ROUND FOR EVERY ANSWER</small></h3><div class="box">${rec.res.map((r,i)=>{const p=P[byK[r.q]];
+    return `<button class="brow" data-t="${r.t}" data-i="${i}" aria-expanded="false"><span class="dim">${i+1}</span>${icon(r.t)}<span><small>${esc(p.q)}</small><span class="a">${r.a?esc(r.a):"—"}</span></span><span class="p">${r.p}</span><span class="dim">+</span></button>
+    <ul class="all" hidden>${[...p.a].sort((x,y)=>y.p-x.p||x.name.localeCompare(y.name)).map(a=>`<li data-t="${a.t}" class="${a.name===r.a?"me":""}">${icon(a.t)}<span>${esc(a.name)}${a.name===r.a?"<em>YOU</em>":""}</span><b>+${a.p}</b></li>`).join("")}</ul>`}).join("")}</div>
+  <div class="btnrow">${rec.mode==="unl"?`<button class="btn2" data-go="unlimited">PLAY AGAIN ↻</button>`:rec.mode==="pack"?`<button class="btn2" data-pack="${rec.pk}">PLAY AGAIN ↻</button>`:`<button class="btn2" data-go="unlimited">UNLIMITED ∞</button>`}
+    <button class="btn2" data-go="archive">ARCHIVE ⟲</button><button class="btn2" data-go="packs">THEMED PACKS →</button><button class="btn2" data-go="">TODAY'S GAME →</button></div>`;
+  $("#results").scrollTop=0;
+  if(fresh&&!RM)tween(1100,k=>$("#rs").textContent=Math.round(s*k),e=>1-Math.pow(1-e,3));
+  $$("#rcol .brow").forEach(b=>b.onclick=()=>{const ul=b.nextElementSibling,open=ul.hidden;ul.hidden=!open;b.setAttribute("aria-expanded",open);b.lastElementChild.textContent=open?"–":"+"});
+  $("#copy").onclick=()=>{const head=`Hail Mary 🏈 ${rec.day?"#"+rec.day:rec.mode==="unl"?"∞":rec.title}`,txt=`${head}\n${s} · ${rec.m.toFixed(1)} yd\n\n${rec.res.map(r=>T[r.t].e).join("")}`,msg=$("#cmsg");
+    const fall=()=>{msg.textContent="Couldn't reach the clipboard. Here it is: "+txt.replace(/\n+/g," ")};
+    try{navigator.clipboard.writeText(txt).then(()=>{msg.textContent="COPIED. PASTE IT IN THE GROUP CHAT."},fall)}catch(e){fall()}};
+  drawDist(rec);
+  if(fresh&&s>=350)setTimeout(()=>burst(innerWidth/2,innerHeight*.25,["#ffd166","#4fb3ff","#ff5a3c","#fff"],90,{spread:Math.PI*1.2,speed:11}),600)}
+
+function runChart(rec){const n=rec.res.length,w=560,h=210,x0=74,dx=(w-x0-20)/Math.max(1,n-1);
+  let g=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Yards gained per round">`;
+  ["snap", "3.6 yd", "7.1 yd", "10.7 yd", "14.3 yd"].forEach((l,i)=>{const y=18+i*40;g+=`<line x1="${x0-10}" x2="${w}" y1="${y}" y2="${y}" stroke="#34404f" stroke-dasharray="2 4"/><text x="0" y="${y+5}" fill="#a2adbb" font-family="VT323,monospace" font-size="16">${l}</text>`});
+  rec.res.forEach((r,i)=>{const x=x0+i*dx,y=18+160*(r.p/100);
+    g+=`<line x1="${x}" x2="${x}" y1="18" y2="${y}" style="stroke:var(--t${r.t})" stroke-width="2"/><g transform="translate(${x-8},${y-6}) scale(2)" style="fill:var(--t${r.t})">${ICONS[r.t].split("|").map((row,yy)=>[...row].map((c,xx)=>c==="#"?`<rect x="${xx}" y="${yy}" width="1" height="1"/>`:"").join("")).join("")}</g>
+    <text x="${x}" y="${h-2}" text-anchor="middle" fill="#a2adbb" font-family="VT323,monospace" font-size="16">${i+1}</text>`});
+  return g+"</svg>"}
+
+async function drawDist(rec){const svg=$("#dist"),txt=$("#dtxt");if(!svg)return;
+  let vals=null,label="";
+  if(rec.day&&!rec.late){vals=await dayScores(rec.day);label=`GAME #${rec.day}'S`}
+  let mine=rec.score;
+  if(!vals||vals.length<2){const h=LS.get("hm1-hist",[]);if(h.length>=2){vals=h;label="YOUR"}else vals=null}
+  const X=v=>20+520*(v/700);
+  let g=`<line x1="20" x2="540" y1="104" y2="104" stroke="#34404f"/>`;
+  for(let v=0;v<=700;v+=100)g+=`<text x="${X(v)}" y="124" text-anchor="middle" fill="#a2adbb" font-family="VT323,monospace" font-size="15">${v}</text>`;
+  if(vals){const bins=Array(29).fill(0);vals.forEach(v=>bins[Math.min(28,Math.round(v/25))]++);
+    const sm=bins.map((_,i)=>[-2,-1,0,1,2].reduce((s,o)=>s+(bins[i+o]||0)*[1,4,6,4,1][o+2],0)),mx=Math.max(...sm,1);
+    const pts=sm.map((c,i)=>`${X(i*25)},${104-80*c/mx}`).join(" ");
+    g+=`<polygon points="20,104 ${pts} 540,104" fill="rgba(79,179,255,.22)" stroke="#4fb3ff" stroke-width="2"/>`;
+    const below=vals.filter(v=>v<mine).length,others=vals.length-1;
+    txt.textContent=label==="YOUR"?`BETTER THAN ${Math.round(100*below/Math.max(1,others))}% OF YOUR ${vals.length} RUNS`:`BETTER THAN ${Math.round(100*below/Math.max(1,others))}% OF ${label} ${vals.length} FIRST RUNS`}
+  else txt.textContent=rec.day&&DB?`FIRST RUN LOGGED FOR GAME #${rec.day}`:"YOUR FIRST RUN. PLAY MORE TO SEE THE CURVE.";
+  g+=`<line x1="${X(mine)}" x2="${X(mine)}" y1="14" y2="104" stroke="#ff5a3c" stroke-width="2"/><rect x="${X(mine)-4}" y="10" width="8" height="8" fill="#ff5a3c"/><text x="${X(mine)}" y="124" text-anchor="middle" fill="#ff5a3c" font-family="VT323,monospace" font-size="15" style="paint-order:stroke" stroke="#090b10" stroke-width="4">YOU</text>`;
+  svg.innerHTML=g}
+</script>
+<script>
+// ---------- screens and routing ----------
+const SCREENS=["home","game","results","page"];
+function show(id){SCREENS.forEach(s=>$("#"+s).classList.toggle("on",s===id))}
+function go(h){h=h||"";if(location.hash.slice(1)===h)route();else location.hash=h}
+function route(){closeModals();stopClock();clearTimeout(KU.fuse);clearInterval(KU.speed);const h=location.hash.slice(1);
+  if(h==="play"){if(G){show("game");enterGame()}else go("");return}
+  if(h==="results"){RES=RES||LS.get("hm1-last",null);if(!RES)return go("");show("results");showResults(RES);return}
+  if(h==="unlimited"){startGame("unl");return}
+  if(["archive","packs","stats","faq","party"].includes(h)){show("page");$("#page").scrollTop=0;PAGES[h]();return}
+  show("home");renderHome()}
+function renderHome(){const d=dayNum(),rec=RUNS["d"+d];
+  $("#mdinfo").textContent=`GAME #${d} · STREAK ${streak()}`;
+  $("#kick").textContent=G&&G.day===d&&G.mode==="daily"?"► RESUME GAME ◄":rec?.done?"► TODAY'S RESULT ◄":"► KICKOFF ◄";
+  SC.place(0);SC.setCam(SC.camFor(0)+(innerWidth>700?innerWidth*.17/SC.S:0));SC.clock(24)}
+$("#kick").onclick=()=>{SFX.ok();const d=dayNum();
+  if(G&&G.mode==="daily"&&G.day===d)return go("play");
+  if(RUNS["d"+d]?.done){RES=RUNS["d"+d];return go("results")}
+  startGame("daily")};
+
+// modals
+function openModal(id){closeModals();const m=$("#"+id);m.hidden=false;
+  if(id==="menu"){const h=location.hash.slice(1)||"home";$$("#menu .tile").forEach(t=>t.classList.toggle("cur",(t.dataset.go||"")===(h==="home"?"home":h)||(h==="play"&&t.dataset.go==="home")))}
+  m.querySelector("button")?.focus()}
+function closeModals(){$$(".modal").forEach(m=>m.hidden=true)}
+$("#mb").onclick=()=>openModal("menu");$("#gear").onclick=()=>openModal("set");
+$("#snd").onclick=()=>{SET.snd=!SET.snd;LS.set("hm1-set",SET);applySet();if(SET.snd)SFX.blip()};
+$$(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModals()}));
+addEventListener("keydown",e=>{if(e.key==="Escape")closeModals()});
+$$(".sw").forEach(b=>b.onclick=()=>{SET[b.dataset.k]=!SET[b.dataset.k];LS.set("hm1-set",SET);applySet()});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-go],[data-pack],[data-arch],[data-act],[data-close]");if(!b)return;
+  if(b.hasAttribute("data-close"))return closeModals();
+  if(b.dataset.act==="settings")return openModal("set");
+  SFX.ok();
+  if(b.dataset.pack)return startGame("pack",{pk:b.dataset.pack});
+  if(b.dataset.arch){const k=+b.dataset.arch,rec=RUNS["d"+k];if(rec?.done){RES=rec;return go("results")}return startGame(k===dayNum()?"daily":"archive",{day:k})}
+  const g=b.dataset.go;if(g==="unlimited")return startGame("unl");go(g==="home"?"":g)});
+
+// ---------- pages ----------
+const head=(title,sub)=>`<div class="ph"><div class="logo">${title}</div><p>${sub}</p></div>`;
+function banner(kind){const sky={mlb:["#06120c","#14382a"],october:["#1a0a06","#5a2410"],nfl:["#070a12","#16233a"],sb:["#0c0a1a","#2a1a3e"],college:["#0a0f22","#24301a"],nhl:["#050a14","#14243a"],cup:["#0a0e1a","#1c2a44"],legends:["#120a26","#2a1340"],journey:["#08121f","#1c2a40"],world:["#06102a","#0d2a52"],soon:["#0e0a18","#1c1428"]}[kind]||["#0e0a18","#1c1428"];
+  let s=`<svg viewBox="0 0 560 118" preserveAspectRatio="xMidYMid slice" class="px" aria-hidden="true"><defs><linearGradient id="bg-${kind}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient></defs><rect width="560" height="118" fill="url(#bg-${kind})"/>`;
+  for(let i=0;i<26;i++)s+=`<rect x="${(i*97)%560}" y="${(i*37)%54}" width="2" height="2" fill="#d8e2f0" opacity=".5"/>`;
+  const at=(x,y,svg)=>svg.replace(/<rect /g,`<rect transform="translate(${x},${y})" `);
+  const crowd=(y,cols)=>{let r=`<rect y="${y}" width="560" height="24" fill="#10141f"/>`;for(let x=4;x<560;x+=9)r+=`<rect x="${x}" y="${y+4+(x%3)*5}" width="4" height="4" fill="${cols[x%3]}"/>`;return r};
+  const grass=y=>{let r=`<rect y="${y}" width="560" height="${118-y}" fill="#1d6a38"/>`;for(let x=0;x<560;x+=70)r+=`<rect x="${x}" y="${y}" width="35" height="${118-y}" fill="#237a42"/>`;return r};
+  const arc=(x0,x1,top,c)=>{let r="";for(let i=0;i<9;i++){const t=i/8;r+=`<rect x="${Math.round(x0+(x1-x0)*t)}" y="${Math.round(top+60-Math.sin(t*Math.PI)*52)}" width="3" height="3" fill="${c}" opacity="${(.3+i*.07).toFixed(2)}"/>`}return r};
+  const conf=()=>{let r="";for(let i=0;i<70;i++)r+=`<rect x="${(i*53)%560}" y="${(i*29)%100+4}" width="${3+i%3}" height="3" fill="${["#ffd166","#ff5a3c","#4fb3ff","#5fd38d","#f4f1e8"][i%5]}" opacity=".85"/>`;return r};
+  if(kind==="mlb"){s+=crowd(52,["#3a5a4e","#8a2a2a","#d8d2c0"])+`<rect y="76" width="560" height="12" fill="#1d5a36"/><rect y="76" width="560" height="2" fill="#f5c542"/>`+grass(88)+arc(120,400,14,"#f4f1e8")+at(404,22,pixels(BALLMAP,BPAL,4))}
+  if(kind==="october"){for(let x=0;x<560;x+=56)s+=`<path d="M${x} 0a28 18 0 0 0 56 0z" fill="#c8102e"/><path d="M${x+6} 0a22 12 0 0 0 44 0z" fill="#f4f1e8"/><path d="M${x+12} 0a16 7 0 0 0 32 0z" fill="#1d3b8a"/>`;
+    s+=crowd(56,["#ff8a3a","#f4f1e8","#c8102e"])+grass(80)+`<path d="M280 98l40-14 40 14-40 14z" fill="#b9784a"/><rect x="316" y="95" width="8" height="6" fill="#f4f1e8"/>`}
+  if(kind==="nfl"){s+=crowd(54,["#3d4a66","#7a2a2e","#d4b04c"])+grass(78);for(let x=20;x<560;x+=46)s+=`<rect x="${x}" y="78" width="2" height="40" fill="#f4f6f0" opacity=".8"/>`;
+    s+=`<path d="M500 78v-22M486 56h28M486 56v-40M514 56v-40" stroke="#ffcc33" stroke-width="4" fill="none"/>`+arc(140,470,8,"#ffcc33")+at(250,28,pixels(BALLMAP,BPAL,5))}
+  if(kind==="sb"){s+=conf()+`<rect x="226" y="28" width="108" height="50" fill="#141a24" stroke="#ffd166" stroke-width="2"/><text x="280" y="62" text-anchor="middle" fill="#ffd166" font-family="VT323,monospace" font-size="30">FINAL</text>`}
+  if(kind==="college"){s+=crowd(52,["#c8102e","#f4f1e8","#1d3b8a"])+grass(78);[[70,"#c8102e"],[120,"#1d3b8a"],[440,"#d4b04c"],[490,"#1f6a3a"]].forEach(([x,c])=>s+=`<path d="M${x} 20h40l-40 16z" fill="${c}"/><rect x="${x-2}" y="20" width="2" height="54" fill="#d8e2f0"/>`);
+    s+=`<path d="M280 78v-22M262 56h36M262 56v-44M298 56v-44" stroke="#ffcc33" stroke-width="4" fill="none"/>`}
+  if(kind==="nhl"){s+=crowd(44,["#3a4a6e","#8a2a36","#d8dde6"])+`<rect y="68" width="560" height="22" fill="rgba(200,230,255,.12)"/><rect y="90" width="560" height="12" fill="#eef2f6"/><rect y="99" width="560" height="3" fill="#f2c230"/><rect y="102" width="560" height="16" fill="#e9f3fb"/><rect x="180" y="102" width="6" height="16" fill="#1f5fbf"/><rect x="380" y="102" width="6" height="16" fill="#1f5fbf"/><rect x="278" y="102" width="5" height="16" fill="#c8102e"/>`+at(300,105,pixels(BALLMAP,BPAL,2))}
+  if(kind==="cup"){s+=conf()+pixels("..##########..|.############.|.############.|..##########..|...########...|.....####.....|......##......|......##......|.....####.....|....######....|...########...|..##########..",{"#":"#c6cfda"},6).replace(/<rect /g,`<rect transform="translate(238,14)" `)}
+  if(kind==="legends"){s+=`<rect y="10" width="560" height="4" fill="#2a2140"/>`;
+    [["'93","#7a1f3d"],["99","#1f3a7a"],["'61","#4a2a7a"],["4","#6e4a14"],["'27","#7a1f3d"],["12","#1f3a7a"],["'26","#4a2a7a"]].forEach(([t,c],i)=>{const x=34+i*74;
+      s+=`<rect x="${x+19}" y="14" width="2" height="8" fill="#2a2140"/><path d="M${x} 22h40v52l-20 14l-20-14z" fill="${c}" stroke="#ffd166" stroke-width="2"/><text x="${x+20}" y="58" text-anchor="middle" fill="#ffd166" font-family="VT323,monospace" font-size="24">${t}</text>`})}
+  if(kind==="journey"){s+=`<rect x="20" y="18" width="520" height="4" fill="#7d8aa8"/>`;
+    const tee="###..###|########|########|.######.|.##NN##.|.##NN##.|.######.|.######.";
+    ["#c8102e","#1d3b8a","#ffcc33","#1f6a3a","#7a3aa8","#ff8f2e","#e8e2f0"].forEach((c,i)=>{const x=36+i*72;s+=`<path d="M${x+19} 22v-6h4" stroke="#7d8aa8" stroke-width="2" fill="none"/>`+at(x,26,pixels(tee,{"#":c,N:i===6?"#141a24":"#f4f6f8"},5))});
+    s+=`<rect y="104" width="560" height="14" fill="#141c2e"/><rect x="0" y="110" width="560" height="2" fill="#ffd166" opacity=".5"/>`}
+  if(kind==="world"){s+=`<circle cx="280" cy="64" r="44" fill="#0b3a6e" stroke="#5ad1ff" stroke-width="2"/><ellipse cx="280" cy="64" rx="18" ry="44" fill="none" stroke="#5ad1ff" opacity=".6"/><line x1="236" y1="64" x2="324" y2="64" stroke="#5ad1ff" opacity=".6"/><line x1="242" y1="42" x2="318" y2="42" stroke="#5ad1ff" opacity=".4"/><line x1="242" y1="86" x2="318" y2="86" stroke="#5ad1ff" opacity=".4"/>`;
+    [[60,"#ff4a3d"],[110,"#ffd166"],[430,"#5fd38d"],[480,"#4fb3ff"]].forEach(([x,c])=>s+=`<rect x="${x}" y="34" width="2" height="60" fill="#a2adbb"/><rect x="${x+2}" y="34" width="28" height="18" fill="${c}"/>`)}
+  if(kind==="soon"){s+=at(244,26,pixels(BALLMAP,BPAL,8))+`<text x="372" y="80" font-family="VT323,monospace" font-size="56" fill="#a2adbb">?</text>`}
+  return s+"</svg>"}
+const PAGES={
+  archive(){const d=dayNum();let h=head("ARCHIVE","every game, replayable");
+    for(let k=d;k>=1;k--){const r=RUNS["d"+k];h+=`<div class="arow"><span>GAME #${k}<small>${dayDate(k)}${k===d?" · TODAY":""}${r?.late?" · REPLAYED LATE":""}</small></span><b>${r?r.score:"—"}</b><button class="btn2" data-arch="${k}">${r?"VIEW":"PLAY"} ▸</button></div>`}
+    $("#pg").innerHTML=h+`<p class="dim" style="font-size:16px;margin-top:16px">Games you play late show in your archive but don't count towards your streak.</p>`},
+  packs(){let h=head("THEMED PACKS","beyond the daily game");
+    for(const k in PACKS){const pk=PACKS[k],n=P.filter(p=>p.pk===k).length;h+=`<button class="pack" data-pack="${k}">${banner(k)}<div><span class="eyebrow">${pk.tag}</span><h4>${pk.n}</h4><p>${n} prompts · 7 rounds a game · ${pk.d}</p><span class="go">${pk.go}</span></div></button>`}
+    $("#pg").innerHTML=h+`<div class="pack soon">${banner("soon")}<div><span class="eyebrow" style="color:var(--dim)">COMING SOON</span><h4>THE CFL</h4><p>Three downs and a 110-yard field are being scouted…</p></div></div>`},
+  stats(){const runs=Object.values(RUNS).filter(r=>r.done),picks=runs.flatMap(r=>r.res),best=runs.reduce((m,r)=>Math.max(m,r.score),0),avg=runs.length?Math.round(runs.reduce((s,r)=>s+r.score,0)/runs.length):0;
+    let bs=0,c=0;for(let k=1;k<=dayNum();k++){if(RUNS["d"+k]?.done&&!RUNS["d"+k].late){c++;bs=Math.max(bs,c)}else c=0}
+    const cnt=[0,1,2,3,4,5,6].map(t=>picks.filter(p=>p.t===t).length),mx=Math.max(1,...cnt);
+    $("#pg").innerHTML=head("MY HAIL MARY","your record on this device")+`<div class="stats">
+      <div class="stat"><b>${runs.length}</b><small>PLAYED</small></div><div class="stat"><b>${streak()}</b><small>STREAK</small></div><div class="stat"><b>${bs}</b><small>BEST STREAK</small></div>
+      <div class="stat"><b>${best}</b><small>BEST SCORE</small></div><div class="stat"><b>${avg}</b><small>AVERAGE</small></div><div class="stat"><b>${cnt[6]}</b><small>HAIL MARYS</small></div></div>
+      <h3 class="sec">YOUR FINISHES</h3><div class="tdist">${[6,5,4,3,2,1,0].map(t=>`<div data-t="${t}">${icon(t)}<span>${T[t].n.toUpperCase()}</span><i style="width:${100*cnt[t]/mx}%"></i><span>${cnt[t]}</span></div>`).join("")}</div>
+      ${runs.length?"":`<p class="dim" style="margin-top:18px">No games yet. Your first finish shows up here.</p>`}
+      <div class="btnrow"><button class="btn2" data-go="archive">ARCHIVE ⟲</button><button class="btn2" data-go="">TODAY'S GAME →</button></div>`},
+  faq(){const qa=[["HOW ARE THE ANSWER SETS MADE?","From public football records: champions lists, award histories, draft results and official stats, cleaned into one list per prompt. Each prompt says which years it covers."],
+    ["HOW IS RARITY DECIDED?","By hand. Each answer is rated on how often fans are likely to name it. It's an estimate, not live data from other players."],
+    ["WHAT\'S A FLEA FLICKER?","The go-to \"clever\" pick that isn\'t actually that obscure. It feels tricky, but the whole defense saw it coming, so it only scores 15."],
+    ["WHAT\'S A HAIL MARY?","Every prompt hides one. It isn\'t always the rarest answer; it\'s the one that\'s most satisfying to land, and it comes with a bit of trivia."],
+    ["WHY WAS MY ANSWER INCOMPLETE?","It isn\'t on the list for that prompt, or it falls outside the years the prompt covers. You can keep throwing until the play clock runs out."],
+    ["WHY DID AUTOCORRECT PICK SOMETHING ELSE?","Answers have nicknames and aliases, so a near-miss can land on one you didn't expect. You always confirm before it counts, or switch corrections off in settings."],
+    ["DOES ANYTHING COST MONEY?","No. Unlimited, the archive and every pack are free."],
+    ["WHERE IS MY PROGRESS SAVED?","On this device, in your browser. Where shared stats are switched on, your first run each game day also joins that day's curve."],
+    ["IS THIS KRILLION?","No. Hail Mary is an unofficial game inspired by Krillion's daily format. It isn't affiliated with Krillion, the NFL, the NCAA or any team."]];
+    $("#pg").innerHTML=head("FAQ","the small print")+`<div class="faq">${qa.map(([q,a])=>`<h4>${q}</h4><p>${a}</p>`).join("")}</div><div class="btnrow"><button class="btn2" data-go="">BACK TO THE FIELD</button></div>`},
+  party(){KU.setup()}};
+
+// ---------- party mode: pass-and-play ----------
+const KU={players:LS.get("hm1-ku",["PLAYER 1","PLAYER 2"]),
+  setup(){clearTimeout(this.fuse);clearInterval(this.speed);
+    $("#pg").innerHTML=head(PARTY.name,PARTY.sub)+`<p style="font-size:19px;text-align:center;margin:0 0 18px">${PARTY.intro}</p>
+    <div class="sect">WHO'S PLAYING</div><div id="kul">${this.players.map((n,i)=>`<div class="field"><input id="kp${i}" value="${esc(n)}" maxlength="14" aria-label="Player ${i+1} name" data-i="${i}">${this.players.length>2?`<button data-rm="${i}" aria-label="Remove player">×</button>`:""}</div>`).join("")}</div>
+    ${this.players.length<8?`<button class="btn2" id="kuadd" style="width:100%">+ ADD PLAYER</button>`:""}
+    <button class="cta" id="kugo" style="margin-top:14px">${PARTY.go}</button>`;
+    $$("#kul input").forEach(inp=>inp.oninput=()=>{this.players[+inp.dataset.i]=inp.value.toUpperCase();LS.set("hm1-ku",this.players)});
+    $$("#kul [data-rm]").forEach(b=>b.onclick=()=>{this.players.splice(+b.dataset.rm,1);LS.set("hm1-ku",this.players);this.setup()});
+    $("#kuadd")&&($("#kuadd").onclick=()=>{this.players.push("PLAYER "+(this.players.length+1));LS.set("hm1-ku",this.players);this.setup()});
+    $("#kugo").onclick=()=>{SFX.ok();this.names=this.players.map((n,i)=>n.trim()||"PLAYER "+(i+1));this.lt=this.names.map(()=>0);this.cur=0;this.round=0;this.next()}},
+  alive(i){return this.lt[i]<PARTY.lives},
+  next(){this.round++;const pool=P.filter(p=>p.a.length>=12&&p.k!==this.k);this.k=pool[Math.floor(Math.random()*pool.length)].k;this.used=[];this.t0=performance.now();
+    this.len=12000+Math.random()*16000;clearTimeout(this.fuse);this.fuse=setTimeout(()=>this.drop(),this.len);
+    clearInterval(this.speed);this.speed=setInterval(()=>{const k=Math.min(1,(performance.now()-this.t0)/28000);$(".kball")?.style.setProperty("--kt",(.62-.36*k).toFixed(2)+"s")},500);
+    SFX.start();this.draw()},
+  draw(msg=""){const p=P[byK[this.k]],left=this.names.filter((_,i)=>this.alive(i)).length;
+    $("#pg").innerHTML=head(PARTY.name,`round ${this.round} · ${left} still in`)+`<div class="eyebrow">THE PROMPT</div><div class="pq">${esc(p.q)}</div><div class="dim" style="font-size:16px">${esc(p.h)}</div>
+    <div class="ku"><svg class="kball px" viewBox="0 0 6 6">${pixels(BALLMAP,BPAL)}</svg><div class="who">${esc(this.names[this.cur])}</div></div>
+    <div class="fb">${msg}</div><form class="af" id="kf" autocomplete="off"><input id="ki" placeholder="name one, then pass" aria-label="Your answer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"><button class="shoot">PASS</button></form>
+    <div class="sect" style="margin-top:18px">ON THE BOARD</div><div class="chips">${this.used.map(a=>`<span class="chip" data-t="${a.t}" style="border-color:var(--tc)">${esc(a.name)}</span>`).join("")||`<span class="dim" style="font-size:16px">nothing yet</span>`}</div>
+    <div class="sect" style="margin-top:14px">PLAYERS</div><div class="chips">${this.names.map((n,i)=>`<span class="chip ${!this.alive(i)?"out":i===this.cur?"on":""}">${esc(n)}${this.lt[i]&&this.alive(i)?`<b class="hl">${PARTY.mark.repeat(this.lt[i])}</b>`:""}</span>`).join("")}</div>`;
+    $("#ki").focus({preventScroll:true});
+    $("#kf").onsubmit=e=>{e.preventDefault();const v=$("#ki").value.trim();if(!v)return;const m=match(p,v);let a=m.exact||(m.near&&m.near.length===1&&m.conf<=.3?m.near[0]:null);
+      if(!a){SFX.buzz();return this.draw(`<div class="nope">“${esc(v)}”: ${m.near?"which one? add more":m.vague?"too vague":PARTY.miss}. keep it moving!</div>`)}
+      if(this.used.includes(a)){SFX.buzz();return this.draw(`<div class="nope">${esc(a.name)} is already on the board. try another!</div>`)}
+      this.used.push(a);SFX.shot();do{this.cur=(this.cur+1)%this.names.length}while(!this.alive(this.cur));
+      this.draw(a.name!==v&&!m.exact?`<div class="warm">corrected to ${esc(a.name)}</div>`:"")}},
+  drop(){clearInterval(this.speed);const b=$(".kball");if(!b)return;b.classList.add("drop");SFX.horn(.7);SFX.buzz();
+    const out=this.cur;this.lt[out]++;const gone=!this.alive(out),left=this.names.map((_,i)=>this.alive(i)?i:-1).filter(i=>i>=0);
+    $("#ki").disabled=true;
+    setTimeout(()=>{if(left.length===1){burst(innerWidth/2,innerHeight*.35,["#ffd166",getComputedStyle(document.documentElement).getPropertyValue("--blue").trim()||"#fff","#fff"],90,{spread:Math.PI*1.2,speed:11});SFX.cheer(6);
+        $("#pg").innerHTML=head(PARTY.name,"final")+`<div class="rv" data-t="6" style="position:static;transform:none;margin:0 auto">${icon(6,"ico")}<h2>${esc(this.names[left[0]])}</h2><div class="ans">${PARTY.win}</div><p>${esc(this.names[out])} ${PARTY.last}</p></div><div class="btnrow"><button class="cta" id="kuagain" style="max-width:320px">► RUN IT BACK ◄</button></div>`;
+        $("#kuagain").onclick=()=>this.setup()}
+      else{const f=$("#pg .fb");f.innerHTML=`<div class="nope">${gone?PARTY.out(esc(this.names[out])):PARTY.lose(esc(this.names[out]),this.lt[out])}</div>`;
+        const btn=document.createElement("button");btn.className="cta";btn.style.marginTop="12px";btn.textContent="► NEXT ROUND ◄";btn.onclick=()=>{do{this.cur=(this.cur+1)%this.names.length}while(!this.alive(this.cur));this.next()};$("#kf").replaceWith(btn);btn.focus()}},900)}
+};
+
+// ---------- boot ----------
+$("#partyball").innerHTML=`<g transform="translate(1,1)">${pixels(BALLMAP,BPAL)}</g>`;
+applySet();SC.build();
+let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{SC.build();if(!location.hash.slice(1))renderHome();else SC.setCam(SC.camFor(SC.px))},150)});
+addEventListener("pointerdown",()=>SFX.ok(),{once:true});
+addEventListener("hashchange",route);
+route();
+</script>
+</body>
+</html>
