@@ -1,0 +1,1083 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Buzzer: a daily basketball rarity game. Seven prompts, 24 seconds each. The rarer your answer, the farther you drive.">
+<meta name="theme-color" content="#0b0814">
+<meta property="og:title" content="Buzzer">
+<meta property="og:description" content="The daily basketball deep cut. Seven prompts, a 24-second shot clock. Find the buzzer-beater.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6' shape-rendering='crispEdges'%3E%3Crect width='6' height='6' fill='%230b0814'/%3E%3Cpath d='M1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM0 1h1v1h-1zM2 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM0 2h1v1h-1zM1 2h1v1h-1zM2 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM0 4h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM1 5h1v1h-1zM2 5h1v1h-1zM4 5h1v1h-1z' fill='%23ff8a2a'/%3E%3Cpath d='M1 1h1v1h-1z' fill='%23ffc285'/%3E%3Cpath d='M3 1h1v1h-1zM3 2h1v1h-1zM0 3h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM3 4h1v1h-1zM3 5h1v1h-1z' fill='%233a1d0e'/%3E%3C/svg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Buzzer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Layout: a full-bleed pixel arena (SVG) sits behind every screen: rafters, crowd and a hardwood court the player drives up. A centred CRT-style UI column swaps over it. Single dark look by design. */
+:root{
+  --bg:#0b0814; --panel:#1a1228; --panel2:#21172f; --edge:#3b2b55; --text:#fff3e3; --dim:#a898c2;
+  --blue:#47c2ff; --hot:#ff4d5e; --orange:#ff8f2e; --gold:#ffd166; --red:#ff5d6c;
+  --t0:#5a4d70; --t1:#bfb2d4; --t2:#ff9a3c; --t3:#5fd38d; --t4:#47c2ff; --t5:#c08cff; --t6:#ffd166;
+  --pix:"Press Start 2P","VT323",ui-monospace,monospace; --mono:"VT323",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html.cb{--dim:#cfc2e6; --t1:#ffffff; --t2:#e69f00; --t3:#2fd39f; --t4:#56b4e9; --t5:#e48ad0; --t6:#f0e442}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:20px/1.25 var(--mono);overflow:hidden}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.5))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+[data-t="0"]{--tc:var(--t0)}[data-t="1"]{--tc:var(--t1)}[data-t="2"]{--tc:var(--t2)}[data-t="3"]{--tc:var(--t3)}[data-t="4"]{--tc:var(--t4)}[data-t="5"]{--tc:var(--t5)}[data-t="6"]{--tc:var(--t6)}
+.px{shape-rendering:crispEdges;image-rendering:pixelated}
+
+/* scene */
+#scn{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+.star{animation:tw 3s steps(2,end) infinite}
+.crowd{animation:crowd 1.6s steps(2,end) infinite}
+.lamp{animation:lampOn 1.4s steps(1,end) .2s backwards}
+@keyframes tw{50%{opacity:.2}}
+@keyframes crowd{50%{transform:translateY(1px)}}
+@keyframes lampOn{0%{opacity:.1}12%{opacity:1}18%{opacity:.2}30%{opacity:1}36%{opacity:.4}50%{opacity:1}}
+#pl .fA{animation:fA .26s steps(1,end) infinite}#pl .fB{animation:fB .26s steps(1,end) infinite}
+#pl:not(.run) .fB{display:none}#pl:not(.run) .fA{animation:bob 1.2s steps(2,end) infinite}
+@keyframes fA{50%{opacity:0}}@keyframes fB{0%{opacity:0}50%{opacity:1}}@keyframes bob{50%{transform:translateY(-1px)}}
+.ln *{vector-effect:non-scaling-stroke}
+#ball{animation:dribble .5s cubic-bezier(.45,0,.55,1) infinite alternate}#pl.run #ball{animation-duration:.26s}
+@keyframes dribble{to{transform:translateY(var(--db,14px))}}
+.beam{transform-box:fill-box;transform-origin:50% 0;animation:sway 9s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+.mk{animation:mkIn .35s ease-out backwards}
+@keyframes mkIn{from{opacity:0;transform:translateY(8px)}}
+
+/* chrome */
+.scr{position:fixed;inset:0;z-index:5;display:none}
+.scr.on{display:block}
+.page{overflow-y:auto;background:rgba(11,8,20,.95);-webkit-overflow-scrolling:touch}
+.col{max-width:620px;margin:0 auto;padding:calc(62px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(48px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.ic{width:36px;height:36px;background:var(--panel2);border:2px solid var(--edge);color:var(--dim);display:grid;place-items:center;font-size:22px;padding:0}
+.ic:hover{color:var(--text);border-color:var(--dim)}
+#mb{position:fixed;z-index:40;top:calc(10px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px))}
+.tr{position:fixed;z-index:40;top:calc(10px + env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));display:grid;gap:6px}
+.logo{font-family:var(--pix);font-weight:400;color:#fff;letter-spacing:.04em;line-height:1.15;margin:0;text-shadow:3px 0 0 var(--hot),-3px 0 0 var(--blue),0 0 24px rgba(255,77,94,.35);animation:glitch 6s steps(1,end) infinite}
+@keyframes glitch{0%,92%,100%{text-shadow:3px 0 0 var(--hot),-3px 0 0 var(--blue),0 0 24px rgba(255,77,94,.35)}93%{text-shadow:-4px 1px 0 var(--hot),5px -1px 0 var(--blue),0 0 24px rgba(255,77,94,.35)}95%{text-shadow:6px 0 0 var(--hot),-2px 0 0 var(--blue),0 0 24px rgba(255,77,94,.35)}}
+.logo.sm{font-size:14px;text-shadow:2px 0 0 var(--hot),-2px 0 0 var(--blue);animation:none}
+.eyebrow{font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--orange)}
+.dim{color:var(--dim)}
+
+/* home */
+.hero{position:absolute;left:0;right:0;top:calc(13vh + env(safe-area-inset-top,0px));text-align:center;padding-inline:16px;pointer-events:none}
+.hero .logo{font-size:clamp(34px,10.5vw,84px)}
+.tagline{margin-top:18px;color:var(--blue);font-size:clamp(20px,4.4vw,30px);letter-spacing:.32em;text-shadow:0 2px 0 rgba(11,8,20,.5),0 0 12px rgba(71,194,255,.5)}
+.sub{margin-top:10px;color:var(--text);opacity:.8;font-size:clamp(17px,3.6vw,21px);letter-spacing:.06em;text-shadow:0 1px 0 #000}
+.dock{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(480px,calc(100% - 32px));display:grid;gap:10px}
+.howto{background:rgba(11,8,20,.78);border:1px solid var(--edge);padding:4px 12px}
+.howto summary{cursor:pointer;font-size:15px;letter-spacing:.2em;color:var(--dim);list-style:none;padding:4px 0}
+.howto summary::-webkit-details-marker{display:none}
+.howto ol{margin:4px 0 8px;padding:0;list-style:none;display:grid;gap:4px;font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.party{position:relative;display:flex;align-items:center;gap:12px;width:100%;background:var(--panel);border:2px solid var(--blue);padding:14px 14px 10px;text-align:left;font-size:24px;letter-spacing:.16em}
+.party .tag{position:absolute;top:-10px;left:12px;background:var(--blue);color:var(--bg);font-size:13px;letter-spacing:.12em;padding:0 6px}
+.party small{margin-left:auto;font-size:14px;color:var(--dim);letter-spacing:.08em}
+.cta{display:block;width:100%;background:var(--panel2);border:2px solid var(--blue);box-shadow:inset 0 0 0 2px var(--bg),0 0 20px rgba(71,194,255,.22);font-size:clamp(24px,5vw,30px);letter-spacing:.16em;padding:14px 10px;transition:box-shadow .2s,transform .12s}
+.cta:hover{box-shadow:inset 0 0 0 2px var(--bg),0 0 30px rgba(71,194,255,.45)}
+.cta:active{transform:translateY(1px)}
+.cta.pink{border-color:var(--hot);background:var(--hot);color:var(--bg);box-shadow:0 0 22px rgba(255,77,94,.3)}
+.dockrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px;letter-spacing:.14em;color:var(--dim)}
+.mini{background:var(--panel);border:1px solid var(--edge);color:var(--dim);font-size:15px;letter-spacing:.12em;padding:4px 10px}
+.mini:hover{color:var(--text);border-color:var(--dim)}
+.links{display:flex;gap:6px;flex-wrap:wrap}
+
+/* modals */
+.modal{position:fixed;inset:0;z-index:70;background:rgba(5,3,10,.8);display:grid;place-items:center;padding:16px;animation:fadeIn .18s ease-out}
+.mbox{position:relative;width:min(380px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--panel);border:2px solid var(--edge);box-shadow:0 0 34px rgba(71,194,255,.14);padding:18px}
+.mbox .x{position:absolute;top:12px;right:12px}
+.mtitle{font-family:var(--pix);font-weight:400;font-size:19px;color:#fff;margin:6px 0 16px;text-shadow:2px 0 0 var(--hot),-2px 0 0 var(--blue)}
+.sect{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:.2em;color:var(--dim);margin:6px 0 10px}
+.sect::after{content:"";flex:1;border-top:1px solid var(--edge)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--panel2);border:2px solid var(--edge);padding:12px 6px 10px;display:grid;justify-items:center;gap:6px;font-size:16px;letter-spacing:.14em;color:var(--dim)}
+.tile b{font-weight:400;font-size:22px;color:var(--text);line-height:1}
+.tile:hover,.tile.cur{border-color:var(--hot);color:var(--hot)}
+.mfoot{margin-top:14px;padding-top:10px;border-top:1px solid var(--edge);font-size:14px;color:var(--dim);letter-spacing:.08em}
+.opt{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--edge)}
+.opt b{font-weight:400;font-size:18px;letter-spacing:.12em}
+.opt span{grid-column:1;font-size:15px;color:var(--dim)}
+.sw{grid-row:1 / span 2;grid-column:2;width:62px;height:28px;background:var(--bg);border:2px solid var(--edge);padding:2px;display:flex}
+.sw i{width:50%;display:grid;place-items:center;font-style:normal;font-size:13px;background:var(--edge);color:var(--dim);transition:transform .15s}
+.sw[aria-checked="true"]{border-color:var(--blue)}
+.sw[aria-checked="true"] i{transform:translateX(100%);background:var(--blue);color:var(--bg)}
+@keyframes fadeIn{from{opacity:0}}
+</style>
+<style>
+/* game */
+.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;align-items:flex-start;gap:clamp(8px,7vw,110px);padding:calc(6px + env(safe-area-inset-top,0px)) 56px 0;pointer-events:none}
+.hb{min-width:78px;background:rgba(11,8,20,.94);border:1px solid var(--edge);padding:1px 10px 3px}
+.hb small,.hc small{display:block;font-size:13px;letter-spacing:.2em;color:var(--dim);white-space:nowrap}
+.hb b{font-weight:400;font-size:28px;line-height:1;color:var(--orange);font-variant-numeric:tabular-nums}
+.hb.r{text-align:right}.hb.r b{color:var(--hot)}
+.hc{text-align:center;padding:5px 10px 3px;background:rgba(11,8,20,.88);border:1px solid var(--edge)}
+.sqs{display:flex;gap:3px;justify-content:center;margin-bottom:3px}
+.sqs i{width:11px;height:11px;background:var(--edge);display:block}
+.sqs i.cur{background:var(--hot);animation:tw 1s steps(2,end) infinite}
+.sqs i[data-t]{background:var(--tc)}
+.pp{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));background:rgba(16,11,26,.86);border:1px solid var(--edge);padding:10px 16px 12px;animation:ppIn .35s ease-out}
+.pq{font-size:clamp(26px,5.6vw,38px);line-height:1.05;margin:6px 0 6px;text-wrap:balance}
+.pph{font-size:15px;color:var(--dim);letter-spacing:.1em}
+@keyframes ppIn{from{opacity:0;transform:translate(-50%,-8px)}}
+.bar{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(540px,calc(100% - 24px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.fb{min-height:30px;display:grid;align-items:end;justify-items:center;margin-bottom:8px}
+.fb>*{animation:ppIn2 .25s ease-out}
+@keyframes ppIn2{from{opacity:0;transform:translateY(6px)}}
+.warm{font-size:18px;letter-spacing:.14em;color:var(--dim);background:rgba(11,8,20,.75);padding:2px 10px}
+.nope{font-size:19px;color:var(--hot);background:rgba(11,8,20,.8);padding:2px 10px;text-align:center}
+.fix{background:rgba(26,18,40,.95);border:1px solid var(--orange);padding:6px 12px;text-align:center;font-size:19px}
+.fix .to{color:var(--orange)}
+.fix small{display:block;font-size:15px;color:var(--dim);letter-spacing:.08em}
+.fix .opts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.fix .opts button{background:var(--orange);color:var(--bg);border:0;padding:3px 10px;font-size:18px}
+form.af{display:flex;gap:8px;align-items:center}
+.dial{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--orange) calc(var(--f,1)*360deg),rgba(255,143,46,.12) 0);position:relative}
+.dial::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 1px rgba(255,143,46,.35)}
+.dial span{position:relative;font-size:24px;color:var(--orange);font-variant-numeric:tabular-nums}
+.dial.low span{color:var(--hot);animation:tw .5s steps(2,end) infinite}
+.af input{flex:1;min-width:0;height:52px;background:rgba(11,8,20,.92);border:2px solid var(--orange);color:var(--text);font:26px var(--mono);padding:0 12px}
+.af input:disabled{opacity:.55}
+.af input::placeholder{color:var(--dim)}
+.shoot{height:52px;background:var(--orange);color:var(--bg);border:0;font-size:22px;letter-spacing:.12em;padding:0 16px}
+.shoot:disabled{opacity:.5}
+.tbar{height:3px;background:rgba(255,143,46,.18);margin:6px 0 0 60px}
+.tbar i{display:block;height:100%;background:var(--orange);transform-origin:left;transform:scaleX(var(--f,1))}
+.rv{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(420px,calc(100% - 32px));background:rgba(11,8,20,.9);border:1px solid var(--tc);box-shadow:0 0 34px -6px var(--tc);padding:16px 16px 14px;text-align:center;animation:rvIn .4s cubic-bezier(.34,1.56,.64,1)}
+.rv .ico{width:52px;height:52px;margin:0 auto 6px;filter:drop-shadow(0 0 10px var(--tc))}
+.rv h2{margin:0;font-family:var(--pix);font-weight:400;font-size:clamp(15px,4.4vw,21px);line-height:1.35;letter-spacing:.06em;color:var(--tc);text-transform:uppercase}
+.rv .ans{font-size:24px;margin:8px 0 4px}
+.rv .pts{font-size:22px}.rv .pts b{font-weight:400;color:var(--tc)}
+.rv p{margin:8px 0 0;font-size:16px;color:var(--dim);letter-spacing:.04em}
+@keyframes rvIn{from{opacity:0;transform:translate(-50%,10px) scale(.94)}}
+.next{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);min-width:220px;background:var(--panel2);border:2px solid var(--hot);font-size:24px;letter-spacing:.16em;padding:10px 22px;animation:ppIn2 .3s ease-out .2s backwards}
+.next:hover{box-shadow:0 0 20px rgba(255,77,94,.35)}
+.lbl{font:16px var(--mono);letter-spacing:.12em}
+
+/* results and pages */
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:15px;letter-spacing:.18em;color:var(--dim)}
+.big{display:flex;align-items:baseline;gap:10px;margin:16px 0 4px;flex-wrap:wrap}
+.big b{font-family:var(--pix);font-size:clamp(44px,12vw,66px);line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
+.big span{color:var(--dim);font-size:22px}.big em{font-style:normal;color:var(--blue);font-size:22px}
+.chart{display:block;width:100%;height:auto;overflow:visible}
+.cy{color:var(--blue);font-size:18px;letter-spacing:.12em;margin:6px 0 4px}
+h3.sec{font-weight:400;font-size:17px;letter-spacing:.2em;margin:30px 0 10px;color:var(--text)}
+h3.sec small{font-size:15px;color:var(--dim);margin-left:8px}
+.scout{display:grid;gap:0}
+.scout div{display:grid;grid-template-columns:26px 82px 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--edge);font-size:17px;color:var(--dim)}
+.scout div.me{color:var(--text)}.scout div.me b{color:var(--tc)}
+.scout b{font-weight:400;font-variant-numeric:tabular-nums}
+.copyrow{display:flex;gap:8px;margin-top:22px}
+.box{border-top:1px solid var(--edge)}
+.brow{width:100%;display:grid;grid-template-columns:20px 24px 1fr auto 16px;gap:8px;align-items:center;background:none;border:0;border-bottom:1px solid var(--edge);padding:9px 0;text-align:left}
+.brow small{display:block;font-size:14px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.brow span.a{font-size:21px}
+.brow .p{color:var(--tc);font-size:20px;font-variant-numeric:tabular-nums}
+.all{margin:0;padding:4px 0 8px 52px;list-style:none;display:grid;gap:2px;border-bottom:1px solid var(--edge)}
+.all li{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;font-size:18px}
+.all li.me{background:rgba(71,194,255,.08)}
+.all li em{font-style:normal;color:var(--blue);font-size:14px;margin-left:6px}
+.all li b{font-weight:400;color:var(--tc);font-size:16px}
+.ph{text-align:center;margin-bottom:22px}
+.ph .logo{font-size:clamp(22px,6.2vw,38px)}
+.ph p{margin:10px 0 0;color:var(--dim);letter-spacing:.14em;font-size:17px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+.btn2{background:var(--panel);border:1px solid var(--edge);font-size:17px;letter-spacing:.14em;padding:8px 14px;color:var(--text)}
+.btn2:hover{border-color:var(--blue)}
+.pack{display:block;width:100%;text-align:left;background:var(--panel);border:2px solid var(--edge);padding:0;margin-bottom:14px}
+.pack:hover{border-color:var(--blue)}
+.pack svg{display:block;width:100%;height:118px}
+.pack div{padding:10px 14px 12px}
+.pack h4{margin:0;font-family:var(--pix);font-weight:400;font-size:15px;letter-spacing:.04em;line-height:1.5}
+.pack p{margin:4px 0 8px;font-size:16px;color:var(--dim)}
+.pack .go{display:block;text-align:right;font-size:16px;letter-spacing:.16em;color:var(--orange)}
+.pack.soon{opacity:.6;cursor:default}
+.arow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--edge);font-size:19px}
+.arow small{display:block;font-size:14px;color:var(--dim);letter-spacing:.1em}
+.arow b{font-weight:400;color:var(--hot);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border:1px solid var(--edge);padding:10px;text-align:center}
+.stat b{display:block;font-family:var(--pix);font-weight:400;font-size:19px;line-height:1.6;color:var(--blue)}
+.stat small{font-size:14px;letter-spacing:.14em;color:var(--dim)}
+.tdist{display:grid;gap:6px}
+.tdist div{display:grid;grid-template-columns:24px 110px 1fr 34px;gap:8px;align-items:center;font-size:16px}
+.tdist i{display:block;height:10px;background:var(--tc);min-width:2px}
+.faq h4{margin:22px 0 6px;font-weight:400;font-size:19px;letter-spacing:.14em;color:var(--blue)}
+.faq p{margin:0;font-size:19px;line-height:1.35;color:var(--text);opacity:.9}
+.field{display:flex;gap:6px;margin-bottom:6px}
+.field input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--edge);color:var(--text);font:22px var(--mono);padding:6px 10px}
+.field button{background:var(--panel2);border:1px solid var(--edge);color:var(--dim);padding:0 12px}
+.ku{position:relative;height:150px;margin:6px 0 10px}
+.ku .kball{position:absolute;left:50%;top:0;width:34px;height:34px;margin-left:-17px;animation:keepy var(--kt,.7s) cubic-bezier(.5,0,.5,1) infinite alternate}
+@keyframes keepy{to{transform:translateY(78px)}}
+.ku .kball.drop{animation:drop .9s cubic-bezier(.3,0,.7,1) forwards}
+@keyframes drop{to{transform:translate(150px,104px) rotate(320deg);opacity:.35}}
+.ku .who{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:30px;letter-spacing:.12em;color:var(--orange)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--edge);background:var(--panel);padding:2px 8px;font-size:17px}
+.chip.out{opacity:.45;text-decoration:line-through}
+.chip.on{border-color:var(--orange);color:var(--orange)}
+.chip .hl{color:var(--hot);margin-left:6px;letter-spacing:.12em;font-weight:400}
+.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+html.low .star,html.low .crowd,html.low .logo,html.low .lamp,html.low .beam,html.low #ball{animation:none}
+@media (max-width:440px){.hud{padding-inline:50px;gap:6px}.hb{min-width:62px;padding-inline:6px}.hb b{font-size:24px}.hc small{letter-spacing:.08em}.scout div{grid-template-columns:22px 70px 1fr}
+  .dockrow{flex-direction:column;align-items:stretch;text-align:center}.links{justify-content:space-between}.mini{padding:4px 6px;font-size:14px;letter-spacing:.06em}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg id="scn" class="px" aria-hidden="true"></svg>
+<canvas id="fx" class="fx" aria-hidden="true" hidden></canvas>
+
+<button class="ic" id="mb" aria-label="Open menu">☰</button>
+<div class="tr">
+  <button class="ic" id="snd" aria-label="Mute sound">♪</button>
+  <button class="ic" id="gear" aria-label="Open settings">⚙&#xFE0E;</button>
+</div>
+
+<section class="scr" id="home">
+  <div class="hero">
+    <h1 class="logo">BUZZER</h1>
+    <div class="tagline">BEAT THE SHOT CLOCK</div>
+    <div class="sub">7 prompts · 24 seconds each · rarer answers drive farther</div>
+  </div>
+  <div class="dock">
+    <details class="howto">
+      <summary>► HOW TO PLAY</summary>
+      <ol>
+        <li>7 prompts a day. Same for everyone.</li>
+        <li>24 seconds on the shot clock to name one thing.</li>
+        <li>Rare answers score big. Obvious ones are layups.</li>
+        <li>The pick that feels clever? A granny shot. Half the gym had it too.</li>
+        <li>Every point drives you an inch and a half upcourt. 700 is a dunk on the far rim.</li>
+        <li>One game per day. No replays.</li>
+      </ol>
+    </details>
+    <button class="party" data-go="party"><span class="tag">BETA · PASS &amp; PLAY</span><svg width="30" height="30" viewBox="0 0 8 8" class="px" id="partyball"></svg>H-O-R-S-E<small>2–8 players</small></button>
+    <button class="cta" id="kick">► TIP OFF ◄</button>
+    <div class="dockrow"><span id="mdinfo">GAME #1 · STREAK 0</span>
+      <span class="links"><button class="mini" data-go="archive">ARCHIVE ⟲</button><button class="mini" data-go="packs">THEMED PACKS</button><button class="mini" data-go="unlimited">UNLIMITED ∞</button></span></div>
+  </div>
+</section>
+
+<section class="scr" id="game">
+  <div class="hud">
+    <div class="hb"><small>FEET</small><b id="hm">0.0</b></div>
+    <div class="hc"><div class="sqs" id="sq"></div><small id="hr">ROUND 1 OF 7</small></div>
+    <div class="hb r"><small>SCORE</small><b id="hs">0</b></div>
+  </div>
+  <div class="pp" id="pp"><div class="eyebrow" id="ppr">ROUND 1 OF 7</div><div class="pq" id="ppq"></div><div class="pph">► rarer answers drive farther ►</div></div>
+  <div class="rv" id="rv" hidden></div>
+  <div class="bar" id="bar">
+    <div class="fb" id="fb" aria-live="polite"></div>
+    <form class="af" id="af" autocomplete="off">
+      <div class="dial" id="dial"><span id="dn">24</span></div>
+      <input id="ai" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="type one answer…" aria-label="Your answer">
+      <button class="shoot" id="shoot">SHOOT</button>
+    </form>
+    <div class="tbar"><i id="tb"></i></div>
+  </div>
+  <button class="next" id="next" hidden>NEXT PLAY →</button>
+</section>
+
+<section class="scr page" id="results"><div class="col" id="rcol"></div></section>
+<section class="scr page" id="page"><div class="col" id="pg"></div></section>
+
+<div class="modal" id="menu" hidden>
+  <div class="mbox" role="dialog" aria-label="Menu">
+    <button class="ic x" data-close aria-label="Close menu">X</button>
+    <div class="eyebrow" style="color:var(--blue)">BUZZER</div>
+    <div class="mtitle">MENU</div>
+    <div class="sect">TIP OFF</div>
+    <div class="tiles">
+      <button class="tile" data-go="home"><b>▼</b>DAILY GAME</button>
+      <button class="tile" data-go="unlimited"><b>∞</b>UNLIMITED</button>
+      <button class="tile" data-go="party"><b>◉</b>H-O-R-S-E</button>
+      <button class="tile" data-go="archive"><b>⟲</b>ARCHIVE</button>
+      <button class="tile" data-go="packs"><b>▦</b>THEMED PACKS</button>
+      <button class="tile" data-go="stats"><b>☻</b>MY BUZZER</button>
+      <button class="tile" data-act="settings"><b>⚙&#xFE0E;</b>SETTINGS</button>
+      <button class="tile" data-go="faq"><b>?</b>FAQ</button>
+    </div>
+    <div class="mfoot">find the buzzer-beater.</div>
+  </div>
+</div>
+
+<div class="modal" id="set" hidden>
+  <div class="mbox" role="dialog" aria-label="Settings">
+    <button class="ic x" data-close aria-label="Close settings">X</button>
+    <div class="mtitle">SETTINGS</div>
+    <div class="opt"><b>SOUND</b><span>Horns, swishes and the crowd.</span><button class="sw" role="switch" data-k="snd" aria-label="Sound"><i>OFF</i></button></div>
+    <div class="opt"><b>LOW-POWER MODE</b><span>Lighter graphics and fewer background animations.</span><button class="sw" role="switch" data-k="low" aria-label="Low-power mode"><i>OFF</i></button></div>
+    <div class="opt"><b>COLORBLIND MODE</b><span>Brighter text and more separated tier colors.</span><button class="sw" role="switch" data-k="cb" aria-label="Colorblind mode"><i>OFF</i></button></div>
+    <div class="opt"><b>ANSWER CORRECTIONS</b><span>Preview corrected answers before scoring. Off accepts them immediately.</span><button class="sw" role="switch" data-k="corr" aria-label="Answer corrections"><i>OFF</i></button></div>
+    <div class="opt"><b>CLEAR REJECTED ENTRIES</b><span>Empty the answer box after an airball.</span><button class="sw" role="switch" data-k="clr" aria-label="Clear rejected entries"><i>OFF</i></button></div>
+    <div class="btnrow"><button class="btn2" data-go="stats">MY BUZZER →</button><button class="btn2" data-go="faq">FAQ</button></div>
+  </div>
+</div>
+<script>
+// Answer sets. "Name|rarity 1-5|aliases". "*" marks the buzzer-beater (one per prompt), "~" marks a granny shot: the "clever" pick that isn't.
+const RAW=[
+ // ---- THE LEAGUE ----
+ {k:"nch",pk:"nba",q:"Name a franchise that has won the NBA title",h:"Champions 1947–2026, any former name counts",f:"The Kings' only NBA title came in 1951, when they were the Rochester Royals.",a:
+ "Boston Celtics|1|celtics,boston;Los Angeles Lakers|1|lakers,la lakers,minneapolis lakers;Chicago Bulls|1|bulls,chicago;Golden State Warriors|1|warriors,golden state,gsw,philadelphia warriors,san francisco warriors;San Antonio Spurs|1|spurs,san antonio;Miami Heat|1|heat,miami;New York Knicks|1|knicks,new york,ny knicks;Detroit Pistons|2|pistons,detroit;Houston Rockets|2|rockets,houston;Philadelphia 76ers|2|76ers,sixers,philadelphia,philly,syracuse nationals;Cleveland Cavaliers|2|cavaliers,cavs,cleveland;Toronto Raptors|2|raptors,toronto;Milwaukee Bucks|2|bucks,milwaukee;Denver Nuggets|2|nuggets,denver;Dallas Mavericks|2|mavericks,mavs,dallas;Oklahoma City Thunder|2|thunder,okc,oklahoma city,seattle supersonics,supersonics,sonics,seattle;~Portland Trail Blazers|3|trail blazers,blazers,portland;Washington Wizards|4|wizards,washington,washington bullets,bullets;Atlanta Hawks|4|hawks,atlanta,st louis hawks,saint louis hawks;Baltimore Bullets|5|original baltimore bullets;*Sacramento Kings|5|kings,sacramento,rochester royals,royals"},
+ {k:"nnot",pk:"nba",q:"Name a current NBA team that has never won the title",h:"NBA titles only, through 2026",f:"The Grizzlies began in Vancouver in 1995 and have never reached the Finals.",a:
+ "Phoenix Suns|1|suns,phoenix;Utah Jazz|1|jazz,utah;Los Angeles Clippers|1|clippers,la clippers;Indiana Pacers|1|pacers,indiana;Orlando Magic|2|magic,orlando;Brooklyn Nets|2|nets,brooklyn,new jersey nets,new york nets;Minnesota Timberwolves|2|timberwolves,wolves,minnesota,t wolves;Charlotte Hornets|2|hornets,charlotte,charlotte bobcats,bobcats;New Orleans Pelicans|3|pelicans,new orleans,new orleans hornets;*Memphis Grizzlies|3|grizzlies,memphis,vancouver grizzlies"},
+ {k:"mvp",pk:"nba",q:"Name an NBA MVP since 2000",h:"Winners 2000–2026",f:"Rose won it in 2011 at 22, the youngest MVP in NBA history.",a:
+ "LeBron James|1|lebron,king james,lbj;Stephen Curry|1|curry,steph,steph curry;Nikola Jokic|1|jokic,joker;Giannis Antetokounmpo|1|giannis,greek freak,antetokounmpo;Kobe Bryant|1|kobe,bryant;Kevin Durant|1|durant,kd;Shai Gilgeous-Alexander|1|sga,shai,gilgeous alexander;Shaquille O'Neal|2|shaq,oneal,shaquille oneal;Tim Duncan|2|duncan;James Harden|2|harden;Russell Westbrook|2|westbrook,russ;Joel Embiid|2|embiid;Dirk Nowitzki|2|dirk,nowitzki;Allen Iverson|2|iverson,ai;Steve Nash|3|nash;Kevin Garnett|3|garnett,kg;*Derrick Rose|2|rose,d rose,drose"},
+ {k:"fmvp",pk:"nba",q:"Name an NBA Finals MVP",h:"Every winner, 1969–2026",f:"Jerry West won the first Finals MVP in 1969, and his Lakers lost the series.",a:
+ "Michael Jordan|1|jordan,mj;LeBron James|1|lebron;Magic Johnson|1|magic;Kobe Bryant|1|kobe;Shaquille O'Neal|1|shaq,oneal,shaquille oneal;Tim Duncan|1|duncan;Stephen Curry|1|curry,steph;Kevin Durant|1|durant,kd;Larry Bird|1|bird;Kawhi Leonard|2|kawhi,leonard;Giannis Antetokounmpo|2|giannis,greek freak;Nikola Jokic|2|jokic,joker;Hakeem Olajuwon|2|hakeem,olajuwon,akeem olajuwon;Dirk Nowitzki|2|dirk,nowitzki;Kareem Abdul-Jabbar|2|kareem,abdul jabbar,lew alcindor;Dwyane Wade|2|wade,dwayne wade;Jalen Brunson|2|brunson;Shai Gilgeous-Alexander|2|sga,shai;Jaylen Brown|2|jaylen brown;Paul Pierce|2|pierce;Tony Parker|3|parker;Chauncey Billups|3|billups;Wilt Chamberlain|3|wilt,chamberlain;Isiah Thomas|3|isiah;Joe Dumars|3|dumars;James Worthy|3|worthy;Moses Malone|3|moses;Bill Walton|3|walton;Willis Reed|3|reed;~Andre Iguodala|3|iguodala,iggy;Rick Barry|4|barry;John Havlicek|4|havlicek;Wes Unseld|4|unseld;Dennis Johnson|4|dennis johnson;Jo Jo White|5|jojo white;Cedric Maxwell|5|maxwell;*Jerry West|3|west,the logo"},
+ {k:"pick1",pk:"nba",q:"Name a No. 1 overall NBA draft pick since 2000",h:"Drafts 2000–2026",f:"Kwame Brown was the first high schooler taken No. 1, picked by Michael Jordan's Wizards in 2001.",a:
+ "LeBron James|1|lebron;Victor Wembanyama|1|wembanyama,wemby;Anthony Davis|1|anthony davis,ad;Zion Williamson|1|zion,williamson;Cooper Flagg|1|flagg;Kyrie Irving|1|kyrie,irving;Derrick Rose|1|rose,d rose;Anthony Edwards|1|anthony edwards,ant;Yao Ming|1|yao;Dwight Howard|2|dwight,howard;Blake Griffin|2|blake,griffin;Karl-Anthony Towns|2|kat,towns,karl anthony towns;John Wall|2|wall;Paolo Banchero|2|banchero,paolo;Cade Cunningham|2|cade,cunningham;Ben Simmons|2|simmons;AJ Dybantsa|2|dybantsa,a j dybantsa;Andrew Wiggins|2|wiggins;Greg Oden|2|oden;~Anthony Bennett|3|bennett;Deandre Ayton|3|ayton;Markelle Fultz|3|fultz;Zaccharie Risacher|3|risacher;Andrew Bogut|3|bogut;Andrea Bargnani|4|bargnani;Kenyon Martin|4|kenyon martin,kenyon;*Kwame Brown|4|kwame"},
+ {k:"nos",pk:"nba",q:"Name an NBA team whose nickname doesn't end in S",h:"Current teams",f:"Oklahoma City chose 'Thunder' in 2008, after the franchise left Seattle.",a:
+ "Miami Heat|1|heat,miami;Utah Jazz|1|jazz,utah;Orlando Magic|2|magic,orlando;*Oklahoma City Thunder|2|thunder,okc,oklahoma city"},
+ {k:"f20s",pk:"nba",q:"Name a team that played in the NBA Finals in the 2020s",h:"Finals 2020–2026, winners or losers",f:"The Suns led the 2021 Finals 2–0 before Giannis and the Bucks won four straight.",a:
+ "Los Angeles Lakers|1|lakers;Boston Celtics|1|celtics,boston;Golden State Warriors|1|warriors,golden state;Denver Nuggets|1|nuggets,denver;Oklahoma City Thunder|1|thunder,okc;New York Knicks|1|knicks,new york;San Antonio Spurs|1|spurs,san antonio;Miami Heat|2|heat,miami;Milwaukee Bucks|2|bucks,milwaukee;Dallas Mavericks|2|mavericks,mavs,dallas;Indiana Pacers|2|pacers,indiana;*Phoenix Suns|3|suns,phoenix"},
+ {k:"lostf",pk:"nba",q:"Name a current NBA team that has reached the Finals but never won it",h:"Through 2026",f:"The Nets reached back-to-back Finals in 2002 and 2003 behind Jason Kidd.",a:
+ "Phoenix Suns|1|suns,phoenix;Utah Jazz|1|jazz,utah;Indiana Pacers|1|pacers,indiana;Orlando Magic|2|magic,orlando;*Brooklyn Nets|3|nets,brooklyn,new jersey nets"},
+ {k:"exp",pk:"nba",q:"Name an NBA expansion team from 1988 to 2004",h:"Use today's team name",f:"Charlotte's current team joined as the Bobcats in 2004 and took back the Hornets name in 2014.",a:
+ "Miami Heat|1|heat,miami;Orlando Magic|1|magic,orlando;Toronto Raptors|1|raptors,toronto;Memphis Grizzlies|1|grizzlies,memphis,vancouver grizzlies;Minnesota Timberwolves|2|timberwolves,wolves,minnesota;New Orleans Pelicans|3|pelicans,new orleans,new orleans hornets;*Charlotte Hornets|2|hornets,charlotte,bobcats,charlotte bobcats"},
+ {k:"d03",pk:"nba",q:"Name a top-five pick in the 2003 NBA draft",h:"Picks 1 through 5",f:"Detroit took Darko Miličić second, ahead of Carmelo Anthony, Chris Bosh and Dwyane Wade.",a:
+ "LeBron James|1|lebron;Carmelo Anthony|1|carmelo,melo;Dwyane Wade|1|wade,dwayne wade;Chris Bosh|2|bosh;*Darko Milicic|2|darko,milicic"},
+ {k:"d09",pk:"nba",q:"Name a top-seven pick in the 2009 NBA draft",h:"Picks 1 through 7",f:"Minnesota took Ricky Rubio fifth and Jonny Flynn sixth. Stephen Curry went seventh.",a:
+ "Stephen Curry|1|curry,steph;James Harden|1|harden;Blake Griffin|1|blake,griffin;~Hasheem Thabeet|2|thabeet;Ricky Rubio|2|rubio;Tyreke Evans|3|tyreke,evans;*Jonny Flynn|4|flynn,johnny flynn"},
+ {k:"dpoy",pk:"nba",q:"Name an NBA Defensive Player of the Year",h:"Every winner, 1983–2026",f:"Milwaukee's Sidney Moncrief won the first two awards, in 1983 and 1984.",a:
+ "Victor Wembanyama|1|wembanyama,wemby;Rudy Gobert|1|gobert;Giannis Antetokounmpo|1|giannis,greek freak;Dwight Howard|1|dwight,howard;Kawhi Leonard|1|kawhi,leonard;Michael Jordan|1|jordan,mj;Hakeem Olajuwon|1|hakeem,olajuwon;Dennis Rodman|1|rodman;Ben Wallace|2|ben wallace,big ben;Dikembe Mutombo|2|mutombo,deke;Draymond Green|2|draymond,green;Kevin Garnett|2|garnett,kg;Gary Payton|2|payton,the glove;David Robinson|2|robinson,the admiral;Marcus Smart|2|smart;Alonzo Mourning|2|mourning,zo;Jaren Jackson Jr.|3|jaren jackson,jjj;Evan Mobley|3|mobley;Ron Artest|3|artest,metta world peace,metta sandiford artest;Marc Gasol|3|marc gasol;Joakim Noah|3|noah;Tyson Chandler|3|chandler;Marcus Camby|3|camby;Mark Eaton|4|eaton;Michael Cooper|4|cooper;Alvin Robertson|4|alvin robertson;*Sidney Moncrief|4|moncrief"},
+ {k:"dunk",pk:"nba",q:"Name a Slam Dunk Contest champion",h:"NBA contest, 1984–2026",f:"Spud Webb, 5-foot-7, won the 1986 contest over his Hawks teammate Dominique Wilkins.",a:
+ "Michael Jordan|1|jordan,mj;Vince Carter|1|vince,carter,vinsanity;Zach LaVine|1|lavine;Dominique Wilkins|1|dominique,wilkins,nique;Blake Griffin|1|blake,griffin;Kobe Bryant|2|kobe;Dwight Howard|2|dwight,howard;Nate Robinson|2|nate robinson;Mac McClung|2|mcclung;Donovan Mitchell|3|mitchell,spida;Gerald Green|3|gerald green;Jason Richardson|3|richardson,j rich;Dee Brown|3|dee brown;Josh Smith|3|josh smith;John Wall|3|wall;Terrence Ross|3|ross;Derrick Jones Jr.|3|derrick jones;Obi Toppin|3|toppin;Keshad Johnson|3|keshad;Larry Nance|4|nance;Harold Miner|4|miner,baby jordan;Isaiah Rider|4|rider,jr rider;Brent Barry|4|barry;Desmond Mason|4|mason;Fred Jones|4|fred jones;Jeremy Evans|4|evans;Glenn Robinson III|4|glenn robinson;Hamidou Diallo|4|diallo;Anfernee Simons|4|simons;Cedric Ceballos|4|ceballos;Kenny Walker|5|kenny walker,sky walker;*Spud Webb|2|spud,webb"},
+ {k:"6moy",pk:"nba",q:"Name a player who won Sixth Man of the Year more than once",h:"Through 2026",f:"Detlef Schrempf won it in back-to-back seasons, 1991 and 1992, with Indiana.",a:
+ "Jamal Crawford|1|crawford;Lou Williams|1|lou williams,sweet lou;Kevin McHale|2|mchale;Ricky Pierce|4|ricky pierce;*Detlef Schrempf|4|schrempf"},
+ {k:"west",pk:"nba",q:"Name a team in the NBA's Western Conference",h:"2026–27 season",f:"The Jazz kept the name they were given in New Orleans when they moved to Salt Lake City in 1979.",a:
+ "Los Angeles Lakers|1|lakers,la lakers;Golden State Warriors|1|warriors,golden state;San Antonio Spurs|1|spurs,san antonio;Dallas Mavericks|1|mavericks,mavs,dallas;Phoenix Suns|1|suns,phoenix;Denver Nuggets|1|nuggets,denver;Oklahoma City Thunder|1|thunder,okc;Houston Rockets|2|rockets,houston;Los Angeles Clippers|2|clippers,la clippers;Minnesota Timberwolves|2|timberwolves,wolves,minnesota;Memphis Grizzlies|2|grizzlies,memphis;Portland Trail Blazers|3|trail blazers,blazers,portland;Sacramento Kings|3|kings,sacramento;New Orleans Pelicans|3|pelicans,new orleans;*Utah Jazz|3|jazz,utah"},
+ {k:"east",pk:"nba",q:"Name a team in the NBA's Eastern Conference",h:"2026–27 season",f:"Toronto is the only NBA city outside the United States.",a:
+ "Boston Celtics|1|celtics,boston;New York Knicks|1|knicks,new york;Miami Heat|1|heat,miami;Chicago Bulls|1|bulls,chicago;Milwaukee Bucks|1|bucks,milwaukee;Philadelphia 76ers|1|76ers,sixers,philadelphia,philly;Cleveland Cavaliers|1|cavaliers,cavs,cleveland;Brooklyn Nets|2|nets,brooklyn;Indiana Pacers|2|pacers,indiana;Orlando Magic|2|magic,orlando;Atlanta Hawks|2|hawks,atlanta;Detroit Pistons|2|pistons,detroit;Washington Wizards|3|wizards,washington;Charlotte Hornets|3|hornets,charlotte;*Toronto Raptors|2|raptors,toronto"},
+ {k:"70pt",pk:"nba",q:"Name a player who scored 70 or more in an NBA game",h:"Regular season or playoffs, through 2026",f:"David Robinson scored 71 on the last day of the 1993–94 season to take the scoring title from Shaquille O'Neal.",a:
+ "Wilt Chamberlain|1|wilt,chamberlain;Kobe Bryant|1|kobe;Bam Adebayo|1|bam,adebayo;Luka Doncic|2|luka,doncic;Devin Booker|2|booker;Joel Embiid|3|embiid;Donovan Mitchell|3|mitchell,spida;Damian Lillard|3|lillard,dame;David Thompson|4|david thompson,skywalker;Elgin Baylor|4|baylor;*David Robinson|4|robinson,the admiral"},
+ {k:"w73",pk:"nba",q:"Name a starter on the 73–9 Warriors of 2015–16",h:"The usual starting five",f:"Andrew Bogut started at center for the 73–9 team and was traded to Dallas that summer to clear room for Kevin Durant.",a:
+ "Stephen Curry|1|curry,steph;Klay Thompson|1|klay,thompson;Draymond Green|1|draymond,green;Harrison Barnes|2|barnes;*Andrew Bogut|3|bogut"},
+ {k:"roy",pk:"nba",q:"Name an NBA Rookie of the Year since 2010",h:"Winners 2010–2026",f:"Michael Carter-Williams opened his career with 22 points, 12 assists and nine steals against the champion Heat.",a:
+ "Victor Wembanyama|1|wembanyama,wemby;Luka Doncic|1|luka,doncic;Cooper Flagg|1|flagg;Ja Morant|1|morant;Kyrie Irving|1|kyrie,irving;Damian Lillard|1|lillard,dame;Blake Griffin|1|blake,griffin;Ben Simmons|2|simmons;Karl-Anthony Towns|2|kat,towns;Paolo Banchero|2|banchero,paolo;LaMelo Ball|2|lamelo;Andrew Wiggins|2|wiggins;Malcolm Brogdon|3|brogdon;Scottie Barnes|3|barnes;Stephon Castle|3|castle;Tyreke Evans|3|tyreke,evans;*Michael Carter-Williams|4|carter williams,mcw"},
+ {k:"3pt",pk:"nba",q:"Name a Three-Point Contest champion",h:"NBA contest, 1986–2026",f:"Craig Hodges won three in a row from 1990 to 1992 and once made 19 straight shots.",a:
+ "Stephen Curry|1|curry,steph;Klay Thompson|1|klay,thompson;Larry Bird|1|bird;Damian Lillard|1|lillard,dame;Ray Allen|1|ray allen,allen;Devin Booker|2|booker;Kyrie Irving|2|kyrie,irving;Dirk Nowitzki|2|dirk,nowitzki;Karl-Anthony Towns|2|kat,towns;Steve Kerr|2|kerr;Tyler Herro|2|herro;Paul Pierce|2|pierce;Kevin Love|2|kevin love;Buddy Hield|2|hield,buddy;Peja Stojakovic|2|peja,stojakovic;Mark Price|3|price;Glen Rice|3|rice;Jeff Hornacek|3|hornacek;Eric Gordon|3|gordon;Joe Harris|3|joe harris;Marco Belinelli|3|belinelli;Jason Kapono|3|kapono;Dale Ellis|3|ellis;Quentin Richardson|4|richardson;Voshon Lenard|4|lenard;James Jones|4|james jones;Daequan Cook|4|cook;Tim Legler|4|legler;*Craig Hodges|4|hodges"},
+ {k:"mvpt",pk:"nba",q:"Name a team that has had the NBA MVP since 2000",h:"The MVP's team that season, 2000–2026",f:"Kevin Garnett's 2004 award is the only MVP in Timberwolves history.",a:
+ "Los Angeles Lakers|1|lakers;Golden State Warriors|1|warriors,golden state;Denver Nuggets|1|nuggets,denver;Milwaukee Bucks|1|bucks,milwaukee;Oklahoma City Thunder|1|thunder,okc;Cleveland Cavaliers|1|cavaliers,cavs,cleveland;Miami Heat|1|heat,miami;Philadelphia 76ers|2|76ers,sixers,philadelphia;San Antonio Spurs|2|spurs,san antonio;Houston Rockets|2|rockets,houston;Phoenix Suns|2|suns,phoenix;Dallas Mavericks|2|mavericks,mavs,dallas;Chicago Bulls|2|bulls,chicago;*Minnesota Timberwolves|3|timberwolves,wolves,minnesota"},
+ {k:"b2b",pk:"nba",q:"Name a franchise that has won back-to-back NBA titles",h:"Two or more in a row, 1947–2026",f:"Houston's 1995 repeat came as a No. 6 seed, the lowest seed ever to win the title.",a:
+ "Chicago Bulls|1|bulls,chicago;Los Angeles Lakers|1|lakers,minneapolis lakers;Boston Celtics|1|celtics,boston;Golden State Warriors|2|warriors,golden state;Miami Heat|2|heat,miami;Detroit Pistons|2|pistons,detroit;*Houston Rockets|3|rockets,houston"},
+ {k:"5049",pk:"nba",q:"Name a member of the 50-40-90 club",h:"NBA qualifying seasons, through 2025–26",f:"Cleveland's Mark Price joined in 1988–89, the first member after Larry Bird.",a:
+ "Stephen Curry|1|curry,steph;Kevin Durant|1|durant,kd;Larry Bird|1|bird;Steve Nash|1|nash;Dirk Nowitzki|1|dirk,nowitzki;Kyrie Irving|2|kyrie,irving;Reggie Miller|2|reggie,miller;Malcolm Brogdon|3|brogdon;*Mark Price|4|price"},
+ // ---- HALL OF FAME ----
+ {k:"aba",pk:"legends",q:"Name a franchise that joined the NBA from the ABA in 1976",h:"Use today's team name",f:"The Spurs began in 1967 as the Dallas Chaparrals.",a:
+ "Indiana Pacers|1|pacers,indiana;Denver Nuggets|2|nuggets,denver;Brooklyn Nets|2|nets,brooklyn,new york nets,new jersey nets;*San Antonio Spurs|2|spurs,san antonio,dallas chaparrals"},
+ {k:"d84",pk:"legends",q:"Name a top-five pick in the 1984 NBA draft",h:"Picks 1 through 5",f:"Sam Perkins went fourth, one pick after his North Carolina teammate Michael Jordan.",a:
+ "Michael Jordan|1|jordan,mj;Hakeem Olajuwon|1|hakeem,olajuwon,akeem olajuwon;~Sam Bowie|1|bowie;Charles Barkley|2|barkley,sir charles;*Sam Perkins|3|perkins"},
+ {k:"d96",pk:"legends",q:"Name a top-five pick in the 1996 NBA draft",h:"Picks 1 through 5",f:"Shareef Abdur-Rahim went third to the Vancouver Grizzlies. Kobe Bryant went 13th.",a:
+ "Allen Iverson|1|iverson,ai;Stephon Marbury|2|marbury,starbury;Ray Allen|2|ray allen,allen;Marcus Camby|3|camby;*Shareef Abdur-Rahim|4|abdur rahim,shareef"},
+ {k:"f50",pk:"legends",q:"Name a player who scored 50 or more in an NBA Finals game",h:"Through 2026",f:"Bob Pettit's 50 in Game 6 clinched the 1958 title for the St. Louis Hawks.",a:
+ "Michael Jordan|1|jordan,mj;LeBron James|1|lebron;Giannis Antetokounmpo|2|giannis,greek freak;Jerry West|3|west,the logo;Elgin Baylor|3|baylor;Rick Barry|3|barry;*Bob Pettit|4|pettit"},
+ {k:"qd",pk:"legends",q:"Name a player with an NBA quadruple-double",h:"Official record, through 2026",f:"Alvin Robertson's 1986 quadruple-double is the only one built on steals instead of blocks.",a:
+ "Hakeem Olajuwon|1|hakeem,olajuwon;David Robinson|1|robinson,the admiral;Nate Thurmond|3|thurmond;*Alvin Robertson|3|alvin robertson,robertson"},
+ {k:"scch",pk:"legends",q:"Name a player who won the scoring title and the NBA title in the same season",h:"1947–2026",f:"Joe Fulks led the league in scoring in its first season, 1946–47, and his Warriors won the title.",a:
+ "Michael Jordan|1|jordan,mj;Shaquille O'Neal|2|shaq,oneal,shaquille oneal;Shai Gilgeous-Alexander|2|sga,shai;Kareem Abdul-Jabbar|3|kareem,abdul jabbar,lew alcindor;George Mikan|3|mikan;*Joe Fulks|5|fulks,jumping joe"},
+ {k:"3mvp",pk:"legends",q:"Name a player who won three or more NBA MVPs",h:"Through 2026",f:"Moses Malone won back-to-back MVPs in 1982 and 1983 with different teams.",a:
+ "Michael Jordan|1|jordan,mj;LeBron James|1|lebron;Kareem Abdul-Jabbar|1|kareem,abdul jabbar;Nikola Jokic|1|jokic,joker;Bill Russell|2|russell;Wilt Chamberlain|2|wilt,chamberlain;Magic Johnson|2|magic;Larry Bird|2|bird;*Moses Malone|3|moses"},
+ {k:"2fmvp",pk:"legends",q:"Name a player with two or more Finals MVPs",h:"Through 2026",f:"Willis Reed won it in 1970 and 1973, the Knicks' only titles before 2026.",a:
+ "Michael Jordan|1|jordan,mj;LeBron James|1|lebron;Magic Johnson|1|magic;Shaquille O'Neal|1|shaq,oneal,shaquille oneal;Tim Duncan|1|duncan;Kobe Bryant|1|kobe;Kevin Durant|2|durant,kd;Kawhi Leonard|2|kawhi,leonard;Larry Bird|2|bird;Hakeem Olajuwon|2|hakeem,olajuwon;Kareem Abdul-Jabbar|2|kareem,abdul jabbar;*Willis Reed|3|reed"},
+ {k:"ast4",pk:"legends",q:"Name a player who led the NBA in assists four or more times",h:"Assists-per-game titles, through 2025–26",f:"Kevin Porter's 29 assists in a 1978 game stood as the record until Scott Skiles had 30 in 1990.",a:
+ "John Stockton|1|stockton;Chris Paul|1|cp3,chris paul;Magic Johnson|1|magic;Steve Nash|1|nash;Jason Kidd|2|kidd;Oscar Robertson|2|oscar,big o;Bob Cousy|3|cousy;*Kevin Porter|5|kevin porter"},
+ {k:"reb15",pk:"legends",q:"Name a player with 15,000 career NBA rebounds",h:"Regular season, through 2026",f:"Elvin Hayes ranks fourth all-time with 16,279 rebounds.",a:
+ "Wilt Chamberlain|1|wilt,chamberlain;Bill Russell|1|russell;Kareem Abdul-Jabbar|2|kareem,abdul jabbar;Tim Duncan|2|duncan;Moses Malone|3|moses;*Elvin Hayes|4|hayes,big e"},
+ {k:"sc4",pk:"legends",q:"Name a player who won four or more NBA scoring titles",h:"Through 2025–26",f:"George Gervin won the 1978 scoring title by scoring 63 on the final day, hours after David Thompson scored 73.",a:
+ "Michael Jordan|1|jordan,mj;Wilt Chamberlain|1|wilt,chamberlain;Kevin Durant|2|durant,kd;Allen Iverson|2|iverson,ai;*George Gervin|3|gervin,iceman,the iceman"},
+ {k:"coach3",pk:"legends",q:"Name a head coach who won three or more NBA titles",h:"Through 2026",f:"John Kundla coached the Minneapolis Lakers to five titles between 1949 and 1954.",a:
+ "Phil Jackson|1|phil jackson,zen master;Gregg Popovich|1|popovich,pop;Pat Riley|1|riley;Red Auerbach|1|auerbach;Steve Kerr|2|kerr;*John Kundla|4|kundla"},
+ {k:"m8090",pk:"legends",q:"Name an NBA MVP from the 1980s or 1990s",h:"Seasons 1979–80 to 1998–99",f:"Julius Erving won his only NBA MVP in 1981 with Philadelphia.",a:
+ "Michael Jordan|1|jordan,mj;Magic Johnson|1|magic;Larry Bird|1|bird;Karl Malone|2|karl malone,the mailman,mailman;Charles Barkley|2|barkley,sir charles;Hakeem Olajuwon|2|hakeem,olajuwon;Kareem Abdul-Jabbar|2|kareem,abdul jabbar;David Robinson|3|robinson,the admiral;Moses Malone|3|moses;*Julius Erving|3|erving,dr j,doctor j"},
+ {k:"mopf",pk:"legends",q:"Name a Final Four Most Outstanding Player who later won Finals MVP",h:"NCAA men's tournament",f:"Wilt Chamberlain was named Most Outstanding Player in 1957 even though Kansas lost the final in triple overtime.",a:
+ "Magic Johnson|1|magic;Kareem Abdul-Jabbar|1|kareem,abdul jabbar,lew alcindor;Hakeem Olajuwon|2|hakeem,olajuwon,akeem olajuwon;James Worthy|2|worthy;Isiah Thomas|2|isiah;Bill Walton|2|walton;Jerry West|3|west,the logo;*Wilt Chamberlain|3|wilt,chamberlain"},
+ {k:"mvpn",pk:"legends",q:"Name an NBA MVP who also won an NCAA men's title",h:"MVP at any point in their career",f:"Bob Cousy won the 1947 NCAA title as a Holy Cross freshman, ten years before his MVP season.",a:
+ "Michael Jordan|1|jordan,mj;Magic Johnson|1|magic;Kareem Abdul-Jabbar|1|kareem,abdul jabbar,lew alcindor;Bill Russell|2|russell;Bill Walton|3|walton;*Bob Cousy|3|cousy"},
+ {k:"mlb",pk:"legends",q:"Name someone who played in both the NBA and Major League Baseball",h:"A regular-season game in each; the BAA counts",f:"Chuck Connors shattered a glass backboard in warmups for the 1946 Celtics, played first base for the 1951 Cubs, then starred as TV's 'The Rifleman'.",a:
+ "Danny Ainge|1|ainge;Dave DeBusschere|2|debusschere;Gene Conley|3|conley;Ron Reed|4|ron reed;Dick Groat|4|groat;Mark Hendrickson|4|hendrickson;Frankie Baumholtz|5|baumholtz,frank baumholtz;Cotton Nash|5|cotton nash;Steve Hamilton|5|steve hamilton;Dick Ricketts|5|ricketts;Howie Schultz|5|schultz;Hank Biasatti|5|biasatti;*Chuck Connors|4|connors"},
+ {k:"comm",pk:"legends",q:"Name an NBA commissioner",h:"Including the league's early presidents, 1946 to today",f:"The MVP trophy was named for Maurice Podoloff, the league's first president, until 2022.",a:
+ "Adam Silver|1|silver;David Stern|1|stern;Larry O'Brien|3|obrien,larry obrien;Walter Kennedy|4|kennedy,j walter kennedy;*Maurice Podoloff|4|podoloff"},
+ {k:"bulls6",pk:"legends",q:"Name a team Michael Jordan's Bulls beat in the NBA Finals",h:"1991–1998",f:"Jordan hit six first-half threes in Game 1 of the 1992 Finals against Portland, then shrugged.",a:
+ "Utah Jazz|1|jazz,utah;Los Angeles Lakers|1|lakers;Phoenix Suns|2|suns,phoenix;Seattle SuperSonics|2|supersonics,sonics,seattle;*Portland Trail Blazers|2|trail blazers,blazers,portland"},
+ {k:"b72",pk:"legends",q:"Name a starter on the 72–10 Bulls of 1995–96",h:"The usual starting five",f:"Luc Longley was the first Australian to play in the NBA.",a:
+ "Michael Jordan|1|jordan,mj;Scottie Pippen|1|pippen;Dennis Rodman|1|rodman;Ron Harper|3|harper;*Luc Longley|3|longley"},
+ {k:"lakf",pk:"legends",q:"Name a Lakers player who won Finals MVP",h:"1969–2026",f:"James Worthy had 36 points, 16 rebounds and 10 assists in Game 7 of the 1988 Finals.",a:
+ "Magic Johnson|1|magic;Kobe Bryant|1|kobe;Shaquille O'Neal|1|shaq,oneal,shaquille oneal;LeBron James|1|lebron;Kareem Abdul-Jabbar|2|kareem,abdul jabbar;Jerry West|2|west,the logo;Wilt Chamberlain|2|wilt,chamberlain;*James Worthy|3|worthy,big game james"},
+ {k:"celf",pk:"legends",q:"Name a Celtics player who won Finals MVP",h:"1969–2026",f:"Jo Jo White played 60 minutes in the triple-overtime Game 5 of the 1976 Finals.",a:
+ "Larry Bird|1|bird;Paul Pierce|1|pierce;Jaylen Brown|2|jaylen brown,brown;John Havlicek|3|havlicek,hondo;Cedric Maxwell|4|maxwell;*Jo Jo White|4|jojo white,white"},
+ {k:"sixm",pk:"legends",q:"Name a 76ers player who won NBA MVP",h:"Through 2026",f:"Moses Malone won MVP in his first Philadelphia season, 1982–83, and the 76ers swept the Finals.",a:
+ "Allen Iverson|1|iverson,ai;Joel Embiid|1|embiid;Julius Erving|2|erving,dr j,doctor j;Wilt Chamberlain|2|wilt,chamberlain;*Moses Malone|3|moses"},
+ {k:"pk1f",pk:"legends",q:"Name a No. 1 overall pick who later won Finals MVP",h:"Through 2026",f:"Hakeem Olajuwon went first in 1984, two picks before Michael Jordan.",a:
+ "LeBron James|1|lebron;Magic Johnson|1|magic;Shaquille O'Neal|1|shaq,oneal,shaquille oneal;Tim Duncan|1|duncan;Kareem Abdul-Jabbar|2|kareem,abdul jabbar,lew alcindor;Bill Walton|3|walton;James Worthy|3|worthy;*Hakeem Olajuwon|2|hakeem,olajuwon,akeem olajuwon"},
+ {k:"roymvp",pk:"legends",q:"Name a Rookie of the Year who also won NBA MVP",h:"Later or in the same season, through 2026",f:"Bob McAdoo was Rookie of the Year in 1973 and MVP in 1975 with the Buffalo Braves.",a:
+ "Michael Jordan|1|jordan,mj;LeBron James|1|lebron;Kevin Durant|1|durant,kd;Derrick Rose|1|rose,d rose;Larry Bird|1|bird;Shaquille O'Neal|1|shaq,oneal,shaquille oneal;Tim Duncan|1|duncan;Allen Iverson|1|iverson,ai;David Robinson|2|robinson,the admiral;Kareem Abdul-Jabbar|2|kareem,abdul jabbar,lew alcindor;Wilt Chamberlain|2|wilt,chamberlain;Oscar Robertson|3|oscar,big o;Willis Reed|3|reed;Wes Unseld|3|unseld;Bob Pettit|4|pettit;Dave Cowens|4|cowens;*Bob McAdoo|4|mcadoo"},
+ {k:"mvpd",pk:"legends",q:"Name an NBA MVP who also won Defensive Player of the Year",h:"Both awards at any point, through 2026",f:"Kevin Garnett won MVP in 2004 with Minnesota and Defensive Player of the Year in 2008, his first Boston season.",a:
+ "Michael Jordan|1|jordan,mj;Giannis Antetokounmpo|1|giannis,greek freak;Hakeem Olajuwon|1|hakeem,olajuwon;David Robinson|2|robinson,the admiral;*Kevin Garnett|2|garnett,kg"},
+ {k:"mjc",pk:"legends",q:"Name a head coach Michael Jordan played for in the NBA",h:"Bulls and Wizards",f:"Stan Albeck coached Jordan for one season, 1985–86, when a broken foot limited him to 18 games.",a:
+ "Phil Jackson|1|phil jackson;Doug Collins|2|collins;Kevin Loughery|4|loughery;*Stan Albeck|4|albeck"},
+ // ---- JOURNEYMEN ----
+ {k:"shaq",pk:"journey",q:"Name a team Shaquille O'Neal played for",h:"NBA, 1992–2011",f:"Shaq's last season, 2010–11, was spent in Boston.",a:
+ "Los Angeles Lakers|1|lakers;Orlando Magic|1|magic,orlando;Miami Heat|1|heat,miami;Phoenix Suns|2|suns,phoenix;Cleveland Cavaliers|3|cavaliers,cavs,cleveland;*Boston Celtics|3|celtics,boston"},
+ {k:"vc",pk:"journey",q:"Name a team Vince Carter played for",h:"NBA, 1998–2020",f:"Carter's last game came for the Hawks in March 2020, closing a record 22-season career.",a:
+ "Toronto Raptors|1|raptors,toronto;Brooklyn Nets|1|nets,new jersey nets,new jersey,brooklyn;Orlando Magic|2|magic,orlando;Dallas Mavericks|2|mavericks,mavs,dallas;Phoenix Suns|3|suns,phoenix;Memphis Grizzlies|3|grizzlies,memphis;Sacramento Kings|4|kings,sacramento;*Atlanta Hawks|3|hawks,atlanta"},
+ {k:"melo",pk:"journey",q:"Name a team Carmelo Anthony played for",h:"NBA, 2003–2022",f:"Melo lasted 10 games in Houston in 2018 before the Rockets moved on.",a:
+ "Denver Nuggets|1|nuggets,denver;New York Knicks|1|knicks,new york;Oklahoma City Thunder|2|thunder,okc;Los Angeles Lakers|2|lakers;Portland Trail Blazers|2|trail blazers,blazers,portland;*Houston Rockets|3|rockets,houston"},
+ {k:"d12",pk:"journey",q:"Name an NBA team Dwight Howard played for",h:"NBA only, 2004–2022",f:"Howard signed with Washington in 2018 and played just nine games for the Wizards.",a:
+ "Orlando Magic|1|magic,orlando;Los Angeles Lakers|1|lakers;Houston Rockets|2|rockets,houston;Atlanta Hawks|2|hawks,atlanta;Charlotte Hornets|3|hornets,charlotte;Philadelphia 76ers|3|76ers,sixers,philadelphia;*Washington Wizards|4|wizards,washington"},
+ {k:"kd",pk:"journey",q:"Name a team Kevin Durant has played for",h:"NBA, through 2026",f:"Durant's rookie year, 2007–08, was the SuperSonics' last season in Seattle.",a:
+ "Oklahoma City Thunder|1|thunder,okc;Golden State Warriors|1|warriors,golden state,gsw;Brooklyn Nets|1|nets,brooklyn;Phoenix Suns|2|suns,phoenix;Houston Rockets|2|rockets,houston;*Seattle SuperSonics|3|supersonics,sonics,seattle"},
+ {k:"rod",pk:"journey",q:"Name a team Dennis Rodman played for",h:"NBA, 1986–2000",f:"Rodman's NBA career ended with 12 games for Dallas in 2000.",a:
+ "Chicago Bulls|1|bulls,chicago;Detroit Pistons|1|pistons,detroit;San Antonio Spurs|2|spurs,san antonio;Los Angeles Lakers|3|lakers;*Dallas Mavericks|3|mavericks,mavs,dallas"},
+ {k:"ai3",pk:"journey",q:"Name a team Allen Iverson played for",h:"Pro career, NBA and overseas",f:"Iverson's only season abroad was 2010–11, with Beşiktaş in Istanbul.",a:
+ "Philadelphia 76ers|1|76ers,sixers,philadelphia,philly;Denver Nuggets|2|nuggets,denver;Detroit Pistons|2|pistons,detroit;Memphis Grizzlies|3|grizzlies,memphis;*Besiktas|4|besiktas jk,besiktas istanbul"},
+ {k:"kidd",pk:"journey",q:"Name a team Jason Kidd played for",h:"NBA, 1994–2013",f:"Kidd's final season, 2012–13, was spent with the Knicks.",a:
+ "Brooklyn Nets|1|nets,new jersey nets,new jersey,brooklyn;Dallas Mavericks|1|mavericks,mavs,dallas;Phoenix Suns|2|suns,phoenix;*New York Knicks|3|knicks,new york"},
+ {k:"tmac",pk:"journey",q:"Name an NBA team Tracy McGrady played for",h:"NBA only, 1997–2013",f:"McGrady signed with San Antonio for the 2013 playoff run, his only trip to the Finals.",a:
+ "Orlando Magic|1|magic,orlando;Houston Rockets|1|rockets,houston;Toronto Raptors|1|raptors,toronto;New York Knicks|3|knicks,new york;Detroit Pistons|3|pistons,detroit;Atlanta Hawks|3|hawks,atlanta;*San Antonio Spurs|3|spurs,san antonio"},
+ {k:"gp",pk:"journey",q:"Name a team Gary Payton played for",h:"NBA, 1990–2007",f:"Seattle traded Payton to Milwaukee in February 2003, ending more than 12 seasons as a Sonic.",a:
+ "Seattle SuperSonics|1|supersonics,sonics,seattle;Los Angeles Lakers|2|lakers;Miami Heat|2|heat,miami;Boston Celtics|3|celtics,boston;*Milwaukee Bucks|3|bucks,milwaukee"},
+ {k:"pau",pk:"journey",q:"Name an NBA team Pau Gasol played for",h:"NBA only, 2001–2019",f:"Gasol's last NBA games were three appearances for Milwaukee in 2019.",a:
+ "Los Angeles Lakers|1|lakers;Memphis Grizzlies|1|grizzlies,memphis;Chicago Bulls|2|bulls,chicago;San Antonio Spurs|2|spurs,san antonio;*Milwaukee Bucks|3|bucks,milwaukee"},
+ {k:"rondo",pk:"journey",q:"Name a team Rajon Rondo played for",h:"NBA, 2006–2022",f:"Rondo led the NBA in assists with Sacramento in 2015–16.",a:
+ "Boston Celtics|1|celtics,boston;Los Angeles Lakers|1|lakers;Dallas Mavericks|2|mavericks,mavs,dallas;Chicago Bulls|2|bulls,chicago;New Orleans Pelicans|2|pelicans,new orleans;Atlanta Hawks|3|hawks,atlanta;Los Angeles Clippers|3|clippers,la clippers;Cleveland Cavaliers|3|cavaliers,cavs,cleveland;*Sacramento Kings|3|kings,sacramento"},
+ {k:"cb1",pk:"journey",q:"Name a team Chauncey Billups played for",h:"NBA, 1997–2014",f:"Boston drafted Billups third in 1997, then traded him to Toronto halfway through his rookie season.",a:
+ "Detroit Pistons|1|pistons,detroit;Denver Nuggets|1|nuggets,denver;Boston Celtics|2|celtics,boston;Los Angeles Clippers|2|clippers,la clippers;New York Knicks|2|knicks,new york;Minnesota Timberwolves|3|timberwolves,wolves,minnesota;*Toronto Raptors|3|raptors,toronto"},
+ // ---- COLLEGE HOOPS ----
+ {k:"ncaam",pk:"college",q:"Name a school that has won the NCAA men's tournament",h:"Champions 1939–2026",f:"In 1950 CCNY won both the NCAA tournament and the NIT, the only school ever to do it.",a:
+ "Duke|1|blue devils;North Carolina|1|unc,carolina,tar heels;Kentucky|1|uk,kentucky wildcats;Kansas|1|ku,jayhawks;UCLA|1|bruins;UConn|1|connecticut,huskies;Michigan|1|wolverines;Villanova|2|nova;Michigan State|2|msu,spartans;Indiana|2|iu,hoosiers;Florida|2|gators;Louisville|2|cardinals;Syracuse|2|cuse,orange;Georgetown|2|hoyas;Virginia|2|uva,cavaliers;Arizona|3|arizona wildcats;Arkansas|3|razorbacks,hogs;Maryland|3|terps,terrapins;Baylor|3|baylor bears;UNLV|3|runnin rebels,nevada las vegas;NC State|3|north carolina state,wolfpack;Marquette|3|golden eagles;Cincinnati|4|bearcats;Ohio State|4|buckeyes,osu;Loyola Chicago|4|loyola,ramblers;UTEP|4|texas western,miners;San Francisco|4|usf,dons;Oklahoma State|4|oklahoma a and m,okstate;Holy Cross|5|crusaders;La Salle|5|explorers;California|5|cal,golden bears;Stanford|5|stanford cardinal;Utah|5|utes;Wyoming|5;Wisconsin|5|badgers;Oregon|5|ducks;*CCNY|5|city college of new york,city college"},
+ {k:"c3m",pk:"college",q:"Name a coach who won three or more NCAA men's titles",h:"Through 2026",f:"Bob Knight's 1976 Indiana team went 32–0, the last unbeaten men's champion.",a:
+ "John Wooden|1|wooden;Mike Krzyzewski|1|coach k,krzyzewski;Adolph Rupp|2|rupp;Roy Williams|2|roy williams;Jim Calhoun|2|calhoun;*Bob Knight|2|knight,bobby knight"},
+ {k:"c00",pk:"college",q:"Name a coach who has won the NCAA men's title since 2000",h:"Champions 2000–2026, vacated titles count",f:"Kevin Ollie won it in 2014, his second season in charge, with a UConn team seeded seventh.",a:
+ "Mike Krzyzewski|1|coach k,krzyzewski;Roy Williams|1|roy williams;Bill Self|1|self;John Calipari|1|calipari;Jay Wright|1|jay wright,wright;Dan Hurley|1|hurley;Tom Izzo|1|izzo;Billy Donovan|2|donovan;Jim Calhoun|2|calhoun;Tony Bennett|2|tony bennett;Rick Pitino|2|pitino;Jim Boeheim|2|boeheim;Scott Drew|2|drew;Dusty May|2|dusty may;Todd Golden|3|golden;Gary Williams|3|gary williams;*Kevin Ollie|3|ollie"},
+ {k:"s11",pk:"college",q:"Name a No. 11 seed that reached the men's Final Four",h:"Through 2026",f:"LSU was the first, in 1986, and beat the top three seeds in its region on the way.",a:
+ "Loyola Chicago|1|loyola,ramblers;VCU|1|virginia commonwealth;George Mason|1|mason,gmu;NC State|2|north carolina state,wolfpack;UCLA|2|bruins;*LSU|3|louisiana state"},
+ {k:"mop",pk:"college",q:"Name a men's Final Four Most Outstanding Player since 2000",h:"2000–2026",f:"Juan Dixon took the award in 2002, when Maryland won its first title.",a:
+ "Carmelo Anthony|1|carmelo,melo;Anthony Davis|1|anthony davis,ad;Kemba Walker|1|kemba,walker;Joakim Noah|2|noah;Shane Battier|2|battier;Mario Chalmers|2|chalmers;Tyus Jones|2|tyus;Donte DiVincenzo|2|divincenzo,big ragu;Shabazz Napier|2|napier;Elliot Cadeau|2|cadeau;Walter Clayton Jr.|2|walter clayton,clayton;Kyle Singler|3|singler;Emeka Okafor|3|okafor;Sean May|3|sean may;Corey Brewer|3|brewer;Wayne Ellington|3|ellington;Ryan Arcidiacono|3|arcidiacono;Joel Berry II|3|joel berry,berry;Kyle Guy|3|kyle guy;Jared Butler|3|butler;Ochai Agbaji|3|agbaji;Adama Sanogo|3|sanogo;Tristen Newton|3|newton;Mateen Cleaves|3|cleaves;Luke Hancock|4|hancock;*Juan Dixon|3|dixon"},
+ {k:"both",pk:"college",q:"Name a school that has won both the men's and women's NCAA titles",h:"Division I, through 2026",f:"Stanford's men won in 1942; its women won in 1990, 1992 and 2021.",a:
+ "UConn|1|connecticut,huskies;North Carolina|2|unc,carolina,tar heels;Baylor|2|bears;UCLA|2|bruins;Maryland|3|terps,terrapins;*Stanford|3|cardinal"},
+ {k:"unb",pk:"college",q:"Name a school that finished unbeaten as NCAA men's champion",h:"1939–2026",f:"Bill Russell's San Francisco Dons went 29–0 in 1955–56.",a:
+ "UCLA|1|bruins;Indiana|1|iu,hoosiers;North Carolina|2|unc,carolina,tar heels;*San Francisco|4|usf,dons"},
+ {k:"blue",pk:"college",q:"Name a school with five or more NCAA men's titles",h:"Through 2026",f:"Indiana's fifth title came in 1987, on Keith Smart's jumper with four seconds left.",a:
+ "UCLA|1|bruins;Kentucky|1|uk;North Carolina|1|unc,carolina,tar heels;Duke|1|blue devils;UConn|1|connecticut,huskies;*Indiana|2|iu,hoosiers"},
+ {k:"ncaa1",pk:"college",q:"Name a college that produced a No. 1 NBA draft pick since 2000",h:"The school he left for the draft, 2000–2026",f:"Anthony Edwards went first in 2020 after one season at Georgia.",a:
+ "Duke|1|blue devils;Kentucky|1|uk;Kansas|2|ku,jayhawks;Ohio State|2|buckeyes,osu;Memphis|2|tigers;Oklahoma|2|sooners;LSU|2|louisiana state;Arizona|2|wildcats;Oklahoma State|2|okstate,cowboys;BYU|2|brigham young,cougars;Washington|3|huskies,uw;UNLV|3|runnin rebels;Cincinnati|3|bearcats;Utah|4|utes;*Georgia|3|bulldogs,uga"},
+ // ---- THE W ----
+ {k:"wch",pk:"wnba",q:"Name a WNBA champion franchise",h:"Champions 1997–2026",f:"The Sacramento Monarchs won the 2005 title and folded four years later.",a:
+ "Las Vegas Aces|1|aces,las vegas,san antonio stars,utah starzz;New York Liberty|1|liberty,new york;Minnesota Lynx|1|lynx,minnesota;Seattle Storm|1|storm,seattle;Golden State Valkyries|1|valkyries,golden state;Phoenix Mercury|2|mercury,phoenix;Los Angeles Sparks|2|sparks,la sparks;Houston Comets|2|comets,houston;Indiana Fever|2|fever,indiana;Chicago Sky|2|sky,chicago;Washington Mystics|3|mystics,washington;Detroit Shock|3|shock,detroit,tulsa shock,dallas wings;*Sacramento Monarchs|4|monarchs,sacramento"},
+ {k:"wmvp",pk:"wnba",q:"Name a WNBA MVP",h:"Every winner, 1997–2026",f:"Yolanda Griffith was MVP in 1999, her first WNBA season, with Sacramento.",a:
+ "A'ja Wilson|1|aja wilson,aja,wilson;Breanna Stewart|1|stewart,stewie;Candace Parker|1|parker;Diana Taurasi|1|taurasi;Lisa Leslie|1|leslie;Maya Moore|1|moore;Sheryl Swoopes|1|swoopes;Elena Delle Donne|2|delle donne,edd;Lauren Jackson|2|lauren jackson;Cynthia Cooper|2|cooper;Tamika Catchings|2|catchings;Sylvia Fowles|2|fowles;Nneka Ogwumike|2|nneka,ogwumike;Tina Charles|2|charles;Jonquel Jones|3|jonquel;*Yolanda Griffith|3|griffith"},
+ {k:"wfmvp",pk:"wnba",q:"Name a WNBA Finals MVP",h:"Every winner, 1997–2026",f:"Betty Lennox was Finals MVP in 2004, when Seattle won its first title.",a:
+ "A'ja Wilson|1|aja wilson,aja,wilson;Breanna Stewart|1|stewart,stewie;Diana Taurasi|1|taurasi;Candace Parker|1|parker;Maya Moore|1|moore;Cynthia Cooper|1|cooper;Lisa Leslie|1|leslie;Sylvia Fowles|2|fowles;Lauren Jackson|2|lauren jackson;Tamika Catchings|2|catchings;Gabby Williams|2|gabby williams,gabby;Jonquel Jones|2|jonquel;Chelsea Gray|2|gray;Kahleah Copper|2|copper;Seimone Augustus|3|augustus;Emma Meesseman|3|meesseman;Cappie Pondexter|3|pondexter,cappie;Katie Smith|3|katie smith;Yolanda Griffith|3|griffith;Deanna Nolan|4|nolan;Ruth Riley|4|riley;*Betty Lennox|4|lennox"},
+ {k:"w26",pk:"wnba",q:"Name a team that played in the 2026 WNBA season",h:"All 15 teams",f:"The Toronto Tempo debuted in 2026 as the WNBA's first team outside the United States.",a:
+ "Las Vegas Aces|1|aces,las vegas;New York Liberty|1|liberty,new york;Indiana Fever|1|fever,indiana;Chicago Sky|1|sky,chicago;Minnesota Lynx|1|lynx,minnesota;Seattle Storm|1|storm,seattle;Phoenix Mercury|1|mercury,phoenix;Los Angeles Sparks|1|sparks,la sparks;Golden State Valkyries|1|valkyries,golden state;Atlanta Dream|2|dream,atlanta;Connecticut Sun|2|sun,connecticut;Dallas Wings|2|wings,dallas;Washington Mystics|2|mystics,washington;Portland Fire|3|fire,portland;*Toronto Tempo|3|tempo,toronto"},
+ {k:"w1",pk:"wnba",q:"Name a No. 1 pick in the WNBA draft since 2010",h:"Drafts 2010–2026",f:"Chiney Ogwumike went first in 2014, two years after her sister Nneka.",a:
+ "Caitlin Clark|1|clark;Paige Bueckers|1|bueckers,paige;A'ja Wilson|1|aja wilson,aja;Breanna Stewart|1|stewart,stewie;Sabrina Ionescu|1|ionescu,sabrina;Maya Moore|2|moore;Brittney Griner|2|griner;Aliyah Boston|2|aliyah boston,aliyah;Azzi Fudd|2|fudd,azzi;Kelsey Plum|2|plum;Tina Charles|2|charles;Nneka Ogwumike|2|nneka;Jewell Loyd|3|loyd;Rhyne Howard|3|rhyne;Jackie Young|3|jackie young;Charli Collier|4|collier;*Chiney Ogwumike|3|chiney"},
+ {k:"w24",pk:"wnba",q:"Name a player on the 2024 US women's Olympic team",h:"Paris 2024 gold medalists",f:"Kahleah Copper made her Olympic debut in Paris, three years after she was WNBA Finals MVP.",a:
+ "A'ja Wilson|1|aja wilson,aja;Breanna Stewart|1|stewart,stewie;Diana Taurasi|1|taurasi;Sabrina Ionescu|1|ionescu,sabrina;Brittney Griner|1|griner;Napheesa Collier|2|collier,phee;Kelsey Plum|2|plum;Jackie Young|2|jackie young;Chelsea Gray|2|gray;Jewell Loyd|2|loyd;Alyssa Thomas|3|alyssa thomas;*Kahleah Copper|3|copper"},
+ {k:"ncaaw",pk:"wnba",q:"Name a school that has won the NCAA women's tournament",h:"Champions 1982–2026",f:"Louisiana Tech won the first NCAA women's tournament, in 1982.",a:
+ "UConn|1|connecticut,huskies;South Carolina|1|gamecocks;Tennessee|1|lady vols,vols;LSU|1|louisiana state;Baylor|2|lady bears;Stanford|2|cardinal;UCLA|2|bruins;Notre Dame|2|fighting irish;Texas|3|longhorns;Maryland|3|terps,terrapins;Texas A&M|3|aggies,tamu;North Carolina|3|unc,tar heels;Purdue|3|boilermakers;USC|3|southern cal,trojans;Texas Tech|4|lady raiders;Old Dominion|4|odu,lady monarchs;*Louisiana Tech|4|lady techsters,la tech"},
+ {k:"wcoach",pk:"wnba",q:"Name a coach with two or more NCAA women's titles",h:"Through 2026",f:"Linda Sharp coached USC and Cheryl Miller to back-to-back titles in 1983 and 1984.",a:
+ "Geno Auriemma|1|auriemma,geno;Dawn Staley|1|staley;Kim Mulkey|1|mulkey;Pat Summitt|1|summitt;Tara VanDerveer|2|vanderveer;Muffet McGraw|2|mcgraw,muffet;*Linda Sharp|4|sharp"},
+ {k:"wunb",pk:"wnba",q:"Name a school that finished unbeaten as NCAA women's champion",h:"1982–2026",f:"Texas went 34–0 in 1986, the first unbeaten women's champion.",a:
+ "UConn|1|connecticut,huskies;South Carolina|1|gamecocks;Baylor|2|lady bears;Tennessee|2|lady vols,vols;*Texas|3|longhorns"},
+ {k:"wdef",pk:"wnba",q:"Name a WNBA team that folded",h:"Defunct franchises, 1997–2026",f:"The first Portland Fire folded in 2002. A new Portland Fire joined the league in 2026.",a:
+ "Houston Comets|1|comets,houston;Sacramento Monarchs|2|monarchs,sacramento;Charlotte Sting|2|sting,charlotte;Cleveland Rockers|3|rockers,cleveland;Miami Sol|3|sol,miami;*Portland Fire|3|fire,portland"},
+ {k:"w2mvp",pk:"wnba",q:"Name a player with two or more WNBA MVPs",h:"Through 2026",f:"Cynthia Cooper won the first two WNBA MVPs, in 1997 and 1998, with Houston.",a:
+ "A'ja Wilson|1|aja wilson,aja,wilson;Breanna Stewart|1|stewart,stewie;Candace Parker|1|parker;Lisa Leslie|1|leslie;Sheryl Swoopes|1|swoopes;Lauren Jackson|2|lauren jackson;Elena Delle Donne|2|delle donne,edd;*Cynthia Cooper|2|cooper"},
+ {k:"worig",pk:"wnba",q:"Name one of the WNBA's eight original teams",h:"The 1997 season",f:"The Utah Starzz moved to San Antonio in 2003 and became the Las Vegas Aces in 2018.",a:
+ "New York Liberty|1|liberty,new york;Los Angeles Sparks|1|sparks,la sparks;Phoenix Mercury|1|mercury,phoenix;Houston Comets|1|comets,houston;Sacramento Monarchs|2|monarchs,sacramento;Charlotte Sting|2|sting,charlotte;Cleveland Rockers|3|rockers,cleveland;*Utah Starzz|3|starzz,utah,las vegas aces,san antonio stars,san antonio silver stars"},
+ {k:"uc1",pk:"wnba",q:"Name a UConn player taken No. 1 in the WNBA draft",h:"Through 2026",f:"Sue Bird went first in 2002 and spent her whole WNBA career in Seattle.",a:
+ "Paige Bueckers|1|bueckers,paige;Breanna Stewart|1|stewart,stewie;Maya Moore|1|moore;Diana Taurasi|1|taurasi;Azzi Fudd|2|fudd,azzi;Tina Charles|2|charles;*Sue Bird|2|bird"},
+ // ---- WORLD HOOPS ----
+ {k:"olg",pk:"world",q:"Name a country that has won men's Olympic basketball gold",h:"1936–2024",f:"Yugoslavia won gold in Moscow in 1980, beating Italy in the final.",a:
+ "United States|1|usa,us,team usa,america;Soviet Union|2|ussr,soviet;Argentina|2;*Yugoslavia|3"},
+ {k:"olm",pk:"world",q:"Name a country that has won a men's Olympic basketball medal",h:"1936–2024",f:"Mexico won bronze in 1936, when the tournament was played outdoors on clay tennis courts.",a:
+ "United States|1|usa,us,team usa,america;France|1;Spain|1;Argentina|1;Serbia|2;Lithuania|2;Australia|2;Soviet Union|2|ussr,soviet;Yugoslavia|2|fr yugoslavia;Brazil|3;Italy|3;Croatia|3;Russia|3;Canada|3;Uruguay|4;Cuba|4;*Mexico|4"},
+ {k:"wolm",pk:"world",q:"Name a country that has won a women's Olympic basketball medal",h:"1976–2024",f:"Bulgaria won bronze in 1976 and silver in 1980.",a:
+ "United States|1|usa,us,team usa,america;Australia|1;France|1;Soviet Union|2|ussr,soviet;China|2;Spain|2;Japan|2;Brazil|2;Russia|3;Serbia|3;South Korea|3|korea;Yugoslavia|4;Unified Team|4|cis;*Bulgaria|4"},
+ {k:"wcup",pk:"world",q:"Name a country that has won the men's FIBA World Cup",h:"1950–2023, including the World Championship years",f:"Argentina won the first World Championship, at home in 1950.",a:
+ "United States|1|usa,us,team usa,america;Spain|1;Germany|1;Yugoslavia|2|fr yugoslavia,serbia and montenegro;Soviet Union|2|ussr,soviet;Brazil|3;*Argentina|2"},
+ {k:"eurob",pk:"world",q:"Name a country that has won the men's EuroBasket",h:"1935–2025",f:"Egypt hosted and won EuroBasket in 1949.",a:
+ "Spain|1;Soviet Union|1|ussr,soviet;Yugoslavia|1|fr yugoslavia;Greece|1;Germany|1;France|2;Italy|2;Lithuania|2;Slovenia|2;Russia|3;Latvia|3;Czechoslovakia|3;Hungary|5;*Egypt|4"},
+ {k:"el",pk:"world",q:"Name a EuroLeague champion club",h:"European Champions Cup and EuroLeague, 1958–2026",f:"Limoges won in 1993, still the only French club to lift the trophy.",a:
+ "Real Madrid|1|real,madrid;CSKA Moscow|1|cska;Panathinaikos|1|pao;Maccabi Tel Aviv|1|maccabi,maccabi elite;Olympiacos|1|olympiakos;Barcelona|1|barca;Fenerbahce|1|fener;Anadolu Efes|2|efes,efes pilsen;Olimpia Milano|2|milano,olimpia milan,armani milano,simmenthal,simmenthal milano,tracer milano;Zalgiris|2|zalgiris kaunas;Partizan|2|partizan belgrade;Virtus Bologna|3|virtus,kinder bologna;Split|3|jugoplastika,jugoplastika split,kk split,pop 84;Cibona|3|cibona zagreb;Varese|3|ignis varese,ignis,mobilgirgi varese,pallacanestro varese;Joventut|3|joventut badalona,7up joventut,penya;Cantu|4|pallacanestro cantu,squibb cantu,ford cantu;Virtus Roma|4|banco di roma,roma;Bosna|4|bosna sarajevo;ASK Riga|4|riga,rigas ask;Dinamo Tbilisi|4|dinamo,tbilisi;*Limoges|3|limoges csp,csp"},
+ {k:"redeem",pk:"world",q:"Name a player on the 2008 US men's Olympic team",h:"The Beijing 'Redeem Team'",f:"Michael Redd, then a Milwaukee Buck, made the Redeem Team as its shooting specialist.",a:
+ "Kobe Bryant|1|kobe;LeBron James|1|lebron;Dwyane Wade|1|wade,dwayne wade;Carmelo Anthony|1|carmelo,melo;Chris Paul|1|cp3,chris paul;Dwight Howard|2|dwight,howard;Jason Kidd|2|kidd;Chris Bosh|2|bosh;Deron Williams|3|deron;Carlos Boozer|3|boozer;Tayshaun Prince|3|prince,tayshaun;*Michael Redd|4|redd"},
+ {k:"usa24",pk:"world",q:"Name a player on the 2024 US men's Olympic team",h:"Paris 2024 gold medalists",f:"Derrick White replaced Kawhi Leonard on the roster weeks before Paris.",a:
+ "LeBron James|1|lebron;Stephen Curry|1|curry,steph;Kevin Durant|1|durant,kd;Joel Embiid|1|embiid;Jayson Tatum|1|tatum;Anthony Edwards|1|anthony edwards,ant;Devin Booker|2|booker;Anthony Davis|2|anthony davis,ad;Bam Adebayo|2|bam,adebayo;Jrue Holiday|2|holiday,jrue;Tyrese Haliburton|2|haliburton;*Derrick White|3|derrick white,white"},
+ {k:"dream",pk:"world",q:"Name a player on the 1992 Dream Team",h:"Barcelona 1992",f:"Christian Laettner was the only college player on the Dream Team.",a:
+ "Michael Jordan|1|jordan,mj;Magic Johnson|1|magic;Larry Bird|1|bird;Charles Barkley|1|barkley,sir charles;Scottie Pippen|1|pippen;Patrick Ewing|2|ewing;Karl Malone|2|karl malone,malone,mailman;John Stockton|2|stockton;David Robinson|2|robinson,the admiral;Clyde Drexler|3|drexler,the glide;Chris Mullin|3|mullin;*Christian Laettner|4|laettner"},
+ {k:"mvpi",pk:"world",q:"Name an NBA MVP born outside the US mainland",h:"Through 2026",f:"Tim Duncan grew up a swimmer on St. Croix and turned to basketball after Hurricane Hugo wrecked the island's pool in 1989.",a:
+ "Giannis Antetokounmpo|1|giannis,greek freak;Nikola Jokic|1|jokic,joker;Dirk Nowitzki|1|dirk,nowitzki;Shai Gilgeous-Alexander|1|sga,shai;Hakeem Olajuwon|1|hakeem,olajuwon;Joel Embiid|2|embiid;Steve Nash|2|nash;*Tim Duncan|3|duncan"},
+ {k:"ifmvp",pk:"world",q:"Name an NBA Finals MVP born outside the US mainland",h:"Through 2026",f:"Tony Parker, the 2007 Finals MVP, was born in Bruges, Belgium.",a:
+ "Giannis Antetokounmpo|1|giannis,greek freak;Nikola Jokic|1|jokic,joker;Dirk Nowitzki|1|dirk,nowitzki;Hakeem Olajuwon|1|hakeem,olajuwon;Shai Gilgeous-Alexander|1|sga,shai;Tim Duncan|2|duncan;*Tony Parker|2|parker"},
+ {k:"pk1i",pk:"world",q:"Name a No. 1 overall NBA pick born outside the US mainland",h:"Every draft, through 2026",f:"Mychal Thompson, born in Nassau, was the first foreign-born No. 1 pick, in 1978. His son is Klay Thompson.",a:
+ "Victor Wembanyama|1|wembanyama,wemby;Yao Ming|1|yao;Hakeem Olajuwon|1|hakeem,olajuwon;Andrew Wiggins|2|wiggins;Ben Simmons|2|simmons;Kyrie Irving|2|kyrie,irving;Patrick Ewing|2|ewing;Tim Duncan|2|duncan;Andrea Bargnani|3|bargnani;Andrew Bogut|3|bogut;Deandre Ayton|3|ayton;Anthony Bennett|3|bennett;Zaccharie Risacher|3|risacher;Michael Olowokandi|4|olowokandi;*Mychal Thompson|4|mychal thompson"},
+ {k:"beat",pk:"world",q:"Name a country that has beaten a US men's team of NBA players at the Olympics or World Cup",h:"Tournament games, 1992–2024",f:"Puerto Rico beat the US 92–73 in the opening game of the 2004 Olympics.",a:
+ "France|1;Argentina|1;Germany|1;Lithuania|2;Serbia|2;Spain|2;Greece|2;Canada|2;Yugoslavia|3|fr yugoslavia,serbia and montenegro;*Puerto Rico|3"},
+ {k:"usac",pk:"world",q:"Name a head coach of the US men's Olympic team since 1992",h:"Barcelona 1992 to Paris 2024",f:"Rudy Tomjanovich coached the 2000 team to gold in Sydney.",a:
+ "Mike Krzyzewski|1|coach k,krzyzewski;Gregg Popovich|1|popovich,pop;Steve Kerr|1|kerr;Chuck Daly|2|daly;Larry Brown|2|larry brown;Lenny Wilkens|3|wilkens;*Rudy Tomjanovich|3|tomjanovich,rudy t"}
+];
+const PACKS={
+  nba:{n:"THE LEAGUE",tag:"PRIME TIME",d:"NBA champions, MVPs, drafts and records",go:"TIP OFF →"},
+  legends:{n:"HALL OF FAME",tag:"THE RAFTERS",d:"dynasties, all-time greats and the record book",go:"RAISE THE BANNERS →"},
+  journey:{n:"JOURNEYMEN",tag:"BAGS PACKED",d:"every team a star suited up for",go:"HIT THE ROAD →"},
+  college:{n:"COLLEGE HOOPS",tag:"THE BIG DANCE",d:"NCAA champions, coaches and Final Fours",go:"CUT DOWN THE NETS →"},
+  wnba:{n:"THE W",tag:"NOW SHOWING",d:"the WNBA, women's college hoops and Team USA",go:"CHECK IN →"},
+  world:{n:"WORLD HOOPS",tag:"PASSPORT READY",d:"Olympics, World Cups and the EuroLeague",go:"BOARD THE PLANE →"}
+};
+</script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ROUND=24,WARM=3,FT_PER_PT=88.75/700; // 700 points reaches the far rim
+
+// tiers: 0 shot-clock violation, 1 layup … 6 buzzer-beater (mirrors the six-step rarity ladder)
+const T=[
+ {n:"Shot clock",p:0,e:"⬛",fl:"Violation. The clock beat you to it."},
+ {n:"Layup",p:10,e:"⚪",fl:"The answer the whole gym shouts."},
+ {n:"Granny shot",p:15,e:"🟠",fl:"Felt cheeky. Half the gym had the same idea."},
+ {n:"Jumper",p:30,e:"🟢",fl:"Pure. Makes the highlights."},
+ {n:"Step-back",p:60,e:"🔵",fl:"Created space. Not many saw that."},
+ {n:"Logo three",p:85,e:"🟣",fl:"Deep cut. The bench is on its feet."},
+ {n:"Buzzer-beater",p:100,e:"🌟",fl:""}];
+const SCOUT=[[0,150,1,"Pickup Run","Lost on next. Call it and run it back."],[151,250,3,"Rec League","Honest hooper. The tape holds up."],[251,350,4,"Varsity","Starting five. Nearly at half court."],[351,449,5,"Division I","Crossing half court on the attack. Scouts are in the gym."],[450,700,6,"The League","Lottery pick. The whole arena knows your name."]];
+
+// 8×8 pixel icons per tier
+const ICONS=[
+ "..####..|.#....#.|#..#...#|#..#...#|#..###.#|#......#|.#....#.|..####..",
+ ".##....#|.##....#|.......#|..######|..#.#.#.|...#.#..|........|........",
+ "....##..|...#..#.|..#....#|.#......|#.......|##......|##......|........",
+ "...##...|..#..#..|...##...|..####..|..####..|...##...|..#..#..|.#....#.",
+ "....##..|...####.|....##..|..####..|#.#.##..|....##..|#..#..#.|..#....#",
+ "######..|.....#..|....#...|...###..|......#.|......#.|#....#..|.####...",
+ "#..#..#.|.#.#.#..|..###...|#######.|..###...|.#.#.#..|#..#..#.|........"];
+function icon(t,cls){const rows=ICONS[t].split("|");let r="";rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==="#")r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}));
+  return `<svg class="px ${cls||""}" viewBox="0 0 8 8" data-t="${t}" style="fill:var(--tc)" aria-hidden="true">${r}</svg>`}
+const BALLMAP=".OOOO.|OLOKOO|OOOKOO|KKKKKK|OOOKOO|.OOKO.",BPAL={O:"#ff8a2a",L:"#ffc285",K:"#3a1d0e"};
+function pixels(map,pal,s=1){let r="";map.split("|").forEach((row,y)=>[...row].forEach((c,x)=>{if(pal[c])r+=`<rect x="${x*s}" y="${y*s}" width="${s}" height="${s}" fill="${pal[c]}"/>`}));return r}
+
+// data
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/ø/g,"o").replace(/ß/g,"ss").replace(/&/g,"and").replace(/[^a-z0-9 ]/g," ").replace(/\b(fc|cf|the)\b/g," ").replace(/\s+/g," ").trim();
+const tierOf=(r,gem,clever)=>gem?6:clever?2:r<=1?1:r===2?3:r===3?4:5;
+const P=RAW.map(p=>({...p,a:p.a.split(";").map(s=>{let[n,r,al]=s.split("|");const gem=n[0]==="*",clever=n[0]==="~";if(gem||clever)n=n.slice(1);const t=tierOf(+r,gem,clever);
+  return{name:n,t,p:T[t].p,keys:[n,...(al?al.split(","):[])].map(norm).filter(Boolean)}})}));
+const byK=Object.fromEntries(P.map((p,i)=>[p.k,i]));
+
+// spelling help: edit distance where a swapped pair of letters counts once; gives up past `max`
+function lev(a,b,max=4){const n=a.length,m=b.length;if(Math.abs(n-m)>max)return max+1;
+  let p2=new Array(m+1).fill(0),p1=[...Array(m+1).keys()],c=new Array(m+1);
+  for(let i=1;i<=n;i++){c[0]=i;let lo=i;
+    for(let j=1;j<=m;j++){let v=Math.min(p1[j]+1,c[j-1]+1,p1[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])v=Math.min(v,p2[j-2]+1);c[j]=v;if(v<lo)lo=v}
+    if(lo>max)return max+1;const t=p2;p2=p1;p1=c;c=t}
+  return p1[m]}
+// sound-alike skeleton, so "Kryzewski" and "Krzyzewski" land next to each other
+function sk(s){s=s.replace(/[^a-z]/g,"").replace(/ph/g,"f").replace(/sch|sh/g,"s").replace(/ch|ck|c|q/g,"k").replace(/x/g,"ks").replace(/z/g,"s").replace(/y/g,"i").replace(/w/g,"v").replace(/h/g,"");
+  return s?(s[0]+s.slice(1).replace(/[aeiou]/g,"")).replace(/(.)\1+/g,"$1"):""}
+const tolFor=L=>L<=3?0:L<=5?1:L<=8?2:L<=12?3:4;
+P.forEach(p=>p.a.forEach(a=>a.kx=a.keys.map(k=>({k,ns:k.replace(/ /g,""),sk:sk(k),tk:k.split(" ")}))));
+// real names that aren't answers here should never be "corrected" into one that is
+const KNOWN=new Set([...P.flatMap(p=>p.a.flatMap(a=>a.keys)),...("trae young|angel reese|jalen williams|chet holmgren|jamal murray|paul george|jimmy butler|lonzo ball|manu ginobili|tracy mcgrady|grant hill|penny hardaway|chris webber|pete maravich|robert parish|kristaps porzingis|al horford|toni kukoc|horace grant|john paxson|sue bird|cheryl miller|nancy lieberman|teresa edwards|juju watkins|cameron brink|kamilla cardoso|dave cowens|bill sharman|vlade divac|steve francis|gilbert arenas|amare stoudemire|jason terry|lamarcus aldridge|demar derozan|kyle lowry|pascal siakam|ja morant|desmond bane|tyrese maxey|jalen green|alperen sengun|fred vanvleet|kon knueppel|vj edgecombe|ace bailey|dylan harper|jabari smith|amen thompson|ausar thompson|scoot henderson|brandon miller|zach edey|reed sheppard|derrick white|"+
+  "nigeria|cameroon|china|philippines|dominican republic|new zealand|south sudan|montenegro|poland|finland|georgia|israel|venezuela|angola|senegal|iran|jordan|turkey|czech republic|netherlands|belgium|great britain|england|south africa|ukraine|bosnia|north macedonia|bahamas|jamaica|panama|portugal|sweden|denmark|norway|switzerland|austria|ireland|scotland|korea|taiwan|india|tunisia|morocco|colombia|chile|peru|"+
+  "gonzaga|houston|auburn|alabama|iowa|iowa state|creighton|xavier|kansas state|west virginia|wake forest|georgia tech|illinois|minnesota|nebraska|northwestern|penn state|rutgers|arizona state|colorado|san diego state|nevada|boise state|saint marys|st johns|seton hall|providence|butler|dayton|richmond|davidson|wichita state|temple|smu|tulane|ole miss|mississippi state|missouri|florida state|miami|clemson|virginia tech|pittsburgh|boston college|umbc|fairleigh dickinson|princeton|harvard|yale|penn|louisiana|ohio|utah state|washington state|oregon state|colorado state|new mexico|new mexico state|kent state|akron|toledo|western kentucky|murray state|belmont|saint louis|santa clara|fresno state|hawaii|tennessee|texas|oklahoma|mississippi|purdue|usc|stanford|notre dame|south carolina|"+
+  "vancouver|seattle|buffalo braves|kansas city kings|new jersey|bobcats|supersonics|toronto tempo|portland fire|seattle storm|atlanta dream").split("|").map(norm)]);
+const STOP=new Set("the new los angeles san saint city state university college of at and de la le el van der von north south east west team club".split(" "));
+// "Texas" is a school of its own, not shorthand for "Texas Western"
+const QUAL=/\b(state|tech|western|eastern|northern|southern|central|commonwealth|dominion|a and m)\b/;
+// exact: counts. near: correction preview. vague: too generic. {}: not an answer.
+function match(p,guess){
+  const g=norm(guess);if(!g)return{};
+  const bag=s=>s.split(" ").sort().join(" "),gb=bag(g),gn=g.replace(/ /g,"");
+  for(const a of p.a)if(a.kx.some(x=>x.k===g||x.ns===gn||bag(x.k)===gb))return{exact:a};
+  const gt=g.split(" "),gs=sk(g),gk=KNOWN.has(g),gq=QUAL.test(g);
+  if(gt.every(w=>w.length<3||STOP.has(w)))return p.a.some(a=>a.kx.some(x=>x.tk.some(t=>gt.includes(t))))?{vague:true}:{};
+  const cand=[];
+  for(const a of p.a){let best=9,tokHit=false;
+    for(const x of a.kx){
+      const L=Math.max(gn.length,x.ns.length),tl=tolFor(L);
+      if(tl){const d=lev(gn,x.ns,tl);if(d<=tl)best=Math.min(best,d/L)}
+      if(gs.length>=2&&x.sk.length>=2&&gs[0]===x.sk[0]){const tol=x.sk.length<=3?0:x.sk.length<=6?1:2,ds=lev(gs,x.sk,tol);if(ds<=tol)best=Math.min(best,.12+ds/x.sk.length)}
+      if(gk&&!gq&&QUAL.test(x.k))continue;
+      if(gt.length===1&&x.tk.length>1)for(const t of x.tk){if(t.length<4||STOP.has(t))continue;
+        if(t===g){best=Math.min(best,.1);tokHit=true;continue}
+        const tt=tolFor(t.length),dt=lev(g,t,tt);if(tt&&dt<=tt)best=Math.min(best,.18+dt/t.length);
+        else if(g.length>=5&&g.length>=t.length*.5&&t.startsWith(g))best=Math.min(best,.3)}
+      if(g.length>=5&&gn.length>=x.ns.length*.5&&x.ns.startsWith(gn))best=Math.min(best,.25)}
+    if(best<.6)cand.push({a,s:best,tokHit})}
+  if(!cand.length||(gk&&!cand.some(c=>c.tokHit)))return{};
+  cand.sort((x,y)=>x.s-y.s||x.a.name.localeCompare(y.a.name));
+  const top=cand.filter(c=>c.s<=cand[0].s+.12);
+  return top.length>3?{vague:true}:{near:top.map(c=>c.a),conf:cand[0].s};
+}
+
+// days
+const EPOCH=Date.UTC(2026,9,20);
+const dayNum=()=>Math.max(1,Math.floor((Date.now()-EPOCH)/864e5)+1);
+const dayDate=n=>new Date(EPOCH+(n-1)*864e5).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"});
+function rng(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
+function shuffle(arr,r=Math.random){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const dailyOrder=n=>shuffle(P.map((_,i)=>i),rng(n*7919+13)).slice(0,7);
+
+// settings and saved runs (per-viewer conveniences)
+const SET=Object.assign({snd:true,low:false,cb:false,corr:true,clr:false},LS.get("bz1-set",{}));
+function applySet(){document.documentElement.classList.toggle("low",SET.low);document.documentElement.classList.toggle("cb",SET.cb);
+  $$(".sw").forEach(b=>{const on=!!SET[b.dataset.k];b.setAttribute("aria-checked",on);b.querySelector("i").textContent=on?"ON":"OFF"});
+  $("#snd").textContent=SET.snd?"♪":"×";$("#snd").setAttribute("aria-label",SET.snd?"Mute sound":"Turn sound on")}
+const RUNS=LS.get("bz1-runs",{});
+const saveRuns=()=>LS.set("bz1-runs",RUNS);
+function streak(){let s=0;for(let d=dayNum();d>=1;d--){if(RUNS["d"+d]?.done)s++;else if(d===dayNum())continue;else break}return s}
+
+// sound: tiny synth, starts only after a tap
+const SFX={ctx:null,
+  ok(){if(!SET.snd)return null;try{this.ctx=this.ctx||new (window.AudioContext||window.webkitAudioContext)();if(this.ctx.state==="suspended")this.ctx.resume();return this.ctx}catch(e){return null}},
+  tone(f,d,type="sine",v=.12,f2,at=0){const c=this.ok();if(!c)return;const t=c.currentTime+at,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(c.destination);o.start(t);o.stop(t+d+.02)},
+  noise(d,v=.15,freq=900,at=0){const c=this.ok();if(!c)return;const t=c.currentTime+at,n=c.sampleRate*d,b=c.createBuffer(1,n,c.sampleRate),ch=b.getChannelData(0);for(let i=0;i<n;i++)ch[i]=(Math.random()*2-1)*(1-i/n);
+    const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=b;f.type="bandpass";f.frequency.value=freq;f.Q.value=.7;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+d*.3);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f).connect(g).connect(c.destination);s.start(t)},
+  shot(){this.tone(120,.12,"sine",.32,55);this.noise(.22,.07,3800,.14)},
+  whistle(n=1){for(let i=0;i<n;i++){this.tone(2900,.22,"square",.035,2700,i*.3);this.tone(2950,.22,"sine",.05,2800,i*.3)}},
+  horn(d=.8){const c=this.ok();if(!c)return;const t=c.currentTime,g=c.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.06,t+.02);g.gain.setValueAtTime(.06,t+d*.85);g.gain.exponentialRampToValueAtTime(.0001,t+d);g.connect(c.destination);
+    [[220,"square",.6],[233,"sawtooth",.5],[440,"square",.2]].forEach(([f,type,v])=>{const o=c.createOscillator(),gg=c.createGain();o.type=type;o.frequency.value=f;gg.gain.value=v;o.connect(gg).connect(g);o.start(t);o.stop(t+d+.02)})},
+  tick(){this.tone(1300,.05,"square",.03)},
+  buzz(){this.tone(150,.2,"sawtooth",.07,110)},
+  blip(){this.tone(880,.08,"triangle",.07,1320)},
+  cheer(t){if(t<3)return;this.noise(.6+t*.25,.05+t*.03,700);if(t>=5)this.noise(1.6,.12,1100,.1);if(t===6)[523,659,784,1047].forEach((f,i)=>this.tone(f,.3,"triangle",.08,0,.15+i*.09))}
+};
+</script>
+<script>
+// ---------- the arena scene ----------
+const NS="http://www.w3.org/2000/svg";
+const LANDMARKS=[[0,"your baseline"],[19,"your free-throw line"],[29,"your three-point line"],[47,"HALF COURT"],[65,"THEIR THREE-POINT LINE"],[75,"THEIR FREE-THROW LINE"],[88.75,"THE RIM · a perfect game ends in a dunk"]];
+const PLAYER={A:"....HHHH....|...HHHHHH...|...HSSSSH...|....SSSS....|.....SS.....|..SJJJJJJS..|..SJJNNJJS..|.S.JJNNJJ.S.|.S.JJJJJJ.S.|...WWWWWW...|...WWWWWW...|...WW..WW...|...SS..SS...|...KK..KK...|..BBB..BBB..",
+  B:"....HHHH....|...HHHHHH...|...HSSSSH...|....SSSS....|.....SS.....|..SJJJJJJS..|..SJJNNJJS..|.S.JJNNJJ.S.|.S.JJJJJJ.S.|...WWWWWW...|...WWWWWW...|...WW..WW...|..SS....SS..|.KK......KK.|BB........BB"};
+const PAL={H:"#1d1410",S:"#b97a52",J:"#2f6bff",N:"#fff3e3",W:"#2f6bff",K:"#fff3e3",B:"#140f1f"};
+const SC={cam:0,px:0,K:.42,clk:24,
+  layout(){const W=innerWidth,H=innerHeight;Object.assign(this,{W,H,S:Math.max(11,Math.min(30,W/34)),D:H*.32/50,PB:H*.9,OX:W*.16,ps:Math.max(3,Math.min(5,Math.round(H/180)))});this.V=this.S*.42},
+  proj(x,y){return[x*this.S+y*this.D*this.K+this.OX,this.PB-y*this.D]},
+  el(tag,attrs,parent,html){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(html)e.innerHTML=html;if(parent)parent.appendChild(e);return e},
+  build(){
+    this.layout();const{W,H,S,D,PB,ps,V}=this,svg=$("#scn"),el=this.el.bind(this),pts=a=>a.map(p=>p.map(v=>v.toFixed(1)).join(",")).join(" ");
+    svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.innerHTML="";
+    el("defs",{},svg,`<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#07050d"/><stop offset=".55" stop-color="#120b1f"/><stop offset="1" stop-color="#1e1333"/></linearGradient>
+      <radialGradient id="glow"><stop offset="0" stop-color="#ffe2b0" stop-opacity=".5"/><stop offset="1" stop-color="#ffe2b0" stop-opacity="0"/></radialGradient>
+      <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1d6" stop-opacity=".15"/><stop offset="1" stop-color="#fff1d6" stop-opacity="0"/></linearGradient>
+      <pattern id="crowdA" width="12" height="11" patternUnits="userSpaceOnUse">${pixels("....|.ab.|.cc.",{a:"#4a3a6e",b:"#6c5a96",c:"#2c2246"},2)}<g transform="translate(6,5)">${pixels(".dd|.ee",{d:"#8a3a4e",e:"#40202c"},2)}</g></pattern>
+      <pattern id="crowdB" width="17" height="14" patternUnits="userSpaceOnUse"><g transform="translate(3,2)">${pixels("ff|gg",{f:"#a8702e",g:"#4a3418"},2)}</g><g transform="translate(11,8)">${pixels("hh|ii",{h:"#2e6a8a",i:"#163040"},2)}</g></pattern>`);
+    el("rect",{width:W,height:H,fill:"url(#sky)"},svg);
+    const stars=el("g",{},svg);for(let i=0;i<34;i++)el("rect",{x:Math.random()*W|0,y:Math.random()*H*.1|0,width:2,height:2,fill:"#c9b8e8",class:"star",style:`animation-delay:${(Math.random()*3).toFixed(2)}s`},stars);
+    // stands
+    const sTop=H*.3,sBot=PB-50*D-H*.03;
+    el("rect",{x:0,y:sTop-12,width:W,height:12,fill:"#120c1e"},svg);
+    el("rect",{x:0,y:sTop,width:W,height:sBot-sTop,fill:"#150e24"},svg);
+    this.crowdA=el("rect",{x:-40,y:sTop+10,width:W+80,height:sBot-sTop-16,fill:"url(#crowdA)",class:"crowd",opacity:.55},svg);
+    this.crowdB=el("rect",{x:-40,y:sTop+10,width:W+80,height:sBot-sTop-16,fill:"url(#crowdB)",opacity:.45},svg);
+    for(let y=sTop+18;y<sBot;y+=22)el("rect",{x:0,y,width:W,height:2,fill:"#0c0816",opacity:.7},svg);
+    this.flashG=el("g",{},svg);
+    // rafters (parallax): title banners, light rigs and their beams
+    this.towers=el("g",{},svg);
+    const ban=["#7a1f3d","#1f3a7a","#4a2a7a","#6e4a14"],lab=["'73","23","'26","33","8","'96","24","'70","32","6"];
+    for(let i=0,x=W*.05;x<W+1600;x+=Math.max(130,W*.13),i++){const g=el("g",{opacity:.82},this.towers),bw=Math.max(18,H*.032),bl=bw*1.5,y0=H*.02;
+      el("rect",{x:x+bw/2-1,y:0,width:2,height:y0,fill:"#2a2140"},g);
+      el("path",{d:`M${x} ${y0}h${bw}v${bl}l${-bw/2} ${bw*.35}l${-bw/2} ${-bw*.35}z`,fill:ban[i%4],stroke:"#ffd166","stroke-width":1.5},g);
+      el("text",{x:x+bw/2,y:y0+bl*.62,"text-anchor":"middle",fill:"#ffd166","font-family":"VT323,monospace","font-size":(bw*.62).toFixed(1)},g).textContent=lab[i%lab.length]}
+    for(let x=W*.12;x<W+1600;x+=Math.max(320,W*.4)){const tw=el("g",{},this.towers),y0=H*.13;
+      el("polygon",{points:`${x-6},${y0+6} ${x+6},${y0+6} ${x+80},${sBot} ${x-80},${sBot}`,fill:"url(#beam)",class:"beam"},tw);
+      el("rect",{x:x-34,y:y0-3,width:68,height:3,fill:"#2a2140"},tw);
+      el("circle",{cx:x,cy:y0+6,r:H*.08,fill:"url(#glow)",class:"lamp"},tw);
+      const lg=el("g",{class:"lamp"},tw);for(let c=0;c<6;c++)el("rect",{x:x-27+c*9,y:y0,width:7,height:6,fill:c%2?"#ffe7b8":"#ffd08a"},lg)}
+    // the court, in feet: 94 long, 50 wide
+    this.world=el("g",{},svg);const w=this.world;
+    el("rect",{x:-14,y:-7,width:122,height:63,fill:"#2b1840"},w);
+    const wood=["#c8874b","#bd7c41","#d29458","#b5763c","#c98d52"];
+    for(let i=0;i<40;i++)el("rect",{x:0,y:i*1.25,width:94,height:1.25,fill:wood[i%5]},w);
+    let seams="";for(let i=0;i<40;i++)for(let x=(i*37)%11+3;x<94;x+=11)seams+=`M${x} ${i*1.25}v1.25`;
+    el("path",{d:seams,stroke:"#8e5a2c","stroke-width":1,"vector-effect":"non-scaling-stroke",opacity:.45},w);
+    const paint={fill:"#4b2a7a","fill-opacity":".88"};
+    el("rect",{x:0,y:17,width:19,height:16,...paint},w);el("rect",{x:75,y:17,width:19,height:16,...paint},w);
+    el("circle",{cx:47,cy:25,r:6,...paint},w);
+    const dec=el("g",{"vector-effect":"non-scaling-stroke"},w);el("circle",{cx:47,cy:25,r:3.4,fill:"#ff8a2a",stroke:"#3a1d0e","stroke-width":2,"vector-effect":"non-scaling-stroke"},dec);
+    el("path",{d:"M43.6 25H50.4M47 21.6V28.4M44.6 22.6Q47 25 44.6 27.4M49.4 22.6Q47 25 49.4 27.4",fill:"none",stroke:"#3a1d0e","stroke-width":2,"vector-effect":"non-scaling-stroke"},dec);
+    const L=el("g",{class:"ln",fill:"none",stroke:"#fff3e3","stroke-opacity":".92","stroke-width":2.5},w);
+    el("rect",{x:0,y:0,width:94,height:50},L);el("line",{x1:47,y1:0,x2:47,y2:50},L);
+    el("circle",{cx:47,cy:25,r:6},L);
+    [0,75].forEach(x=>el("rect",{x,y:17,width:19,height:16},L));
+    el("circle",{cx:19,cy:25,r:6},L);el("circle",{cx:75,cy:25,r:6},L);
+    const three=(c,dir)=>{const b=c-dir*5.25,e=c+dir*8.95;return`M${b} 3L${e} 3A23.75 23.75 0 0 ${dir>0?1:0} ${e} 47L${b} 47`};
+    el("path",{d:three(5.25,1)+three(88.75,-1)},L);
+    el("path",{d:"M5.25 21A4 4 0 0 1 5.25 29M88.75 21A4 4 0 0 0 88.75 29"},L);
+    // upright layer: boards, hoops, captions, markers, player
+    this.up=el("g",{},svg);const up=this.up,bh=Math.max(10,H*.024),[bx0,by]=this.proj(-12,54),[bx1]=this.proj(106,54);
+    el("rect",{x:bx0,y:by-bh,width:bx1-bx0,height:bh,fill:"#160f24"},up);
+    el("rect",{x:bx0,y:by-bh,width:bx1-bx0,height:2,fill:"#ff8f2e",opacity:.55},up);
+    // board text stays clear of the shot clocks above each backboard
+    const busy=[4,90].map(f=>{const[c]=this.proj(f,25),hw=Math.max(24,S*.95)/2+8;return[c-hw,c+hw]});
+    for(let f=-12,i=0;f<104;f+=230/S){const t=i%2?"FIND THE BUZZER-BEATER":"◆ BUZZER ◆",tw=t.length*bh*.45,[x]=this.proj(f,54);
+      if(busy.some(([a,b])=>x<b&&x+tw>a))continue;
+      el("text",{x,y:by-bh*.22,fill:i%2?"#47c2ff":"#ff8f2e","font-family":"VT323,monospace","font-size":bh*.9},up).textContent=t;i++}
+    this.clocks=[];
+    const hoop=(x,dir)=>{const g=el("g",{},up),P=(xx,yy,h=0)=>{const[a,b]=this.proj(xx,yy);return[a,b-h*V]};
+      const xs=x-dir*4.5,xb=x+dir*4,xr=x+dir*5.25;
+      el("polygon",{points:pts([P(xs-1.6,23,3),P(xs+1.6,23,3),P(xs+1.6,27,3),P(xs-1.6,27,3)]),fill:"#3a2a56"},g);
+      el("polygon",{points:pts([P(xs-1.6,23),P(xs+1.6,23),P(xs+1.6,23,3),P(xs-1.6,23,3)]),fill:"#241838"},g);
+      el("polyline",{points:pts([P(xs,25,3),P(xs,25,12.6),P(xb,25,12.6)]),fill:"none",stroke:"#4f4073","stroke-width":Math.max(4,ps*1.2),"stroke-linejoin":"round"},g);
+      const board=pts([P(xb,22,9.5),P(xb,28,9.5),P(xb,28,13),P(xb,22,13)]);
+      el("polygon",{points:board,fill:"rgba(200,230,255,.26)",stroke:"#fff3e3","stroke-width":2},g);
+      el("polygon",{points:pts([P(xb,24,10),P(xb,26,10),P(xb,26,11.5),P(xb,24,11.5)]),fill:"none",stroke:"#fff3e3","stroke-width":1.5},g);
+      const[cx,cy]=P(xb,25,13),cw=Math.max(24,S*.95),ch=Math.max(15,S*.6);
+      el("rect",{x:cx-cw/2,y:cy-ch-4,width:cw,height:ch,fill:"#0c0816",stroke:"#3b2b55"},g);
+      const t=el("text",{x:cx,y:cy-7,"text-anchor":"middle",fill:"#ff4d5e","font-family":"VT323,monospace","font-size":(ch*1.05).toFixed(1)},g);t.textContent="24";this.clocks.push(t);
+      const[rx,ry]=P(xr,25,10),rr=.75*S,rd=Math.max(2,.75*D),nh=1.6*V;
+      const net=el("g",{stroke:"#fff3e3","stroke-width":1,opacity:.75},g);
+      for(let k=0;k<=4;k++){const f=k/4;el("line",{x1:rx-rr+2*rr*f,y1:ry,x2:rx-rr*.55+1.1*rr*f,y2:ry+nh},net)}
+      el("path",{d:`M${rx-rr*.8} ${ry+nh*.45}L${rx+rr*.8} ${ry+nh*.45}M${rx-rr*.6} ${ry+nh*.8}L${rx+rr*.6} ${ry+nh*.8}`},net);
+      const[ax,ay]=P(xb,25,10);el("line",{x1:ax,y1:ay,x2:rx-dir*rr,y2:ry,stroke:"#ff6a1a","stroke-width":2},g);
+      el("ellipse",{cx:rx,cy:ry,rx:rr,ry:rd,fill:"none",stroke:"#ff6a1a","stroke-width":Math.max(2,ps*.6)},g)};
+    hoop(0,1);hoop(94,-1);
+    const cap=el("g",{"font-family":"VT323,monospace","font-size":Math.max(15,Math.min(19,H*.022))},up);
+    LANDMARKS.forEach(([x,t],i)=>{const[X,Y]=this.proj(x,54),yy=Y-bh-10-(i%2)*20,big=t===t.toUpperCase();
+      el("line",{x1:X,y1:yy+4,x2:X,y2:Y-bh,stroke:big?"#47c2ff":"#a898c2","stroke-dasharray":"2 3",opacity:.8},cap);
+      const tx=el("text",{x:X+4,y:yy,fill:big?"#47c2ff":"#d2c4ea",stroke:"#0b0814","stroke-width":3,style:"paint-order:stroke"},cap);tx.textContent="── "+t});
+    this.mk=el("g",{},up);this.lab=el("g",{},up);
+    this.pl=el("g",{id:"pl",style:`--db:${(3.6*ps).toFixed(1)}px`},up);
+    el("ellipse",{cx:6*ps,cy:15*ps,rx:5*ps,ry:ps*1.2,fill:"#000",opacity:.35},this.pl);
+    el("g",{class:"fA"},this.pl,pixels(PLAYER.A,PAL,ps));el("g",{class:"fB"},this.pl,pixels(PLAYER.B,PAL,ps));
+    el("g",{transform:`translate(${9.6*ps},${7.6*ps})`},this.pl,`<g id="ball">${pixels(BALLMAP,BPAL,Math.max(2,ps*.7))}</g>`);
+    this.place(this.px);this.setCam(this.cam);this.clock(this.clk);
+  },
+  clock(n){this.clk=n;(this.clocks||[]).forEach(t=>t.textContent=String(n).padStart(2,"0"))},
+  camFor(px){return px+(25*this.D*this.K+this.OX-this.W*.42)/this.S},
+  setCam(x){this.cam=x;const{S,D,K,OX,PB}=this;this.world.setAttribute("transform",`matrix(${S},0,${K*D},${-D},${OX-x*S},${PB})`);
+    this.up.setAttribute("transform",`translate(${-x*S},0)`);this.towers.setAttribute("transform",`translate(${-x*S*.35},0)`);
+    const o=(-x*S*.5)%24;this.crowdA.setAttribute("x",-40+o);this.crowdB.setAttribute("x",-40+(-x*S*.42)%34)},
+  place(px){this.px=px;const[X,Y]=this.proj(px,25);this.pl.setAttribute("transform",`translate(${X-6*this.ps},${Y-15*this.ps})`)},
+  screen(x){const[X,Y]=this.proj(x,25);return[X-this.cam*this.S,Y]},
+  async runTo(x1,ms){const x0=this.px;this.pl.classList.add("run");
+    await tween(ms,k=>{const x=x0+(x1-x0)*k;this.place(x);this.setCam(this.camFor(x))},e=>e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2);this.pl.classList.remove("run")},
+  markers(m0){this.mk.innerHTML="";[1,2,3,4,5,6].forEach((t,i)=>{const x=m0+T[t].p*FT_PER_PT,[X,Y]=this.proj(x,25),top=Y-18*this.ps-18-(i%3)*22;
+    const g=this.el("g",{class:"mk","data-t":t,style:`animation-delay:${i*.05}s`},this.mk);
+    this.el("line",{x1:X,y1:Y,x2:X,y2:top,style:"stroke:var(--tc)","stroke-dasharray":"3 3","stroke-width":1.5},g);
+    this.el("text",{x:X+4,y:top+4,style:"fill:var(--tc);paint-order:stroke",stroke:"#0b0814","stroke-width":3,"font-family":"VT323,monospace","font-size":16},g).textContent=`${T[t].n.toUpperCase()} · ${T[t].p}`})},
+  clearMarkers(){this.mk.innerHTML="";this.lab.innerHTML=""},
+  async fly(text,x0,x1,ms){this.lab.innerHTML="";const g=this.el("g",{},this.lab),t=this.el("text",{"font-family":"VT323,monospace","font-size":20,fill:"#fff","text-anchor":"middle"},g);t.textContent=`“${text.toUpperCase()}”`;
+    const w=t.getComputedTextLength?t.getComputedTextLength()+16:text.length*10+20,r=this.el("rect",{x:-w/2,y:-17,width:w,height:24,fill:"#1a1228",stroke:"#fff3e3","stroke-width":1.5},g);g.insertBefore(r,t);t.setAttribute("y",1);
+    await tween(ms,k=>{const[X,Y]=this.proj(x0+(x1-x0)*k,25);g.setAttribute("transform",`translate(${X},${Y-18*this.ps-6-Math.sin(k*Math.PI)*26})`);if(Math.random()<.5&&k<1)sparkle(this.screen(x0+(x1-x0)*k))},e=>1-Math.pow(1-e,3))},
+  crowdFlash(n){if(SET.low||RM)return;for(let i=0;i<n;i++){const r=this.el("rect",{x:Math.random()*this.W,y:this.H*.15+Math.random()*(this.PB-50*this.D-this.H*.2),width:3,height:3,fill:"#fff"},this.flashG);setTimeout(()=>r.remove(),180+Math.random()*500)}}
+};
+function tween(ms,step,ease=e=>e){return new Promise(res=>{if(RM||ms<=0){step(1);return res()}const t0=performance.now(),f=now=>{const k=Math.min(1,(now-t0)/ms);step(ease(k));if(k<1)requestAnimationFrame(f);else res()};requestAnimationFrame(f)})}
+
+// pixel sparks and confetti on one canvas
+const fx=$("#fx"),fctx=fx.getContext("2d"),parts=[];let fxOn=false,fxLast=0;
+function burst(x,y,colors,n,o={}){if(RM||SET.low&&n>20)n=Math.min(n,12);if(RM)return;const now=performance.now();
+  for(let i=0;i<n;i++){const a=(o.angle??-Math.PI/2)+(Math.random()-.5)*(o.spread??Math.PI*.9),v=(o.speed??8)*(.4+Math.random()*.8);
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:o.gravity??.3,s:(o.size??4)*(.6+Math.random()*.7),c:colors[i%colors.length],born:now,life:(o.life??1500)*(.7+Math.random()*.5)})}
+  if(!fxOn){fxOn=true;fx.hidden=false;const d=Math.min(2,devicePixelRatio||1);fx.width=innerWidth*d;fx.height=innerHeight*d;fctx.setTransform(d,0,0,d,0,0);fxLast=now;requestAnimationFrame(fxTick)}}
+function sparkle([x,y]){burst(x,y-30,["#ffd166","#fff","#47c2ff"],1,{speed:2,spread:6.3,gravity:.05,life:500,size:3})}
+function fxTick(now){const dt=Math.min(3,Math.max(0,(now-fxLast)/16.67));fxLast=now;fctx.clearRect(0,0,innerWidth,innerHeight);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i],age=now-p.born;if(age>p.life||p.y>innerHeight+20){parts.splice(i,1);continue}
+    p.vy+=p.g*dt;p.vx*=Math.pow(.985,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;fctx.globalAlpha=Math.max(0,Math.min(1,(1-age/p.life)*1.5));fctx.fillStyle=p.c;fctx.fillRect(Math.round(p.x),Math.round(p.y),Math.round(p.s),Math.round(p.s))}
+  if(parts.length)requestAnimationFrame(fxTick);else{fxOn=false;fctx.clearRect(0,0,innerWidth,innerHeight);fx.hidden=true}}
+</script>
+<script>
+// ---------- a match: seven rounds ----------
+let G=LS.get("bz1-cur",null),CLK=null,RES=null;
+const saveG=()=>LS.set("bz1-cur",G);
+const sleep=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
+const total=res=>res.reduce((s,r)=>s+r.p,0);
+
+function startGame(mode,opt={}){
+  let order,key,title,day=null;
+  if(mode==="daily"||mode==="archive"){day=opt.day??dayNum();order=dailyOrder(day);key="d"+day;title="GAME #"+day;
+    if(RUNS[key]?.done){RES=RUNS[key];return go("results")}}
+  else if(mode==="unl"){order=shuffle(P.map((_,i)=>i)).slice(0,7);key="u";title="UNLIMITED"}
+  else{order=shuffle(P.map((_,i)=>i).filter(i=>P[i].pk===opt.pk)).slice(0,7);key="p:"+opt.pk;title=PACKS[opt.pk].n}
+  G={mode,key,day,title,pk:opt.pk||null,order,i:0,res:[],m:0,late:mode==="archive"&&day!==dayNum()};
+  saveG();SC.place(0);SC.setCam(SC.camFor(0));go("play")}
+
+function enterGame(){if(!G)return go("");SC.place(G.m);SC.setCam(SC.camFor(G.m));hud();
+  if(G.res.length>G.i){showReveal(G.res[G.i],false)}else startRound()}
+
+function hud(){$("#hm").textContent=G.m.toFixed(1);$("#hs").textContent=total(G.res);
+  $("#sq").innerHTML=G.order.map((_,k)=>{const r=G.res[k];return r?`<i data-t="${r.t}"></i>`:`<i class="${k===G.i?"cur":""}"></i>`}).join("");
+  $("#hr").textContent=G.i>=G.order.length?"FULL TIME":`ROUND ${G.i+1} OF ${G.order.length}`}
+
+function startRound(){
+  const p=P[G.order[G.i]],ai=$("#ai");stopClock();G.pend=null;
+  $("#rv").hidden=true;$("#next").hidden=true;$("#bar").hidden=false;$("#pp").hidden=false;SC.clearMarkers();
+  $("#ppr").textContent=`ROUND ${G.i+1} OF ${G.order.length}`;$("#ppq").textContent=p.q;
+  $(".pph").textContent=`${p.h} · ► rarer answers drive farther ►`;
+  const pp=$("#pp");pp.style.animation="none";void pp.offsetWidth;pp.style.animation="";
+  ai.value="";ai.disabled=true;$("#shoot").disabled=true;setDial(1,ROUND);hud();
+  let n=RM?0:WARM;const fb=$("#fb");
+  const warm=()=>{if(!G||$("#game").classList.contains("on")===false)return;
+    if(n>0){fb.innerHTML=`<div class="warm">warming up · tip-off in ${n}</div>`;n--;setTimeout(warm,1000)}
+    else{fb.innerHTML="";SFX.whistle(1);ai.disabled=false;$("#shoot").disabled=false;ai.focus({preventScroll:true});startClock()}};
+  warm()}
+
+function setDial(f,secs){const d=$("#dial");d.style.setProperty("--f",f);$("#tb").style.setProperty("--f",f);$("#dn").textContent=Math.max(0,Math.ceil(secs));d.classList.toggle("low",secs<=5);SC.clock(Math.max(0,Math.ceil(secs)))}
+function startClock(){const t0=performance.now();let last=ROUND;
+  CLK=setInterval(()=>{const left=ROUND-(performance.now()-t0)/1000;setDial(Math.max(0,left/ROUND),left);
+    const s=Math.ceil(left);if(s<last&&s<=5&&s>0){SFX.tick()}last=s;if(left<=0)timeout()},100)}
+function stopClock(){clearInterval(CLK);CLK=null}
+
+$("#ai").addEventListener("input",()=>{if(G)G.pend=null;const fb=$("#fb");if(fb.querySelector(".fix,.nope"))fb.innerHTML=""});
+$("#af").addEventListener("submit",e=>{e.preventDefault();if(!G||!CLK)return;
+  const ai=$("#ai"),v=ai.value.trim(),p=P[G.order[G.i]],fb=$("#fb");
+  if(!v)return nudge(ai);
+  if(G.pend&&G.pend.v===v)return lockIn(G.pend.a,v);
+  const m=match(p,v);
+  if(m.exact)return lockIn(m.exact,v);
+  if(m.near){
+    if(!SET.corr&&m.near.length===1)return lockIn(m.near[0],m.near[0].name);
+    SFX.blip();
+    if(m.near.length===1){const a=m.near[0];ai.value=a.name;G.pend={v:a.name,a};
+      fb.innerHTML=`<div class="fix">“${esc(v)}” → <span class="to">“${esc(a.name)}”</span><small>submit again to confirm · or edit</small></div>`}
+    else{fb.innerHTML=`<div class="fix">“${esc(v)}” could be…<div class="opts">${m.near.map((a,i)=>`<button type="button" data-i="${i}">${esc(a.name)}</button>`).join("")}</div><small>tap one to confirm · or edit</small></div>`;
+      fb.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{const a=m.near[+b.dataset.i];ai.value=a.name;lockIn(a,a.name)})}
+    return}
+  SFX.buzz();fb.innerHTML=`<div class="nope">“${esc(v)}”: ${m.vague?"too vague. add more of the name":"airball. not on the list"}</div>`;
+  if(SET.clr)ai.value="";else ai.select();nudge(ai)});
+function nudge(el){if(RM)return;el.animate([{transform:"none"},{transform:"translateX(-6px)"},{transform:"translateX(5px)"},{transform:"none"}],{duration:280})}
+
+async function lockIn(a,guess){if(!G||!CLK)return;stopClock();
+  const p=P[G.order[G.i]],x0=G.m,x1=G.m+a.p*FT_PER_PT;
+  $("#ai").disabled=true;$("#shoot").disabled=true;$("#fb").innerHTML="";
+  G.res.push({q:p.k,a:a.name,g:guess,t:a.t,p:a.p});G.m=x1;G.pend=null;saveG();
+  SFX.shot();SC.markers(x0);
+  await Promise.all([SC.fly(a.name,x0,x1,1300),sleep(260).then(()=>SC.runTo(x1,1100))]);
+  SFX.cheer(a.t);celebrate(a.t,x1);
+  await sleep(250);SC.clearMarkers();showReveal(G.res[G.i],true)}
+function timeout(){if(!G)return;stopClock();const p=P[G.order[G.i]];
+  G.res.push({q:p.k,a:null,g:$("#ai").value.trim(),t:0,p:0});G.pend=null;saveG();
+  $("#ai").disabled=true;$("#shoot").disabled=true;$("#fb").innerHTML="";SFX.horn(.7);showReveal(G.res[G.i],true)}
+function celebrate(t,x){const[X,Y]=SC.screen(x);
+  if(t>=4)burst(X,Y-40,["#ffd166","#47c2ff","#fff","#ff4d5e"],t*14,{speed:7});
+  if(t>=5)SC.crowdFlash(t===6?60:25);
+  if(t===6){burst(innerWidth*.15,innerHeight*.5,["#ffd166","#fff"],40,{angle:-Math.PI/3,speed:11});burst(innerWidth*.85,innerHeight*.5,["#ffd166","#fff"],40,{angle:-2*Math.PI/3,speed:11})}}
+
+function showReveal(r,fresh){const rv=$("#rv"),last=G.i>=G.order.length-1;
+  rv.dataset.t=r.t;$("#pp").hidden=true;$("#bar").hidden=true;
+  rv.innerHTML=`${icon(r.t,"ico")}<h2>${T[r.t].n}</h2><div class="ans">${r.a?`“${esc(r.a)}”`:"—"}</div>
+    <div class="pts"><b>+${r.p} PTS</b>${r.p?` · ${(r.p*FT_PER_PT).toFixed(1)} ft upcourt`:""}</div><p>${esc(r.t===6?P[byK[r.q]].f:T[r.t].fl)}</p>`;
+  rv.hidden=false;if(!fresh)rv.style.animation="none";else rv.style.animation="";
+  hud();$("#hr").textContent=last?"FULL TIME":`ROUND ${G.i+2} OF ${G.order.length}`;
+  const nx=$("#next");nx.textContent=last?"FINAL BUZZER":"NEXT PLAY →";nx.hidden=false;setTimeout(()=>nx.isConnected&&!nx.hidden&&nx.focus({preventScroll:true}),400)}
+$("#next").onclick=()=>{if(!G)return;G.i++;saveG();if(G.i>=G.order.length)return finish();startRound()};
+
+function finish(){SFX.horn(1.3);
+  const rec={key:G.key,mode:G.mode,day:G.day,pk:G.pk,title:G.title,order:G.order,res:G.res,score:total(G.res),m:G.m,done:true,late:G.late,at:Date.now()};
+  if(G.day&&!RUNS[G.key]?.done){RUNS[G.key]=rec;saveRuns();logRun(rec)}
+  const hist=LS.get("bz1-hist",[]);hist.push(rec.score);LS.set("bz1-hist",hist.slice(-300));
+  LS.set("bz1-last",rec);G=null;LS.set("bz1-cur",null);RES=rec;RES.fresh=true;go("results")}
+
+// ---------- shared stats (optional: db capability) ----------
+let DB=null,UID=null;
+(async()=>{try{if(!window.claude?.use)return;const[db,user]=await Promise.all([claude.use("db"),claude.use("user")]);if(db&&user){const id=await user.id();if(id){DB=db;UID=id}}}catch(e){}})();
+async function logRun(rec){if(!DB||rec.late)return;try{const ref=DB.doc("runs/"+UID),s=await ref.get(),d=s.exists?{...(s.data().d||{})}:{};if(d[rec.day]!=null)return;d[rec.day]=rec.score;await ref.set({d})}catch(e){}}
+async function dayScores(day){if(!DB)return null;try{const q=await DB.collection("runs").get();return q.docs.map(s=>s.data()?.d?.[day]).filter(v=>typeof v==="number")}catch(e){return null}}
+
+// ---------- full time ----------
+function showResults(rec){const s=rec.score,fresh=rec.fresh;rec.fresh=false;
+  const band=SCOUT.find(b=>s>=b[0]&&s<=b[1])||SCOUT[0];
+  const tag=rec.day?`GAME #${rec.day}`:rec.title;
+  $("#rcol").innerHTML=`<div class="rhead"><span class="logo sm">BUZZER</span><span>${esc(tag)} — FINAL</span></div>
+  <div class="big"><b id="rs">${fresh&&!RM?0:s}</b><span>/700</span><em>${rec.m.toFixed(1)} ft</em></div>
+  <svg class="chart" id="dist" viewBox="0 0 560 130" role="img" aria-label="Score distribution"></svg><div class="cy" id="dtxt">&nbsp;</div>
+  <h3 class="sec">THE SHOT CHART <small>FARTHER = RARER</small></h3>${runChart(rec)}
+  <h3 class="sec">THE SCOUTING REPORT</h3><div class="scout">${SCOUT.map(b=>`<div class="${b===band?"me":""}" data-t="${b[2]}">${icon(b[2])}<b>${b[0]}–${b[1]===700?"700":b[1]}</b><span><b>${b[3]}.</b> ${b[4]}</span></div>`).join("")}</div>
+  <div class="copyrow"><button class="cta pink" id="copy">COPY RESULT</button></div><div class="cy" id="cmsg" aria-live="polite"></div>
+  <h3 class="sec">THE BOX SCORE <small>TAP A ROUND FOR EVERY ANSWER</small></h3><div class="box">${rec.res.map((r,i)=>{const p=P[byK[r.q]];
+    return `<button class="brow" data-t="${r.t}" data-i="${i}" aria-expanded="false"><span class="dim">${i+1}</span>${icon(r.t)}<span><small>${esc(p.q)}</small><span class="a">${r.a?esc(r.a):"—"}</span></span><span class="p">${r.p}</span><span class="dim">+</span></button>
+    <ul class="all" hidden>${[...p.a].sort((x,y)=>y.p-x.p||x.name.localeCompare(y.name)).map(a=>`<li data-t="${a.t}" class="${a.name===r.a?"me":""}">${icon(a.t)}<span>${esc(a.name)}${a.name===r.a?"<em>YOU</em>":""}</span><b>+${a.p}</b></li>`).join("")}</ul>`}).join("")}</div>
+  <div class="btnrow">${rec.mode==="unl"?`<button class="btn2" data-go="unlimited">PLAY AGAIN ↻</button>`:rec.mode==="pack"?`<button class="btn2" data-pack="${rec.pk}">PLAY AGAIN ↻</button>`:`<button class="btn2" data-go="unlimited">UNLIMITED ∞</button>`}
+    <button class="btn2" data-go="archive">ARCHIVE ⟲</button><button class="btn2" data-go="packs">THEMED PACKS →</button><button class="btn2" data-go="">TODAY'S GAME →</button></div>`;
+  $("#results").scrollTop=0;
+  if(fresh&&!RM)tween(1100,k=>$("#rs").textContent=Math.round(s*k),e=>1-Math.pow(1-e,3));
+  $$("#rcol .brow").forEach(b=>b.onclick=()=>{const ul=b.nextElementSibling,open=ul.hidden;ul.hidden=!open;b.setAttribute("aria-expanded",open);b.lastElementChild.textContent=open?"–":"+"});
+  $("#copy").onclick=()=>{const head=`Buzzer 🏀 ${rec.day?"#"+rec.day:rec.mode==="unl"?"∞":rec.title}`,txt=`${head}\n${s} · ${rec.m.toFixed(1)} ft\n\n${rec.res.map(r=>T[r.t].e).join("")}`,msg=$("#cmsg");
+    const fall=()=>{msg.textContent="Couldn't reach the clipboard. Here it is: "+txt.replace(/\n+/g," ")};
+    try{navigator.clipboard.writeText(txt).then(()=>{msg.textContent="COPIED. PASTE IT IN THE GROUP CHAT."},fall)}catch(e){fall()}};
+  drawDist(rec);
+  if(fresh&&s>=350)setTimeout(()=>burst(innerWidth/2,innerHeight*.25,["#ffd166","#47c2ff","#ff4d5e","#fff"],90,{spread:Math.PI*1.2,speed:11}),600)}
+
+function runChart(rec){const n=rec.res.length,w=560,h=210,x0=74,dx=(w-x0-20)/Math.max(1,n-1);
+  let g=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Feet gained per round">`;
+  ["tip-off","3.2 ft","6.3 ft","9.5 ft","12.7 ft"].forEach((l,i)=>{const y=18+i*40;g+=`<line x1="${x0-10}" x2="${w}" y1="${y}" y2="${y}" stroke="#3b2b55" stroke-dasharray="2 4"/><text x="0" y="${y+5}" fill="#a898c2" font-family="VT323,monospace" font-size="16">${l}</text>`});
+  rec.res.forEach((r,i)=>{const x=x0+i*dx,y=18+160*(r.p/100);
+    g+=`<line x1="${x}" x2="${x}" y1="18" y2="${y}" style="stroke:var(--t${r.t})" stroke-width="2"/><g transform="translate(${x-8},${y-6}) scale(2)" style="fill:var(--t${r.t})">${ICONS[r.t].split("|").map((row,yy)=>[...row].map((c,xx)=>c==="#"?`<rect x="${xx}" y="${yy}" width="1" height="1"/>`:"").join("")).join("")}</g>
+    <text x="${x}" y="${h-2}" text-anchor="middle" fill="#a898c2" font-family="VT323,monospace" font-size="16">${i+1}</text>`});
+  return g+"</svg>"}
+
+async function drawDist(rec){const svg=$("#dist"),txt=$("#dtxt");if(!svg)return;
+  let vals=null,label="";
+  if(rec.day&&!rec.late){vals=await dayScores(rec.day);label=`GAME #${rec.day}'S`}
+  let mine=rec.score;
+  if(!vals||vals.length<2){const h=LS.get("bz1-hist",[]);if(h.length>=2){vals=h;label="YOUR"}else vals=null}
+  const X=v=>20+520*(v/700);
+  let g=`<line x1="20" x2="540" y1="104" y2="104" stroke="#3b2b55"/>`;
+  for(let v=0;v<=700;v+=100)g+=`<text x="${X(v)}" y="124" text-anchor="middle" fill="#a898c2" font-family="VT323,monospace" font-size="15">${v}</text>`;
+  if(vals){const bins=Array(29).fill(0);vals.forEach(v=>bins[Math.min(28,Math.round(v/25))]++);
+    const sm=bins.map((_,i)=>[-2,-1,0,1,2].reduce((s,o)=>s+(bins[i+o]||0)*[1,4,6,4,1][o+2],0)),mx=Math.max(...sm,1);
+    const pts=sm.map((c,i)=>`${X(i*25)},${104-80*c/mx}`).join(" ");
+    g+=`<polygon points="20,104 ${pts} 540,104" fill="rgba(71,194,255,.22)" stroke="#47c2ff" stroke-width="2"/>`;
+    const below=vals.filter(v=>v<mine).length,others=vals.length-1;
+    txt.textContent=label==="YOUR"?`BETTER THAN ${Math.round(100*below/Math.max(1,others))}% OF YOUR ${vals.length} RUNS`:`BETTER THAN ${Math.round(100*below/Math.max(1,others))}% OF ${label} ${vals.length} FIRST RUNS`}
+  else txt.textContent=rec.day&&DB?`FIRST RUN LOGGED FOR GAME #${rec.day}`:"YOUR FIRST RUN. PLAY MORE TO SEE THE CURVE.";
+  g+=`<line x1="${X(mine)}" x2="${X(mine)}" y1="14" y2="104" stroke="#ff4d5e" stroke-width="2"/><rect x="${X(mine)-4}" y="10" width="8" height="8" fill="#ff4d5e"/><text x="${X(mine)}" y="124" text-anchor="middle" fill="#ff4d5e" font-family="VT323,monospace" font-size="15" style="paint-order:stroke" stroke="#0b0814" stroke-width="4">YOU</text>`;
+  svg.innerHTML=g}
+</script>
+<script>
+// ---------- screens and routing ----------
+const SCREENS=["home","game","results","page"];
+function show(id){SCREENS.forEach(s=>$("#"+s).classList.toggle("on",s===id))}
+function go(h){h=h||"";if(location.hash.slice(1)===h)route();else location.hash=h}
+function route(){closeModals();stopClock();clearTimeout(KU.fuse);clearInterval(KU.speed);const h=location.hash.slice(1);
+  if(h==="play"){if(G){show("game");enterGame()}else go("");return}
+  if(h==="results"){RES=RES||LS.get("bz1-last",null);if(!RES)return go("");show("results");showResults(RES);return}
+  if(h==="unlimited"){startGame("unl");return}
+  if(["archive","packs","stats","faq","party"].includes(h)){show("page");$("#page").scrollTop=0;PAGES[h]();return}
+  show("home");renderHome()}
+function renderHome(){const d=dayNum(),rec=RUNS["d"+d];
+  $("#mdinfo").textContent=`GAME #${d} · STREAK ${streak()}`;
+  $("#kick").textContent=G&&G.day===d&&G.mode==="daily"?"► RESUME GAME ◄":rec?.done?"► TODAY'S RESULT ◄":"► TIP OFF ◄";
+  SC.place(0);SC.setCam(SC.camFor(0)+(innerWidth>700?innerWidth*.17/SC.S:0));SC.clock(24)}
+$("#kick").onclick=()=>{SFX.ok();const d=dayNum();
+  if(G&&G.mode==="daily"&&G.day===d)return go("play");
+  if(RUNS["d"+d]?.done){RES=RUNS["d"+d];return go("results")}
+  startGame("daily")};
+
+// modals
+function openModal(id){closeModals();const m=$("#"+id);m.hidden=false;
+  if(id==="menu"){const h=location.hash.slice(1)||"home";$$("#menu .tile").forEach(t=>t.classList.toggle("cur",(t.dataset.go||"")===(h==="home"?"home":h)||(h==="play"&&t.dataset.go==="home")))}
+  m.querySelector("button")?.focus()}
+function closeModals(){$$(".modal").forEach(m=>m.hidden=true)}
+$("#mb").onclick=()=>openModal("menu");$("#gear").onclick=()=>openModal("set");
+$("#snd").onclick=()=>{SET.snd=!SET.snd;LS.set("bz1-set",SET);applySet();if(SET.snd)SFX.blip()};
+$$(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModals()}));
+addEventListener("keydown",e=>{if(e.key==="Escape")closeModals()});
+$$(".sw").forEach(b=>b.onclick=()=>{SET[b.dataset.k]=!SET[b.dataset.k];LS.set("bz1-set",SET);applySet()});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-go],[data-pack],[data-arch],[data-act],[data-close]");if(!b)return;
+  if(b.hasAttribute("data-close"))return closeModals();
+  if(b.dataset.act==="settings")return openModal("set");
+  SFX.ok();
+  if(b.dataset.pack)return startGame("pack",{pk:b.dataset.pack});
+  if(b.dataset.arch){const k=+b.dataset.arch,rec=RUNS["d"+k];if(rec?.done){RES=rec;return go("results")}return startGame(k===dayNum()?"daily":"archive",{day:k})}
+  const g=b.dataset.go;if(g==="unlimited")return startGame("unl");go(g==="home"?"":g)});
+
+// ---------- pages ----------
+const head=(title,sub)=>`<div class="ph"><div class="logo">${title}</div><p>${sub}</p></div>`;
+function banner(kind){const sky={nba:["#0c0718","#24143a"],legends:["#120a26","#2a1340"],journey:["#08121f","#1c2a40"],college:["#0a0f22","#1a2446"],wnba:["#160a1e","#3a1530"],world:["#06102a","#0d2a52"],soon:["#0e0a18","#1c1428"]}[kind]||["#0e0a18","#1c1428"];
+  let s=`<svg viewBox="0 0 560 118" preserveAspectRatio="xMidYMid slice" class="px" aria-hidden="true"><defs><linearGradient id="bg-${kind}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient></defs><rect width="560" height="118" fill="url(#bg-${kind})"/>`;
+  for(let i=0;i<26;i++)s+=`<rect x="${(i*97)%560}" y="${(i*37)%54}" width="2" height="2" fill="#c9b8e8" opacity=".55"/>`;
+  const at=(x,y,svg)=>svg.replace(/<rect /g,`<rect transform="translate(${x},${y})" `);
+  const floor=(y=84)=>{let r=`<rect y="${y}" width="560" height="${118-y}" fill="#c8874b"/>`;for(let yy=y+5;yy<118;yy+=7)r+=`<rect y="${yy}" width="560" height="2" fill="#b5763c"/>`;return r};
+  const crowd=(y,cols)=>{let r=`<rect y="${y}" width="560" height="24" fill="#150e24"/>`;for(let x=4;x<560;x+=9)r+=`<rect x="${x}" y="${y+4+(x%3)*5}" width="4" height="4" fill="${cols[x%3]}"/>`;return r};
+  const hoopAt=(x,y)=>`<rect x="${x}" y="${y}" width="5" height="${84-y}" fill="#3b2f55"/><rect x="${x-30}" y="${y-2}" width="34" height="24" fill="rgba(200,230,255,.22)" stroke="#fff3e3" stroke-width="2"/><rect x="${x-44}" y="${y+18}" width="24" height="4" fill="#ff6a1a"/><path d="M${x-42} ${y+22}l4 13M${x-32} ${y+22}l0 13M${x-22} ${y+22}l-4 13" stroke="#fff3e3" stroke-width="1.5" opacity=".7"/>`;
+  if(kind==="nba"){s+=crowd(58,["#4a3a6e","#8a3a4e","#a8702e"])+floor()+`<rect y="88" width="130" height="30" fill="#4b2a7a" opacity=".85"/><ellipse cx="300" cy="102" rx="46" ry="12" fill="#4b2a7a" opacity=".85" stroke="#fff3e3" stroke-width="2"/>`+hoopAt(520,22);
+    for(let i=0;i<9;i++)s+=`<rect x="${150+i*28}" y="${Math.round(64-Math.sin(i/8*Math.PI)*44)}" width="3" height="3" fill="#ffd166" opacity="${(.3+i*.07).toFixed(2)}"/>`;
+    s+=at(408,8,pixels(BALLMAP,BPAL,4))}
+  if(kind==="legends"){s+=`<rect y="10" width="560" height="4" fill="#2a2140"/>`;
+    [["'73","#7a1f3d"],["23","#1f3a7a"],["'86","#4a2a7a"],["33","#6e4a14"],["'96","#7a1f3d"],["32","#1f3a7a"],["'26","#4a2a7a"]].forEach(([t,c],i)=>{const x=34+i*74;
+      s+=`<rect x="${x+19}" y="14" width="2" height="8" fill="#2a2140"/><path d="M${x} 22h40v52l-20 14l-20-14z" fill="${c}" stroke="#ffd166" stroke-width="2"/><text x="${x+20}" y="58" text-anchor="middle" fill="#ffd166" font-family="VT323,monospace" font-size="24">${t}</text>`})}
+  if(kind==="journey"){s+=`<rect x="20" y="18" width="520" height="4" fill="#7d8aa8"/>`;
+    const tank="##....##|##....##|###..###|########|###NN###|###NN###|########|########|########";
+    ["#ff4d5e","#2f6bff","#ffd166","#5fd38d","#c08cff","#ff8f2e","#e8e2f0"].forEach((c,i)=>{const x=36+i*72;s+=`<path d="M${x+16} 22v-6h4" stroke="#7d8aa8" stroke-width="2" fill="none"/>`+at(x,26,pixels(tank,{"#":c,N:i===6?"#1a1228":"#fff3e3"},5))});
+    s+=`<rect y="104" width="560" height="14" fill="#141c2e"/><rect x="0" y="110" width="560" height="2" fill="#ffd166" opacity=".5"/>`}
+  if(kind==="college"){s+=floor(96);const L=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1}H${x2}V${y2}" fill="none" stroke="#47c2ff" stroke-width="2" opacity=".75"/>`;
+    [[14,24],[34,24],[54,64],[74,64]].forEach(([y,m])=>s+=L(20,y,90,m)+L(540,y,470,m));
+    s+=L(90,24,150,44)+L(90,64,150,44)+L(470,24,410,44)+L(470,64,410,44)+L(150,44,230,44)+L(410,44,330,44);
+    s+=`<rect x="236" y="20" width="88" height="46" fill="#1a1228" stroke="#ffd166" stroke-width="2"/><text x="280" y="52" text-anchor="middle" fill="#ffd166" font-family="VT323,monospace" font-size="26">FINAL 4</text>`}
+  if(kind==="wnba"){s+=crowd(60,["#ff8f2e","#c08cff","#ff4d5e"])+floor()+`<circle cx="280" cy="40" r="30" fill="#ff8f2e" opacity=".18"/>`+at(262,22,pixels(BALLMAP,BPAL,6))}
+  if(kind==="world"){s+=`<circle cx="280" cy="64" r="44" fill="#0b3a6e" stroke="#47c2ff" stroke-width="2"/><ellipse cx="280" cy="64" rx="18" ry="44" fill="none" stroke="#47c2ff" opacity=".6"/><line x1="236" y1="64" x2="324" y2="64" stroke="#47c2ff" opacity=".6"/><line x1="242" y1="42" x2="318" y2="42" stroke="#47c2ff" opacity=".4"/><line x1="242" y1="86" x2="318" y2="86" stroke="#47c2ff" opacity=".4"/>`;
+    [[60,"#ff4d5e"],[110,"#ffd166"],[430,"#5fd38d"],[480,"#47c2ff"]].forEach(([x,c])=>s+=`<rect x="${x}" y="34" width="2" height="60" fill="#a898c2"/><rect x="${x+2}" y="34" width="28" height="18" fill="${c}"/>`)}
+  if(kind==="soon"){s+=at(232,20,pixels(".RRRR.|RRWWRR|WWWWWW|BBWWBB|BBBBBB|.BBBB.",{R:"#d23a3a",W:"#f4f0e8",B:"#2a4ab0"},8))+`<text x="372" y="80" font-family="'Press Start 2P',monospace" font-size="34" fill="#a898c2">?</text>`}
+  return s+"</svg>"}
+const PAGES={
+  archive(){const d=dayNum();let h=head("ARCHIVE","every game, replayable");
+    for(let k=d;k>=1;k--){const r=RUNS["d"+k];h+=`<div class="arow"><span>GAME #${k}<small>${dayDate(k)}${k===d?" · TODAY":""}${r?.late?" · REPLAYED LATE":""}</small></span><b>${r?r.score:"—"}</b><button class="btn2" data-arch="${k}">${r?"VIEW":"PLAY"} ▸</button></div>`}
+    $("#pg").innerHTML=h+`<p class="dim" style="font-size:16px;margin-top:16px">Games you play late show in your archive but don't count towards your streak.</p>`},
+  packs(){let h=head("THEMED PACKS","beyond the daily game");
+    for(const k in PACKS){const pk=PACKS[k],n=P.filter(p=>p.pk===k).length;h+=`<button class="pack" data-pack="${k}">${banner(k)}<div><span class="eyebrow">${pk.tag}</span><h4>${pk.n}</h4><p>${n} prompts · 7 rounds a game · ${pk.d}</p><span class="go">${pk.go}</span></div></button>`}
+    $("#pg").innerHTML=h+`<div class="pack soon">${banner("soon")}<div><span class="eyebrow" style="color:var(--dim)">COMING SOON</span><h4>THE ABA</h4><p>The red, white and blue ball is being pumped up…</p></div></div>`},
+  stats(){const runs=Object.values(RUNS).filter(r=>r.done),picks=runs.flatMap(r=>r.res),best=runs.reduce((m,r)=>Math.max(m,r.score),0),avg=runs.length?Math.round(runs.reduce((s,r)=>s+r.score,0)/runs.length):0;
+    let bs=0,c=0;for(let k=1;k<=dayNum();k++){if(RUNS["d"+k]?.done&&!RUNS["d"+k].late){c++;bs=Math.max(bs,c)}else c=0}
+    const cnt=[0,1,2,3,4,5,6].map(t=>picks.filter(p=>p.t===t).length),mx=Math.max(1,...cnt);
+    $("#pg").innerHTML=head("MY BUZZER","your record on this device")+`<div class="stats">
+      <div class="stat"><b>${runs.length}</b><small>PLAYED</small></div><div class="stat"><b>${streak()}</b><small>STREAK</small></div><div class="stat"><b>${bs}</b><small>BEST STREAK</small></div>
+      <div class="stat"><b>${best}</b><small>BEST SCORE</small></div><div class="stat"><b>${avg}</b><small>AVERAGE</small></div><div class="stat"><b>${cnt[6]}</b><small>BUZZER-BEATERS</small></div></div>
+      <h3 class="sec">YOUR FINISHES</h3><div class="tdist">${[6,5,4,3,2,1,0].map(t=>`<div data-t="${t}">${icon(t)}<span>${T[t].n.toUpperCase()}</span><i style="width:${100*cnt[t]/mx}%"></i><span>${cnt[t]}</span></div>`).join("")}</div>
+      ${runs.length?"":`<p class="dim" style="margin-top:18px">No games yet. Your first finish shows up here.</p>`}
+      <div class="btnrow"><button class="btn2" data-go="archive">ARCHIVE ⟲</button><button class="btn2" data-go="">TODAY'S GAME →</button></div>`},
+  faq(){const qa=[["HOW ARE THE ANSWER SETS MADE?","From public basketball records: champions lists, award histories, draft results and official stats, cleaned into one list per prompt. Each prompt says which years it covers."],
+    ["HOW IS RARITY DECIDED?","By hand. Each answer is rated on how often fans are likely to name it. It's an estimate, not live data from other players."],
+    ["WHAT'S A GRANNY SHOT?","The go-to \"clever\" pick that isn't actually that obscure. It feels cheeky, but half the gym had the same idea, so it only scores 15."],
+    ["WHAT'S A BUZZER-BEATER?","Every prompt hides one. It isn't always the rarest answer; it's the one that's most satisfying to hit, and it comes with a bit of trivia."],
+    ["WHY 24 SECONDS?","It's the shot clock. Get one answer up before it expires or it's a violation."],
+    ["WHY WAS MY ANSWER AN AIRBALL?","It isn't on the list for that prompt, or it falls outside the years the prompt covers. You can keep shooting until the shot clock runs out."],
+    ["WHY DID AUTOCORRECT PICK SOMETHING ELSE?","Answers have nicknames and aliases, so a near-miss can land on one you didn't expect. You always confirm before it counts, or switch corrections off in settings."],
+    ["DOES ANYTHING COST MONEY?","No. Unlimited, the archive and every pack are free."],
+    ["WHERE IS MY PROGRESS SAVED?","On this device, in your browser. Where shared stats are switched on, your first run each game day also joins that day's curve."],
+    ["IS THIS KRILLION?","No. Buzzer is an unofficial basketball game inspired by Krillion's daily format. It isn't affiliated with Krillion, the NBA, the WNBA or the NCAA."]];
+    $("#pg").innerHTML=head("FAQ","the small print")+`<div class="faq">${qa.map(([q,a])=>`<h4>${q}</h4><p>${a}</p>`).join("")}</div><div class="btnrow"><button class="btn2" data-go="">BACK TO THE COURT</button></div>`},
+  party(){KU.setup()}};
+
+// ---------- H-O-R-S-E: pass-and-play ----------
+const KU={players:LS.get("bz1-ku",["PLAYER 1","PLAYER 2"]),word:LS.get("bz1-kw","HORSE"),
+  setup(){clearTimeout(this.fuse);clearInterval(this.speed);if(!["HORSE","PIG"].includes(this.word))this.word="HORSE";
+    $("#pg").innerHTML=head("H-O-R-S-E","pass the ball · beat the hidden clock")+`<p style="font-size:19px;text-align:center;margin:0 0 18px">One phone, 2–8 players. Name an answer and pass before the hidden shot clock sounds. Whoever's holding the ball takes a letter. Spell the word and you're out. Last one standing wins.</p>
+    <div class="sect">GAME TO</div><div class="chips" id="kuw" style="margin-bottom:16px">${["HORSE","PIG"].map(w=>`<button class="chip ${w===this.word?"on":""}" data-w="${w}" aria-pressed="${w===this.word}">${w.split("").join("-")}</button>`).join("")}</div>
+    <div class="sect">WHO'S PLAYING</div><div id="kul">${this.players.map((n,i)=>`<div class="field"><input id="kp${i}" value="${esc(n)}" maxlength="14" aria-label="Player ${i+1} name" data-i="${i}">${this.players.length>2?`<button data-rm="${i}" aria-label="Remove player">×</button>`:""}</div>`).join("")}</div>
+    ${this.players.length<8?`<button class="btn2" id="kuadd" style="width:100%">+ ADD PLAYER</button>`:""}
+    <button class="cta" id="kugo" style="margin-top:14px">► TIP OFF ◄</button>`;
+    $$("#kuw [data-w]").forEach(b=>b.onclick=()=>{this.word=b.dataset.w;LS.set("bz1-kw",this.word);this.setup()});
+    $$("#kul input").forEach(inp=>inp.oninput=()=>{this.players[+inp.dataset.i]=inp.value.toUpperCase();LS.set("bz1-ku",this.players)});
+    $$("#kul [data-rm]").forEach(b=>b.onclick=()=>{this.players.splice(+b.dataset.rm,1);LS.set("bz1-ku",this.players);this.setup()});
+    $("#kuadd")&&($("#kuadd").onclick=()=>{this.players.push("PLAYER "+(this.players.length+1));LS.set("bz1-ku",this.players);this.setup()});
+    $("#kugo").onclick=()=>{SFX.ok();this.names=this.players.map((n,i)=>n.trim()||"PLAYER "+(i+1));this.lt=this.names.map(()=>0);this.cur=0;this.round=0;this.next()}},
+  alive(i){return this.lt[i]<this.word.length},
+  next(){this.round++;const pool=P.filter(p=>p.a.length>=12&&p.k!==this.k);this.k=pool[Math.floor(Math.random()*pool.length)].k;this.used=[];this.t0=performance.now();
+    this.len=12000+Math.random()*16000;clearTimeout(this.fuse);this.fuse=setTimeout(()=>this.drop(),this.len);
+    clearInterval(this.speed);this.speed=setInterval(()=>{const k=Math.min(1,(performance.now()-this.t0)/28000);$(".kball")?.style.setProperty("--kt",(.62-.36*k).toFixed(2)+"s")},500);
+    SFX.whistle(1);this.draw()},
+  draw(msg=""){const p=P[byK[this.k]],left=this.names.filter((_,i)=>this.alive(i)).length;
+    $("#pg").innerHTML=head("H-O-R-S-E",`round ${this.round} · ${left} still in`)+`<div class="eyebrow">THE PROMPT</div><div class="pq">${esc(p.q)}</div><div class="dim" style="font-size:16px">${esc(p.h)}</div>
+    <div class="ku"><svg class="kball px" viewBox="0 0 6 6">${pixels(BALLMAP,BPAL)}</svg><div class="who">${esc(this.names[this.cur])}</div></div>
+    <div class="fb">${msg}</div><form class="af" id="kf" autocomplete="off"><input id="ki" placeholder="name one, then pass" aria-label="Your answer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"><button class="shoot">PASS</button></form>
+    <div class="sect" style="margin-top:18px">ON THE BOARD</div><div class="chips">${this.used.map(a=>`<span class="chip" data-t="${a.t}" style="border-color:var(--tc)">${esc(a.name)}</span>`).join("")||`<span class="dim" style="font-size:16px">nothing yet</span>`}</div>
+    <div class="sect" style="margin-top:14px">PLAYERS</div><div class="chips">${this.names.map((n,i)=>`<span class="chip ${!this.alive(i)?"out":i===this.cur?"on":""}">${esc(n)}${this.lt[i]?`<b class="hl">${this.word.slice(0,this.lt[i])}</b>`:""}</span>`).join("")}</div>`;
+    $("#ki").focus({preventScroll:true});
+    $("#kf").onsubmit=e=>{e.preventDefault();const v=$("#ki").value.trim();if(!v)return;const m=match(p,v);let a=m.exact||(m.near&&m.near.length===1&&m.conf<=.3?m.near[0]:null);
+      if(!a){SFX.buzz();return this.draw(`<div class="nope">“${esc(v)}”: ${m.near?"which one? add more":m.vague?"too vague":"airball"}. keep it moving!</div>`)}
+      if(this.used.includes(a)){SFX.buzz();return this.draw(`<div class="nope">${esc(a.name)} is already on the board. try another!</div>`)}
+      this.used.push(a);SFX.shot();do{this.cur=(this.cur+1)%this.names.length}while(!this.alive(this.cur));
+      this.draw(a.name!==v&&!m.exact?`<div class="warm">corrected to ${esc(a.name)}</div>`:"")}},
+  drop(){clearInterval(this.speed);const b=$(".kball");if(!b)return;b.classList.add("drop");SFX.horn(.7);SFX.buzz();
+    const out=this.cur;this.lt[out]++;const l=this.word[this.lt[out]-1],gone=!this.alive(out),left=this.names.map((_,i)=>this.alive(i)?i:-1).filter(i=>i>=0);
+    $("#ki").disabled=true;
+    setTimeout(()=>{if(left.length===1){burst(innerWidth/2,innerHeight*.35,["#ffd166","#47c2ff","#ff4d5e","#fff"],90,{spread:Math.PI*1.2,speed:11});SFX.cheer(6);
+        $("#pg").innerHTML=head("H-O-R-S-E","final")+`<div class="rv" data-t="6" style="position:static;transform:none;margin:0 auto">${icon(6,"ico")}<h2>${esc(this.names[left[0]])}</h2><div class="ans">wins ${this.word.split("").join("-")}</div><p>${esc(this.names[out])} spelled it out.</p></div><div class="btnrow"><button class="cta" id="kuagain" style="max-width:320px">► RUN IT BACK ◄</button></div>`;
+        $("#kuagain").onclick=()=>this.setup()}
+      else{const f=$("#pg .fb");f.innerHTML=`<div class="nope">${gone?`${esc(this.names[out])} spells ${this.word}. they're out.`:`shot clock! ${esc(this.names[out])} picks up the ${l}.`}</div>`;
+        const btn=document.createElement("button");btn.className="cta";btn.style.marginTop="12px";btn.textContent="► NEXT ROUND ◄";btn.onclick=()=>{do{this.cur=(this.cur+1)%this.names.length}while(!this.alive(this.cur));this.next()};$("#kf").replaceWith(btn);btn.focus()}},900)}
+};
+
+// ---------- boot ----------
+$("#partyball").innerHTML=`<g transform="translate(1,1)">${pixels(BALLMAP,BPAL)}</g>`;
+applySet();SC.build();
+let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{SC.build();if(!location.hash.slice(1))renderHome();else SC.setCam(SC.camFor(SC.px))},150)});
+addEventListener("pointerdown",()=>SFX.ok(),{once:true});
+addEventListener("hashchange",route);
+route();
+</script>
+</body>
+</html>
