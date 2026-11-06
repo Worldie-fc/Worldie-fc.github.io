@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Walkoff: a daily baseball rarity game. Seven prompts, 25 seconds each. The rarer your answer, the farther it flies.">
+<meta name="theme-color" content="#07100b">
+<meta property="og:title" content="Walkoff">
+<meta property="og:description" content="The daily baseball deep cut. Seven prompts, 25 seconds each. Find the walk-off.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6' shape-rendering='crispEdges'%3E%3Crect width='6' height='6' fill='%2307100b'/%3E%3Cpath d='M1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM1 1h1v1h-1zM2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM5 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM5 3h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM1 5h1v1h-1zM2 5h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1z' fill='%23f4f1e8'/%3E%3Cpath d='M0 1h1v1h-1zM5 1h1v1h-1zM1 2h1v1h-1zM4 2h1v1h-1zM1 3h1v1h-1zM4 3h1v1h-1zM0 4h1v1h-1zM5 4h1v1h-1z' fill='%23d8342c'/%3E%3C/svg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Walkoff</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&family=VT323&display=swap">
+<style>
+/* Layout: a full-bleed pixel ballpark (SVG) sits behind every screen: light towers, crowd and the field from home plate to the 400-foot sign. A centred CRT-style UI column swaps over it. Single dark look by design. */
+:root{
+  --bg:#07100b; --panel:#10201a; --panel2:#142a20; --edge:#2c4a3a; --text:#f4f1e6; --dim:#9fb5a6;
+  --blue:#6fd3ff; --hot:#ff4a3d; --orange:#f5c542; --gold:#ffd166; --red:#ff5d6c;
+  --t0:#4f6658; --t1:#c8d6cc; --t2:#f2a14a; --t3:#5fd38d; --t4:#6fd3ff; --t5:#c08cff; --t6:#ffd166;
+  --pix:"Jersey 10","VT323",ui-monospace,monospace; --mono:"VT323",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html.cb{--dim:#cfc2e6; --t1:#ffffff; --t2:#e69f00; --t3:#2fd39f; --t4:#56b4e9; --t5:#e48ad0; --t6:#f0e442}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:20px/1.25 var(--mono);overflow:hidden}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.5))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+[data-t="0"]{--tc:var(--t0)}[data-t="1"]{--tc:var(--t1)}[data-t="2"]{--tc:var(--t2)}[data-t="3"]{--tc:var(--t3)}[data-t="4"]{--tc:var(--t4)}[data-t="5"]{--tc:var(--t5)}[data-t="6"]{--tc:var(--t6)}
+.px{shape-rendering:crispEdges;image-rendering:pixelated}
+
+/* scene */
+#scn{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+.star{animation:tw 3s steps(2,end) infinite}
+.crowd{animation:crowd 1.6s steps(2,end) infinite}
+.lamp{animation:lampOn 1.4s steps(1,end) .2s backwards}
+@keyframes tw{50%{opacity:.2}}
+@keyframes crowd{50%{transform:translateY(1px)}}
+@keyframes lampOn{0%{opacity:.1}12%{opacity:1}18%{opacity:.2}30%{opacity:1}36%{opacity:.4}50%{opacity:1}}
+#pl .fA{animation:fA .26s steps(1,end) infinite}#pl .fB{animation:fB .26s steps(1,end) infinite}
+#pl:not(.run) .fB{display:none}#pl:not(.run) .fA{animation:bob 1.2s steps(2,end) infinite}
+@keyframes fA{50%{opacity:0}}@keyframes fB{0%{opacity:0}50%{opacity:1}}@keyframes bob{50%{transform:translateY(-1px)}}
+.ln *{vector-effect:non-scaling-stroke}
+.beam{transform-box:fill-box;transform-origin:50% 0;animation:sway 9s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+.mk{animation:mkIn .35s ease-out backwards}
+@keyframes mkIn{from{opacity:0;transform:translateY(8px)}}
+
+/* chrome */
+.scr{position:fixed;inset:0;z-index:5;display:none}
+.scr.on{display:block}
+.page{overflow-y:auto;background:rgba(7,16,11,.95);-webkit-overflow-scrolling:touch}
+.col{max-width:620px;margin:0 auto;padding:calc(62px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(48px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.ic{width:36px;height:36px;background:var(--panel2);border:2px solid var(--edge);color:var(--dim);display:grid;place-items:center;font-size:22px;padding:0}
+.ic:hover{color:var(--text);border-color:var(--dim)}
+#mb{position:fixed;z-index:40;top:calc(10px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px))}
+.tr{position:fixed;z-index:40;top:calc(10px + env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));display:grid;gap:6px}
+.logo{font-family:var(--pix);font-weight:400;color:#fff;letter-spacing:.04em;line-height:1.15;margin:0;text-shadow:3px 0 0 var(--hot),-3px 0 0 var(--blue),0 0 24px rgba(255,74,61,.35);animation:glitch 6s steps(1,end) infinite}
+@keyframes glitch{0%,92%,100%{text-shadow:3px 0 0 var(--hot),-3px 0 0 var(--blue),0 0 24px rgba(255,74,61,.35)}93%{text-shadow:-4px 1px 0 var(--hot),5px -1px 0 var(--blue),0 0 24px rgba(255,74,61,.35)}95%{text-shadow:6px 0 0 var(--hot),-2px 0 0 var(--blue),0 0 24px rgba(255,74,61,.35)}}
+.logo.sm{font-size:14px;text-shadow:2px 0 0 var(--hot),-2px 0 0 var(--blue);animation:none}
+.eyebrow{font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--orange)}
+.dim{color:var(--dim)}
+
+/* home */
+.hero{position:absolute;left:0;right:0;top:calc(13vh + env(safe-area-inset-top,0px));text-align:center;padding-inline:16px;pointer-events:none}
+.hero .logo{font-size:clamp(34px,10.5vw,84px)}
+.tagline{margin-top:18px;color:var(--blue);font-size:clamp(20px,4.4vw,30px);letter-spacing:.32em;text-shadow:0 2px 0 rgba(7,16,11,.5),0 0 12px rgba(111,211,255,.5)}
+.sub{margin-top:10px;color:var(--text);opacity:.8;font-size:clamp(17px,3.6vw,21px);letter-spacing:.06em;text-shadow:0 1px 0 #000}
+.dock{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(480px,calc(100% - 32px));display:grid;gap:10px}
+.howto{background:rgba(7,16,11,.78);border:1px solid var(--edge);padding:4px 12px}
+.howto summary{cursor:pointer;font-size:15px;letter-spacing:.2em;color:var(--dim);list-style:none;padding:4px 0}
+.howto summary::-webkit-details-marker{display:none}
+.howto ol{margin:4px 0 8px;padding:0;list-style:none;display:grid;gap:4px;font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.party{position:relative;display:flex;align-items:center;gap:12px;width:100%;background:var(--panel);border:2px solid var(--blue);padding:14px 14px 10px;text-align:left;font-size:24px;letter-spacing:.16em}
+.party .tag{position:absolute;top:-10px;left:12px;background:var(--blue);color:var(--bg);font-size:13px;letter-spacing:.12em;padding:0 6px}
+.party small{margin-left:auto;font-size:14px;color:var(--dim);letter-spacing:.08em}
+.cta{display:block;width:100%;background:var(--panel2);border:2px solid var(--blue);box-shadow:inset 0 0 0 2px var(--bg),0 0 20px rgba(111,211,255,.22);font-size:clamp(24px,5vw,30px);letter-spacing:.16em;padding:14px 10px;transition:box-shadow .2s,transform .12s}
+.cta:hover{box-shadow:inset 0 0 0 2px var(--bg),0 0 30px rgba(111,211,255,.45)}
+.cta:active{transform:translateY(1px)}
+.cta.pink{border-color:var(--hot);background:var(--hot);color:var(--bg);box-shadow:0 0 22px rgba(255,74,61,.3)}
+.dockrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px;letter-spacing:.14em;color:var(--dim)}
+.mini{background:var(--panel);border:1px solid var(--edge);color:var(--dim);font-size:15px;letter-spacing:.12em;padding:4px 10px}
+.mini:hover{color:var(--text);border-color:var(--dim)}
+.links{display:flex;gap:6px;flex-wrap:wrap}
+
+/* modals */
+.modal{position:fixed;inset:0;z-index:70;background:rgba(3,8,5,.8);display:grid;place-items:center;padding:16px;animation:fadeIn .18s ease-out}
+.mbox{position:relative;width:min(380px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--panel);border:2px solid var(--edge);box-shadow:0 0 34px rgba(111,211,255,.14);padding:18px}
+.mbox .x{position:absolute;top:12px;right:12px}
+.mtitle{font-family:var(--pix);font-weight:400;font-size:19px;color:#fff;margin:6px 0 16px;text-shadow:2px 0 0 var(--hot),-2px 0 0 var(--blue)}
+.sect{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:.2em;color:var(--dim);margin:6px 0 10px}
+.sect::after{content:"";flex:1;border-top:1px solid var(--edge)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--panel2);border:2px solid var(--edge);padding:12px 6px 10px;display:grid;justify-items:center;gap:6px;font-size:16px;letter-spacing:.14em;color:var(--dim)}
+.tile b{font-weight:400;font-size:22px;color:var(--text);line-height:1}
+.tile:hover,.tile.cur{border-color:var(--hot);color:var(--hot)}
+.mfoot{margin-top:14px;padding-top:10px;border-top:1px solid var(--edge);font-size:14px;color:var(--dim);letter-spacing:.08em}
+.opt{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--edge)}
+.opt b{font-weight:400;font-size:18px;letter-spacing:.12em}
+.opt span{grid-column:1;font-size:15px;color:var(--dim)}
+.sw{grid-row:1 / span 2;grid-column:2;width:62px;height:28px;background:var(--bg);border:2px solid var(--edge);padding:2px;display:flex}
+.sw i{width:50%;display:grid;place-items:center;font-style:normal;font-size:13px;background:var(--edge);color:var(--dim);transition:transform .15s}
+.sw[aria-checked="true"]{border-color:var(--blue)}
+.sw[aria-checked="true"] i{transform:translateX(100%);background:var(--blue);color:var(--bg)}
+@keyframes fadeIn{from{opacity:0}}
+</style>
+<style>
+/* game */
+.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;align-items:flex-start;gap:clamp(8px,7vw,110px);padding:calc(6px + env(safe-area-inset-top,0px)) 56px 0;pointer-events:none}
+.hb{min-width:78px;background:rgba(7,16,11,.94);border:1px solid var(--edge);padding:1px 10px 3px}
+.hb small,.hc small{display:block;font-size:13px;letter-spacing:.2em;color:var(--dim);white-space:nowrap}
+.hb b{font-weight:400;font-size:28px;line-height:1;color:var(--orange);font-variant-numeric:tabular-nums}
+.hb.r{text-align:right}.hb.r b{color:var(--hot)}
+.hc{text-align:center;padding:5px 10px 3px;background:rgba(7,16,11,.88);border:1px solid var(--edge)}
+.sqs{display:flex;gap:3px;justify-content:center;margin-bottom:3px}
+.sqs i{width:11px;height:11px;background:var(--edge);display:block}
+.sqs i.cur{background:var(--hot);animation:tw 1s steps(2,end) infinite}
+.sqs i[data-t]{background:var(--tc)}
+.pp{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));background:rgba(10,22,16,.86);border:1px solid var(--edge);padding:10px 16px 12px;animation:ppIn .35s ease-out}
+.pq{font-size:clamp(26px,5.6vw,38px);line-height:1.05;margin:6px 0 6px;text-wrap:balance}
+.pph{font-size:15px;color:var(--dim);letter-spacing:.1em}
+@keyframes ppIn{from{opacity:0;transform:translate(-50%,-8px)}}
+.bar{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(540px,calc(100% - 24px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.fb{min-height:30px;display:grid;align-items:end;justify-items:center;margin-bottom:8px}
+.fb>*{animation:ppIn2 .25s ease-out}
+@keyframes ppIn2{from{opacity:0;transform:translateY(6px)}}
+.warm{font-size:18px;letter-spacing:.14em;color:var(--dim);background:rgba(7,16,11,.75);padding:2px 10px}
+.nope{font-size:19px;color:var(--hot);background:rgba(7,16,11,.8);padding:2px 10px;text-align:center}
+.fix{background:rgba(16,32,26,.95);border:1px solid var(--orange);padding:6px 12px;text-align:center;font-size:19px}
+.fix .to{color:var(--orange)}
+.fix small{display:block;font-size:15px;color:var(--dim);letter-spacing:.08em}
+.fix .opts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.fix .opts button{background:var(--orange);color:var(--bg);border:0;padding:3px 10px;font-size:18px}
+form.af{display:flex;gap:8px;align-items:center}
+.dial{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--orange) calc(var(--f,1)*360deg),rgba(245,197,66,.12) 0);position:relative}
+.dial::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 1px rgba(245,197,66,.35)}
+.dial span{position:relative;font-size:24px;color:var(--orange);font-variant-numeric:tabular-nums}
+.dial.low span{color:var(--hot);animation:tw .5s steps(2,end) infinite}
+.af input{flex:1;min-width:0;height:52px;background:rgba(7,16,11,.92);border:2px solid var(--orange);color:var(--text);font:26px var(--mono);padding:0 12px}
+.af input:disabled{opacity:.55}
+.af input::placeholder{color:var(--dim)}
+.shoot{height:52px;background:var(--orange);color:var(--bg);border:0;font-size:22px;letter-spacing:.12em;padding:0 16px}
+.shoot:disabled{opacity:.5}
+.tbar{height:3px;background:rgba(245,197,66,.18);margin:6px 0 0 60px}
+.tbar i{display:block;height:100%;background:var(--orange);transform-origin:left;transform:scaleX(var(--f,1))}
+.rv{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(420px,calc(100% - 32px));background:rgba(7,16,11,.9);border:1px solid var(--tc);box-shadow:0 0 34px -6px var(--tc);padding:16px 16px 14px;text-align:center;animation:rvIn .4s cubic-bezier(.34,1.56,.64,1)}
+.rv .ico{width:52px;height:52px;margin:0 auto 6px;filter:drop-shadow(0 0 10px var(--tc))}
+.rv h2{margin:0;font-family:var(--pix);font-weight:400;font-size:clamp(15px,4.4vw,21px);line-height:1.35;letter-spacing:.06em;color:var(--tc);text-transform:uppercase}
+.rv .ans{font-size:24px;margin:8px 0 4px}
+.rv .pts{font-size:22px}.rv .pts b{font-weight:400;color:var(--tc)}
+.rv p{margin:8px 0 0;font-size:16px;color:var(--dim);letter-spacing:.04em}
+@keyframes rvIn{from{opacity:0;transform:translate(-50%,10px) scale(.94)}}
+.next{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);min-width:220px;background:var(--panel2);border:2px solid var(--hot);font-size:24px;letter-spacing:.16em;padding:10px 22px;animation:ppIn2 .3s ease-out .2s backwards}
+.next:hover{box-shadow:0 0 20px rgba(255,74,61,.35)}
+.lbl{font:16px var(--mono);letter-spacing:.12em}
+
+/* results and pages */
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:15px;letter-spacing:.18em;color:var(--dim)}
+.big{display:flex;align-items:baseline;gap:10px;margin:16px 0 4px;flex-wrap:wrap}
+.big b{font-family:var(--pix);font-size:clamp(44px,12vw,66px);line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
+.big span{color:var(--dim);font-size:22px}.big em{font-style:normal;color:var(--blue);font-size:22px}
+.chart{display:block;width:100%;height:auto;overflow:visible}
+.cy{color:var(--blue);font-size:18px;letter-spacing:.12em;margin:6px 0 4px}
+h3.sec{font-weight:400;font-size:17px;letter-spacing:.2em;margin:30px 0 10px;color:var(--text)}
+h3.sec small{font-size:15px;color:var(--dim);margin-left:8px}
+.scout{display:grid;gap:0}
+.scout div{display:grid;grid-template-columns:26px 82px 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--edge);font-size:17px;color:var(--dim)}
+.scout div.me{color:var(--text)}.scout div.me b{color:var(--tc)}
+.scout b{font-weight:400;font-variant-numeric:tabular-nums}
+.copyrow{display:flex;gap:8px;margin-top:22px}
+.box{border-top:1px solid var(--edge)}
+.brow{width:100%;display:grid;grid-template-columns:20px 24px 1fr auto 16px;gap:8px;align-items:center;background:none;border:0;border-bottom:1px solid var(--edge);padding:9px 0;text-align:left}
+.brow small{display:block;font-size:14px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.brow span.a{font-size:21px}
+.brow .p{color:var(--tc);font-size:20px;font-variant-numeric:tabular-nums}
+.all{margin:0;padding:4px 0 8px 52px;list-style:none;display:grid;gap:2px;border-bottom:1px solid var(--edge)}
+.all li{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;font-size:18px}
+.all li.me{background:rgba(111,211,255,.08)}
+.all li em{font-style:normal;color:var(--blue);font-size:14px;margin-left:6px}
+.all li b{font-weight:400;color:var(--tc);font-size:16px}
+.ph{text-align:center;margin-bottom:22px}
+.ph .logo{font-size:clamp(22px,6.2vw,38px)}
+.ph p{margin:10px 0 0;color:var(--dim);letter-spacing:.14em;font-size:17px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+.btn2{background:var(--panel);border:1px solid var(--edge);font-size:17px;letter-spacing:.14em;padding:8px 14px;color:var(--text)}
+.btn2:hover{border-color:var(--blue)}
+.pack{display:block;width:100%;text-align:left;background:var(--panel);border:2px solid var(--edge);padding:0;margin-bottom:14px}
+.pack:hover{border-color:var(--blue)}
+.pack svg{display:block;width:100%;height:118px}
+.pack div{padding:10px 14px 12px}
+.pack h4{margin:0;font-family:var(--pix);font-weight:400;font-size:15px;letter-spacing:.04em;line-height:1.5}
+.pack p{margin:4px 0 8px;font-size:16px;color:var(--dim)}
+.pack .go{display:block;text-align:right;font-size:16px;letter-spacing:.16em;color:var(--orange)}
+.pack.soon{opacity:.6;cursor:default}
+.arow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--edge);font-size:19px}
+.arow small{display:block;font-size:14px;color:var(--dim);letter-spacing:.1em}
+.arow b{font-weight:400;color:var(--hot);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border:1px solid var(--edge);padding:10px;text-align:center}
+.stat b{display:block;font-family:var(--pix);font-weight:400;font-size:19px;line-height:1.6;color:var(--blue)}
+.stat small{font-size:14px;letter-spacing:.14em;color:var(--dim)}
+.tdist{display:grid;gap:6px}
+.tdist div{display:grid;grid-template-columns:24px 110px 1fr 34px;gap:8px;align-items:center;font-size:16px}
+.tdist i{display:block;height:10px;background:var(--tc);min-width:2px}
+.faq h4{margin:22px 0 6px;font-weight:400;font-size:19px;letter-spacing:.14em;color:var(--blue)}
+.faq p{margin:0;font-size:19px;line-height:1.35;color:var(--text);opacity:.9}
+.field{display:flex;gap:6px;margin-bottom:6px}
+.field input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--edge);color:var(--text);font:22px var(--mono);padding:6px 10px}
+.field button{background:var(--panel2);border:1px solid var(--edge);color:var(--dim);padding:0 12px}
+.ku{position:relative;height:150px;margin:6px 0 10px}
+.ku .kball{position:absolute;left:50%;top:0;width:34px;height:34px;margin-left:-17px;animation:keepy var(--kt,.7s) cubic-bezier(.5,0,.5,1) infinite alternate}
+@keyframes keepy{to{transform:translateY(78px)}}
+.ku .kball.drop{animation:drop .9s cubic-bezier(.3,0,.7,1) forwards}
+@keyframes drop{to{transform:translate(150px,104px) rotate(320deg);opacity:.35}}
+.ku .who{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:30px;letter-spacing:.12em;color:var(--orange)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--edge);background:var(--panel);padding:2px 8px;font-size:17px}
+.chip.out{opacity:.45;text-decoration:line-through}
+.chip.on{border-color:var(--orange);color:var(--orange)}
+.chip .hl{color:var(--hot);margin-left:6px;letter-spacing:.12em;font-weight:400}
+.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+html.low .star,html.low .crowd,html.low .logo,html.low .lamp,html.low .beam{animation:none}
+@media (max-width:440px){.hud{padding-inline:50px;gap:6px}.hb{min-width:62px;padding-inline:6px}.hb b{font-size:24px}.hc small{letter-spacing:.08em}.scout div{grid-template-columns:22px 70px 1fr}
+  .dockrow{flex-direction:column;align-items:stretch;text-align:center}.links{justify-content:space-between}.mini{padding:4px 6px;font-size:14px;letter-spacing:.06em}}
+@media (max-width:700px){.rhead{padding-right:38px}}
+.hero .logo{font-size:clamp(64px,19vw,150px);letter-spacing:.06em}.logo.sm{font-size:26px}.mtitle{font-size:32px}.rv h2{font-size:clamp(30px,8vw,42px);letter-spacing:.08em}.big b{font-size:clamp(80px,21vw,118px)}.ph .logo{font-size:clamp(44px,12vw,68px)}.pack h4{font-size:30px;letter-spacing:.06em;line-height:1.1}.stat b{font-size:34px;line-height:1.1}
+#pl.run .hop{animation:hop .32s ease-in-out infinite alternate}#pl:not(.run) .hop{animation:bob 1.2s steps(2,end) infinite}@keyframes hop{to{transform:translateY(-14px)}}html.low .hop{animation:none}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg id="scn" class="px" aria-hidden="true"></svg>
+<canvas id="fx" class="fx" aria-hidden="true" hidden></canvas>
+
+<button class="ic" id="mb" aria-label="Open menu">☰</button>
+<div class="tr">
+  <button class="ic" id="snd" aria-label="Mute sound">♪</button>
+  <button class="ic" id="gear" aria-label="Open settings">⚙&#xFE0E;</button>
+</div>
+
+<section class="scr" id="home">
+  <div class="hero">
+    <h1 class="logo">WALKOFF</h1>
+    <div class="tagline">SWING FOR THE FENCES</div>
+    <div class="sub">7 prompts · 25 seconds each · rarer answers fly farther</div>
+  </div>
+  <div class="dock">
+    <details class="howto">
+      <summary>► HOW TO PLAY</summary>
+      <ol>
+        <li>7 prompts a day. Same for everyone.</li>
+        <li>25 seconds to name one thing.</li>
+        <li>Rare answers score big. Obvious ones are singles.</li>
+        <li>The pick that feels clever? A bunt. The whole infield saw it coming.</li>
+        <li>Every point carries the ball about seven inches. 700 clears the wall in center.</li>
+        <li>One game per day. No replays.</li>
+      </ol>
+    </details>
+    <button class="party" data-go="party"><span class="tag">BETA · PASS &amp; PLAY</span><svg width="30" height="30" viewBox="0 0 8 8" class="px" id="partyball"></svg>THREE STRIKES<small>2–8 players</small></button>
+    <button class="cta" id="kick">► PLAY BALL ◄</button>
+    <div class="dockrow"><span id="mdinfo">GAME #1 · STREAK 0</span>
+      <span class="links"><button class="mini" data-go="archive">ARCHIVE ⟲</button><button class="mini" data-go="packs">THEMED PACKS</button><button class="mini" data-go="unlimited">UNLIMITED ∞</button></span></div>
+  </div>
+</section>
+
+<section class="scr" id="game">
+  <div class="hud">
+    <div class="hb"><small>FEET</small><b id="hm">0.0</b></div>
+    <div class="hc"><div class="sqs" id="sq"></div><small id="hr">ROUND 1 OF 7</small></div>
+    <div class="hb r"><small>SCORE</small><b id="hs">0</b></div>
+  </div>
+  <div class="pp" id="pp"><div class="eyebrow" id="ppr">ROUND 1 OF 7</div><div class="pq" id="ppq"></div><div class="pph">► rarer answers fly farther ►</div></div>
+  <div class="rv" id="rv" hidden></div>
+  <div class="bar" id="bar">
+    <div class="fb" id="fb" aria-live="polite"></div>
+    <form class="af" id="af" autocomplete="off">
+      <div class="dial" id="dial"><span id="dn">25</span></div>
+      <input id="ai" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="type one answer…" aria-label="Your answer">
+      <button class="shoot" id="shoot">SHOOT</button>
+    </form>
+    <div class="tbar"><i id="tb"></i></div>
+  </div>
+  <button class="next" id="next" hidden>NEXT AT-BAT →</button>
+</section>
+
+<section class="scr page" id="results"><div class="col" id="rcol"></div></section>
+<section class="scr page" id="page"><div class="col" id="pg"></div></section>
+
+<div class="modal" id="menu" hidden>
+  <div class="mbox" role="dialog" aria-label="Menu">
+    <button class="ic x" data-close aria-label="Close menu">X</button>
+    <div class="eyebrow" style="color:var(--blue)">WALKOFF</div>
+    <div class="mtitle">MENU</div>
+    <div class="sect">PLAY BALL</div>
+    <div class="tiles">
+      <button class="tile" data-go="home"><b>▼</b>DAILY GAME</button>
+      <button class="tile" data-go="unlimited"><b>∞</b>UNLIMITED</button>
+      <button class="tile" data-go="party"><b>◉</b>THREE STRIKES</button>
+      <button class="tile" data-go="archive"><b>⟲</b>ARCHIVE</button>
+      <button class="tile" data-go="packs"><b>▦</b>THEMED PACKS</button>
+      <button class="tile" data-go="stats"><b>☻</b>MY WALKOFF</button>
+      <button class="tile" data-act="settings"><b>⚙&#xFE0E;</b>SETTINGS</button>
+      <button class="tile" data-go="faq"><b>?</b>FAQ</button>
+    </div>
+    <div class="sect" style="margin-top:16px">MORE GAMES</div>
+    <div class="tiles"><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/"><b>WORLDIE</b>SOCCER</a><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/buzzer/"><b>BUZZER</b>BASKETBALL</a><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/hailmary/"><b>HAIL MARY</b>FOOTBALL</a><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/hattrick/"><b>HAT TRICK</b>HOCKEY</a></div>
+    <div class="mfoot">find the walk-off.</div>
+  </div>
+</div>
+
+<div class="modal" id="set" hidden>
+  <div class="mbox" role="dialog" aria-label="Settings">
+    <button class="ic x" data-close aria-label="Close settings">X</button>
+    <div class="mtitle">SETTINGS</div>
+    <div class="opt"><b>SOUND</b><span>Bats, organ and the crowd.</span><button class="sw" role="switch" data-k="snd" aria-label="Sound"><i>OFF</i></button></div>
+    <div class="opt"><b>LOW-POWER MODE</b><span>Lighter graphics and fewer background animations.</span><button class="sw" role="switch" data-k="low" aria-label="Low-power mode"><i>OFF</i></button></div>
+    <div class="opt"><b>COLORBLIND MODE</b><span>Brighter text and more separated tier colors.</span><button class="sw" role="switch" data-k="cb" aria-label="Colorblind mode"><i>OFF</i></button></div>
+    <div class="opt"><b>ANSWER CORRECTIONS</b><span>Preview corrected answers before scoring. Off accepts them immediately.</span><button class="sw" role="switch" data-k="corr" aria-label="Answer corrections"><i>OFF</i></button></div>
+    <div class="opt"><b>CLEAR REJECTED ENTRIES</b><span>Empty the answer box after a foul ball.</span><button class="sw" role="switch" data-k="clr" aria-label="Clear rejected entries"><i>OFF</i></button></div>
+    <div class="btnrow"><button class="btn2" data-go="stats">MY WALKOFF →</button><button class="btn2" data-go="faq">FAQ</button></div>
+  </div>
+</div>
+<script>
+// Answer sets. "Name|rarity 1-5|aliases". "*" marks the top-tier answer (one per prompt), "~" marks the clever pick that isn't.
+const RAW=[
+// ===== THE SHOW (mlb) =====
+{k:"alteams",pk:"mlb",q:"Name an American League team",h:"The 15 AL clubs in the 2026 season",f:"The Astros moved from the National League to the AL West in 2013.",a:
+ "New York Yankees|1|yankees,ny yankees,new york,nyy;Boston Red Sox|1|red sox,boston;Toronto Blue Jays|1|blue jays,toronto,jays;Baltimore Orioles|2|orioles,baltimore;Tampa Bay Rays|2|rays,tampa bay,tampa,devil rays,tampa bay devil rays;Chicago White Sox|2|white sox,chicago,chisox;Cleveland Guardians|2|guardians,cleveland,indians,cleveland indians;Detroit Tigers|2|tigers,detroit;Kansas City Royals|2|royals,kansas city,kc royals;Minnesota Twins|2|twins,minnesota;*Houston Astros|3|astros,houston;Los Angeles Angels|2|angels,la angels,los angeles,anaheim,anaheim angels,california angels,halos;Seattle Mariners|2|mariners,seattle;Texas Rangers|2|rangers,texas;Athletics|2|a's,as,oakland athletics,oakland a's,oakland,sacramento,las vegas,las vegas athletics,sacramento athletics"},
+{k:"nlteams",pk:"mlb",q:"Name a National League team",h:"The 15 NL clubs in the 2026 season",f:"The Brewers switched from the American League to the National League in 1998.",a:
+ "Atlanta Braves|1|braves,atlanta;New York Mets|1|mets,ny mets,new york,nym;Philadelphia Phillies|1|phillies,philadelphia,phils;Miami Marlins|2|marlins,miami,florida marlins,florida;Washington Nationals|2|nationals,nats,washington,expos,montreal expos;Chicago Cubs|1|cubs,chicago;Cincinnati Reds|2|reds,cincinnati;*Milwaukee Brewers|3|brewers,milwaukee,brew crew;Pittsburgh Pirates|2|pirates,pittsburgh,bucs;St. Louis Cardinals|1|cardinals,st louis,cards;Arizona Diamondbacks|2|diamondbacks,d-backs,dbacks,arizona;Colorado Rockies|2|rockies,colorado;Los Angeles Dodgers|1|dodgers,la dodgers,los angeles,brooklyn dodgers;San Diego Padres|2|padres,san diego;San Francisco Giants|1|giants,sf giants,san francisco,new york giants"},
+{k:"neverws",pk:"mlb",q:"Name a current MLB team that has never won the World Series",h:"Through the 2026 World Series",f:"The Padres have reached two World Series, losing to Detroit in 1984 and the Yankees in 1998.",a:
+ "Seattle Mariners|1|mariners,seattle;Colorado Rockies|2|rockies,colorado;Tampa Bay Rays|2|rays,tampa bay,tampa,devil rays;*San Diego Padres|3|padres,san diego"},
+{k:"moved",pk:"mlb",q:"Name a current MLB franchise that has relocated",h:"Moves to a new metro area, 1901–2026 (LA to Anaheim doesn’t count)",f:"The Orioles began in 1901 as the Milwaukee Brewers, then spent 1902–1953 as the St. Louis Browns.",a:
+ "Los Angeles Dodgers|1|dodgers,la dodgers,brooklyn dodgers,brooklyn;San Francisco Giants|1|giants,sf giants,san francisco,new york giants,ny giants;Athletics|1|a's,as,oakland athletics,oakland a's,oakland,philadelphia athletics,kansas city athletics;Atlanta Braves|2|braves,atlanta,boston braves,milwaukee braves;Washington Nationals|2|nationals,nats,washington,montreal expos,expos,montreal;*Baltimore Orioles|4|orioles,baltimore,st louis browns,browns;Minnesota Twins|3|twins,minnesota;Texas Rangers|3|rangers,texas;Milwaukee Brewers|3|brewers,milwaukee,seattle pilots,pilots"},
+{k:"expand",pk:"mlb",q:"Name an MLB expansion franchise",h:"Clubs added from 1961 to 1998; former names count",f:"The Rangers began as the expansion Washington Senators in 1961 and moved to Texas in 1972.",a:
+ "New York Mets|1|mets,new york,ny mets;Los Angeles Angels|2|angels,la angels,los angeles,anaheim angels,california angels,anaheim;*Texas Rangers|4|rangers,texas,washington senators,senators;Houston Astros|2|astros,houston,colt 45s,houston colt 45s;Kansas City Royals|2|royals,kansas city;Milwaukee Brewers|3|brewers,milwaukee,seattle pilots,pilots;Washington Nationals|3|nationals,nats,washington,montreal expos,expos,montreal;San Diego Padres|2|padres,san diego;Seattle Mariners|2|mariners,seattle;Toronto Blue Jays|2|blue jays,toronto,jays;Colorado Rockies|1|rockies,colorado;Miami Marlins|1|marlins,miami,florida marlins,florida;Arizona Diamondbacks|1|diamondbacks,d-backs,dbacks,arizona;Tampa Bay Rays|1|rays,tampa bay,tampa,devil rays,tampa bay devil rays"},
+{k:"almvp",pk:"mlb",q:"Name an AL MVP",h:"Winners 2000–2025 (2026 award due Nov. 12)",f:"Twins first baseman Justin Morneau won the 2006 AL MVP, edging out Derek Jeter.",a:
+ "Aaron Judge|1|judge;Shohei Ohtani|1|ohtani,shohei;Mike Trout|1|trout;Alex Rodriguez|1|a-rod,arod,rodriguez;Miguel Cabrera|2|cabrera,miggy;Ichiro Suzuki|2|ichiro,suzuki;Justin Verlander|2|verlander;Jose Altuve|2|altuve;Mookie Betts|2|betts,mookie;Vladimir Guerrero|3|vlad,guerrero,vladimir guerrero sr;Josh Hamilton|3|hamilton;Dustin Pedroia|3|pedroia;Joe Mauer|3|mauer;Josh Donaldson|3|donaldson;Jason Giambi|3|giambi;Miguel Tejada|3|tejada;José Abreu|4|abreu;*Justin Morneau|4|morneau"},
+{k:"nlmvp",pk:"mlb",q:"Name an NL MVP",h:"Winners 2000–2025 (2026 award due Nov. 12)",f:"Jeff Kent won the 2000 NL MVP over teammate Barry Bonds and entered the Hall of Fame in 2026.",a:
+ "Barry Bonds|1|bonds;Shohei Ohtani|1|ohtani,shohei;Albert Pujols|1|pujols;Bryce Harper|1|harper;Ronald Acuña Jr.|2|acuna,acuna jr,ronald acuna;Clayton Kershaw|2|kershaw;Buster Posey|2|posey;Freddie Freeman|2|freeman;Giancarlo Stanton|2|stanton;Christian Yelich|2|yelich;Kris Bryant|2|bryant;Cody Bellinger|2|bellinger;Ryan Howard|3|howard;Jimmy Rollins|3|rollins,j-roll;Joey Votto|3|votto;Ryan Braun|3|braun;Andrew McCutchen|3|mccutchen,cutch;Paul Goldschmidt|3|goldschmidt,goldy;*Jeff Kent|4|kent"},
+{k:"unanmvp",pk:"mlb",q:"Name a player who won an MVP unanimously",h:"BBWAA MVP voting, 1931–2025",f:"Ken Caminiti hit 40 homers for San Diego in 1996 and won the NL MVP unanimously.",a:
+ "Shohei Ohtani|1|ohtani,shohei;Aaron Judge|2|judge;Mike Trout|2|trout;Barry Bonds|2|bonds;Mickey Mantle|2|mantle;Bryce Harper|3|harper;Ronald Acuña Jr.|3|acuna,acuna jr;Albert Pujols|3|pujols;Ken Griffey Jr.|3|griffey,junior,ken griffey;Frank Thomas|3|thomas,big hurt;Jeff Bagwell|3|bagwell;Jose Canseco|3|canseco;Mike Schmidt|3|schmidt;Reggie Jackson|3|reggie,jackson,mr october;Frank Robinson|3|robinson,f robinson;Denny McLain|4|mclain;Orlando Cepeda|4|cepeda;Hank Greenberg|4|greenberg;*Ken Caminiti|5|caminiti;Al Rosen|5|rosen;Carl Hubbell|5|hubbell"},
+{k:"mvp3",pk:"mlb",q:"Name a player with three or more MVP awards",h:"BBWAA MVPs 1931–2025 (2026 award due Nov. 12)",f:"Roy Campanella won three NL MVPs with Brooklyn before a 1958 car accident left him paralyzed.",a:
+ "Barry Bonds|1|bonds;Shohei Ohtani|1|ohtani,shohei;Aaron Judge|2|judge;Mike Trout|2|trout;Albert Pujols|2|pujols;Alex Rodriguez|2|a-rod,arod,rodriguez;Mickey Mantle|3|mantle;Mike Schmidt|3|schmidt;Yogi Berra|3|berra,yogi;Stan Musial|3|musial,stan the man;Joe DiMaggio|3|dimaggio,joltin joe;*Roy Campanella|4|campanella,campy;Jimmie Foxx|4|foxx,double x"},
+{k:"alcy",pk:"mlb",q:"Name an AL Cy Young winner",h:"Winners 2000–2025 (2026 award due Nov. 11)",f:"Barry Zito won the 2002 AL Cy Young for Oakland after going 23–5.",a:
+ "Tarik Skubal|1|skubal;Justin Verlander|1|verlander;Pedro Martínez|2|pedro,martinez;Roger Clemens|2|clemens,rocket;Roy Halladay|2|halladay,doc halladay;Johan Santana|2|santana,johan;CC Sabathia|2|sabathia,cc;Félix Hernández|2|felix,king felix,hernandez;Max Scherzer|2|scherzer,mad max;Gerrit Cole|2|cole;Bartolo Colón|3|colon,bartolo;Cliff Lee|3|lee;Zack Greinke|3|greinke;David Price|3|price;Corey Kluber|3|kluber,klubot;Dallas Keuchel|3|keuchel;Blake Snell|3|snell;Shane Bieber|3|bieber;*Barry Zito|4|zito;Rick Porcello|4|porcello;Robbie Ray|4|ray"},
+{k:"nlcy",pk:"mlb",q:"Name an NL Cy Young winner",h:"Winners 2000–2025 (2026 award due Nov. 11)",f:"Dodgers closer Éric Gagné won the 2003 NL Cy Young after converting all 55 of his save chances.",a:
+ "Clayton Kershaw|1|kershaw;Randy Johnson|1|randy,johnson,big unit;Paul Skenes|1|skenes;Max Scherzer|2|scherzer,mad max;Jacob deGrom|2|degrom;Tim Lincecum|2|lincecum,the freak;Roy Halladay|2|halladay,doc halladay;Chris Sale|2|sale;Roger Clemens|3|clemens,rocket;Chris Carpenter|3|carpenter;Brandon Webb|3|webb;Jake Peavy|3|peavy;R.A. Dickey|3|ra dickey,dickey;Jake Arrieta|3|arrieta;Corbin Burnes|3|burnes;Sandy Alcántara|3|alcantara;Blake Snell|3|snell;*Éric Gagné|4|gagne,eric gagne;Trevor Bauer|4|bauer"},
+{k:"cyboth",pk:"mlb",q:"Name a pitcher who won the Cy Young in both leagues",h:"Awards 1956–2025 (2026 award due Nov. 11)",f:"Gaylord Perry was the first to win it in each league, in 1972 with Cleveland and 1978 with San Diego.",a:
+ "Randy Johnson|1|randy,johnson,big unit;Roger Clemens|2|clemens,rocket;Pedro Martínez|2|pedro,martinez;Max Scherzer|2|scherzer,mad max;Roy Halladay|2|halladay,doc halladay;Blake Snell|3|snell;*Gaylord Perry|4|perry"},
+{k:"cymvp",pk:"mlb",q:"Name a pitcher who won the MVP and Cy Young in the same season",h:"Seasons 1956–2025 (2026 awards due Nov. 11–12)",f:"Tigers closer Willie Hernández swept the 1984 AL MVP and Cy Young, then won the World Series.",a:
+ "Justin Verlander|1|verlander;Clayton Kershaw|1|kershaw;Sandy Koufax|2|koufax;Bob Gibson|2|gibson;Roger Clemens|2|clemens,rocket;Denny McLain|3|mclain;Dennis Eckersley|3|eckersley,eck;Vida Blue|4|blue;Rollie Fingers|4|fingers;Don Newcombe|4|newcombe,newk;*Willie Hernández|5|hernandez,willie hernandez"},
+{k:"cy3",pk:"mlb",q:"Name a pitcher with three or more Cy Young Awards",h:"Awards 1956–2025 (2026 award due Nov. 11)",f:"Jim Palmer won three AL Cy Youngs for Baltimore and never allowed a grand slam in his career.",a:
+ "Roger Clemens|1|clemens,rocket;Randy Johnson|1|randy,johnson,big unit;Greg Maddux|2|maddux,mad dog;Sandy Koufax|2|koufax;Pedro Martínez|2|pedro,martinez;Clayton Kershaw|2|kershaw;Max Scherzer|2|scherzer,mad max;Justin Verlander|2|verlander;Steve Carlton|3|carlton,lefty;Tom Seaver|3|seaver,tom terrific;*Jim Palmer|4|palmer"},
+{k:"alroy",pk:"mlb",q:"Name an AL Rookie of the Year",h:"Winners 2000–2025 (2026 award due Nov. 9)",f:"Kansas City shortstop Ángel Berroa edged Hideki Matsui for the 2003 AL award.",a:
+ "Mike Trout|1|trout;Aaron Judge|1|judge;Shohei Ohtani|1|ohtani,shohei;Ichiro Suzuki|2|ichiro,suzuki;Justin Verlander|2|verlander;Carlos Correa|2|correa;Yordan Alvarez|2|alvarez,yordan;Julio Rodríguez|2|julio,j-rod,rodriguez;Gunnar Henderson|2|henderson,gunnar;Dustin Pedroia|3|pedroia;Evan Longoria|3|longoria;José Abreu|3|abreu;Randy Arozarena|3|arozarena;Nick Kurtz|3|kurtz;Kazuhiro Sasaki|4|sasaki;Huston Street|4|street;Neftalí Feliz|4|feliz;Jeremy Hellickson|4|hellickson;Wil Myers|4|myers;Kyle Lewis|4|lewis;Luis Gil|4|gil;Eric Hinske|5|hinske;*Ángel Berroa|5|berroa;Bobby Crosby|5|crosby;Andrew Bailey|5|bailey;Michael Fulmer|5|fulmer"},
+{k:"nlroy",pk:"mlb",q:"Name an NL Rookie of the Year",h:"Winners 2000–2025 (2026 award due Nov. 9)",f:"Marlins lefty Dontrelle Willis won the 2003 NL award and a World Series ring the same year.",a:
+ "Albert Pujols|1|pujols;Bryce Harper|1|harper;Paul Skenes|1|skenes;Ronald Acuña Jr.|1|acuna,acuna jr;Buster Posey|2|posey;Jacob deGrom|2|degrom;Kris Bryant|2|bryant;Corey Seager|2|seager;Cody Bellinger|2|bellinger;Pete Alonso|2|alonso,polar bear;Corbin Carroll|2|carroll;Ryan Howard|3|howard;Hanley Ramírez|3|hanley,ramirez;Ryan Braun|3|braun;Craig Kimbrel|3|kimbrel;José Fernández|3|fernandez;Michael Harris II|3|michael harris,harris;Drake Baldwin|3|baldwin;Rafael Furcal|4|furcal;*Dontrelle Willis|4|willis,d-train;Jason Bay|4|bay;Geovany Soto|4|soto;Devin Williams|4|williams;Jonathan India|4|india;Jason Jennings|5|jennings;Chris Coghlan|5|coghlan"},
+{k:"derby",pk:"mlb",q:"Name a Home Run Derby winner",h:"Champions 2000–2026 (no Derby in 2020)",f:"Jordan Walker beat hometown slugger Kyle Schwarber in Philadelphia in 2026 to become the first Cardinal to win the Derby.",a:
+ "Aaron Judge|1|judge;Pete Alonso|1|alonso,polar bear;Vladimir Guerrero Jr.|1|vlad jr,vladdy,guerrero jr;David Ortiz|2|ortiz,big papi;Giancarlo Stanton|2|stanton;Bryce Harper|2|harper;Juan Soto|2|soto;Sammy Sosa|2|sosa;Teoscar Hernández|2|teoscar,hernandez;Cal Raleigh|2|raleigh,big dumper;Jason Giambi|3|giambi;Ryan Howard|3|howard;Vladimir Guerrero|3|vladimir guerrero sr,vlad sr;Prince Fielder|3|fielder,prince;Robinson Canó|3|cano;Yoenis Céspedes|3|cespedes;Todd Frazier|3|frazier;Luis Gonzalez|4|gonzalez,gonzo;Miguel Tejada|4|tejada;Bobby Abreu|4|abreu;Justin Morneau|4|morneau;*Jordan Walker|4|walker;Garret Anderson|5|anderson"},
+{k:"asgmvp",pk:"mlb",q:"Name an All-Star Game MVP",h:"Winners 2000–2026 (no award in 2002 or 2020)",f:"Melky Cabrera won the 2012 All-Star MVP, then was suspended for PEDs a month later and asked to be left out of the batting title race.",a:
+ "Derek Jeter|1|jeter;Mike Trout|2|trout;Cal Ripken Jr.|2|ripken,cal ripken;Mariano Rivera|3|rivera,mariano,mo;Ichiro Suzuki|3|ichiro,suzuki;Vladimir Guerrero Jr.|3|vlad jr,vladdy,guerrero;Giancarlo Stanton|3|stanton;Kyle Schwarber|3|schwarber;Alfonso Soriano|4|soriano;Miguel Tejada|4|tejada;Michael Young|4|young;Carl Crawford|4|crawford;Brian McCann|4|mccann;Prince Fielder|4|fielder,prince;Eric Hosmer|4|hosmer;Robinson Canó|4|cano;Alex Bregman|4|bregman;Shane Bieber|4|bieber;Jarren Duran|4|duran;Cody Bellinger|4|bellinger;Garret Anderson|5|anderson;J.D. Drew|5|jd drew,drew;*Melky Cabrera|5|melky;Elías Díaz|5|diaz"},
+{k:"alhit",pk:"mlb",q:"Name an AL batting champion",h:"Batting title winners 2000–2026",f:"Red Sox third baseman Bill Mueller won the 2003 AL batting title at .326, a point ahead of teammate Manny Ramirez.",a:
+ "Ichiro Suzuki|1|ichiro,suzuki;Miguel Cabrera|1|cabrera,miggy;Joe Mauer|2|mauer;Jose Altuve|2|altuve;Bobby Witt Jr.|2|witt,bobby witt;Aaron Judge|2|judge;Nomar Garciaparra|3|nomar,garciaparra;Manny Ramirez|3|manny,ramirez;Josh Hamilton|3|hamilton;Mookie Betts|3|betts,mookie;DJ LeMahieu|3|lemahieu;Luis Arráez|3|arraez;Yordan Álvarez|3|yordan,alvarez;Michael Young|4|young;Magglio Ordóñez|4|magglio,ordonez;Tim Anderson|4|anderson;Yandy Díaz|4|yandy,diaz;*Bill Mueller|5|mueller;Yuli Gurriel|5|gurriel"},
+{k:"nlhit",pk:"mlb",q:"Name an NL batting champion",h:"Batting title winners 2000–2026",f:"Dee Gordon won both the batting title and the stolen base crown for Miami in 2015.",a:
+ "Barry Bonds|2|bonds;Albert Pujols|2|pujols;Christian Yelich|2|yelich;Juan Soto|2|soto;Trea Turner|2|turner,trea;Luis Arráez|2|arraez;Buster Posey|3|posey;Todd Helton|3|helton;Larry Walker|3|walker;Chipper Jones|3|chipper,jones;DJ LeMahieu|3|lemahieu;Charlie Blackmon|3|blackmon,chuck nazty;Jeff McNeil|3|mcneil,squirrel;Derrek Lee|4|lee;Matt Holliday|4|holliday;Hanley Ramírez|4|hanley,ramirez;Carlos González|4|cargo,gonzalez;José Reyes|4|reyes;*Dee Gordon|4|gordon,dee strange-gordon;Gabriel Moreno|4|moreno;Freddy Sanchez|5|sanchez;Michael Cuddyer|5|cuddyer;Justin Morneau|5|morneau"},
+{k:"alhr",pk:"mlb",q:"Name an AL home run leader",h:"League leaders and co-leaders, 2000–2026",f:"Luke Voit led the majors with 22 homers in the 60-game 2020 season.",a:
+ "Aaron Judge|1|judge;Alex Rodriguez|1|a-rod,arod,rodriguez;Shohei Ohtani|1|ohtani,shohei;David Ortiz|2|ortiz,big papi;Miguel Cabrera|2|cabrera,miggy;Cal Raleigh|2|raleigh,big dumper;Manny Ramirez|3|manny,ramirez;José Bautista|3|bautista,joey bats;Chris Davis|3|crush davis;Nelson Cruz|3|cruz,boomstick;Vladimir Guerrero Jr.|3|vlad jr,vladdy,guerrero;Salvador Perez|3|perez,salvy;Troy Glaus|4|glaus;Mark Teixeira|4|teixeira,tex;Khris Davis|4|khrush;Jorge Soler|4|soler;Pete Alonso|4|alonso,polar bear;Carlos Peña|5|pena;Mark Trumbo|5|trumbo;*Luke Voit|5|voit"},
+{k:"nlhr",pk:"mlb",q:"Name an NL home run leader",h:"League leaders and co-leaders, 2000–2026",f:"Chris Carter tied for the 2016 NL lead with 41 homers for Milwaukee, then was non-tendered that winter.",a:
+ "Barry Bonds|1|bonds;Sammy Sosa|1|sosa;Shohei Ohtani|1|ohtani,shohei;Ryan Howard|2|howard;Albert Pujols|2|pujols;Giancarlo Stanton|2|stanton;Pete Alonso|2|alonso,polar bear;Kyle Schwarber|2|schwarber;Jim Thome|3|thome;Andruw Jones|3|andruw,jones;Prince Fielder|3|fielder,prince;Nolan Arenado|3|arenado;Bryce Harper|3|harper;Fernando Tatís Jr.|3|tatis,tatis jr;Matt Olson|3|olson;Pete Crow-Armstrong|3|pca,crow-armstrong;Adrián Beltré|4|beltre;Matt Kemp|4|kemp;Ryan Braun|4|braun;Paul Goldschmidt|4|goldschmidt,goldy;Marcell Ozuna|4|ozuna;Pedro Álvarez|5|alvarez;*Chris Carter|5|carter"},
+{k:"club4040",pk:"mlb",q:"Name a member of the 40–40 club",h:"40 homers and 40 steals in one season, through 2026",f:"Pete Crow-Armstrong became the seventh 40–40 player in 2026, with 45 homers and 41 steals for the Cubs.",a:
+ "Shohei Ohtani|1|ohtani,shohei;Ronald Acuña Jr.|1|acuna,acuna jr;Barry Bonds|2|bonds;Alex Rodriguez|2|a-rod,arod,rodriguez;Jose Canseco|2|canseco;Alfonso Soriano|3|soriano;*Pete Crow-Armstrong|3|pca,crow-armstrong"},
+{k:"w110",pk:"mlb",q:"Name a franchise with a 110-win season",h:"AL or NL seasons, 1901–2026",f:"The 1909 Pirates went 110–42 and beat Ty Cobb’s Tigers in the World Series.",a:
+ "New York Yankees|1|yankees,ny yankees,new york;Seattle Mariners|1|mariners,seattle;Los Angeles Dodgers|2|dodgers,la dodgers,los angeles;Chicago Cubs|3|cubs,chicago;Cleveland Guardians|3|guardians,cleveland,indians,cleveland indians;*Pittsburgh Pirates|4|pirates,pittsburgh"},
+// ===== OCTOBER =====
+{k:"wschamp",pk:"october",q:"Name a franchise that has won the World Series",h:"Champions 1903–2026; former names count",f:"The Brewers won their first title in 2026, beating Tampa Bay in five games in the franchise’s 58th season.",a:
+ "New York Yankees|1|yankees,ny yankees,nyy;St. Louis Cardinals|1|cardinals,cards,st louis;Boston Red Sox|1|red sox,boston,boston americans;Los Angeles Dodgers|1|dodgers,la dodgers,brooklyn dodgers,brooklyn;San Francisco Giants|1|giants,sf giants,san francisco,new york giants,ny giants;Chicago Cubs|1|cubs;Athletics|2|a's,as,oakland athletics,oakland a's,oakland,philadelphia athletics,kansas city athletics;Pittsburgh Pirates|2|pirates,pittsburgh;Cincinnati Reds|2|reds,cincinnati;Detroit Tigers|2|tigers,detroit;Atlanta Braves|2|braves,atlanta,boston braves,milwaukee braves;Baltimore Orioles|2|orioles,baltimore,st louis browns,browns;Chicago White Sox|2|white sox;Miami Marlins|2|marlins,miami,florida marlins,florida;Toronto Blue Jays|2|blue jays,toronto,jays;Kansas City Royals|2|royals,kansas city;New York Mets|2|mets;Philadelphia Phillies|2|phillies,philadelphia;Houston Astros|2|astros,houston,colt 45s,houston colt 45s;Minnesota Twins|3|twins,minnesota,washington senators,senators;Cleveland Guardians|3|guardians,cleveland,indians,cleveland indians;Los Angeles Angels|3|angels,anaheim angels,anaheim,la angels,california angels;Arizona Diamondbacks|3|diamondbacks,d-backs,dbacks,arizona;Washington Nationals|3|nationals,nats,washington,montreal expos,expos,montreal;Texas Rangers|3|rangers,texas;*Milwaukee Brewers|3|brewers,milwaukee,seattle pilots,pilots"},
+{k:"wsmvp",pk:"october",q:"Name a World Series MVP",h:"Winners 2000–2026",f:"Steve Pearce homered twice in the 2018 clincher and had played for all five AL East teams.",a:
+ "Derek Jeter|1|jeter;David Ortiz|1|ortiz,big papi;Madison Bumgarner|1|bumgarner,madbum;Freddie Freeman|1|freeman;Randy Johnson|2|randy,johnson,big unit;Curt Schilling|2|schilling;Manny Ramirez|2|manny,ramirez;David Freese|2|freese;Corey Seager|2|seager;Yoshinobu Yamamoto|2|yamamoto;Josh Beckett|3|beckett;Cole Hamels|3|hamels;Hideki Matsui|3|matsui,godzilla;Pablo Sandoval|3|sandoval,kung fu panda;Salvador Perez|3|perez,salvy;Ben Zobrist|3|zobrist;George Springer|3|springer;Stephen Strasburg|3|strasburg;Jorge Soler|3|soler;Jeremy Peña|3|pena;William Contreras|3|contreras;Troy Glaus|4|glaus;Jermaine Dye|4|dye;David Eckstein|4|eckstein;Mike Lowell|4|lowell;Édgar Rentería|4|renteria;*Steve Pearce|5|pearce"},
+{k:"wspitch",pk:"october",q:"Name a pitcher who won World Series MVP",h:"Winners 1955–2026",f:"Dodgers reliever Larry Sherry won the 1959 award after winning two games and saving the other two.",a:
+ "Randy Johnson|1|randy,johnson,big unit;Madison Bumgarner|1|bumgarner,madbum;Sandy Koufax|2|koufax;Bob Gibson|2|gibson;Mariano Rivera|2|rivera,mariano,mo;Curt Schilling|2|schilling;Stephen Strasburg|2|strasburg;Yoshinobu Yamamoto|2|yamamoto;Don Larsen|3|larsen;Whitey Ford|3|ford;Orel Hershiser|3|hershiser,bulldog;Jack Morris|3|morris;Tom Glavine|3|glavine;Josh Beckett|3|beckett;Cole Hamels|3|hamels;Johnny Podres|4|podres;Mickey Lolich|4|lolich;Rollie Fingers|4|fingers;Bret Saberhagen|4|saberhagen;Frank Viola|4|viola;Dave Stewart|4|stewart;José Rijo|4|rijo;John Wetteland|4|wetteland;Liván Hernández|4|livan,hernandez;Lew Burdette|5|burdette;Bob Turley|5|turley;Ralph Terry|5|terry;*Larry Sherry|5|sherry"},
+{k:"wsmgr",pk:"october",q:"Name a manager who won the World Series",h:"Winning managers 1990–2026",f:"Jack McKeon took over the Marlins in May 2003 and won the World Series that October at age 72.",a:
+ "Joe Torre|1|torre;Bruce Bochy|1|bochy;Dave Roberts|1|roberts,doc roberts;Bobby Cox|2|cox;Terry Francona|2|francona,tito;Tony La Russa|2|la russa,larussa;Joe Maddon|2|maddon;Dusty Baker|2|dusty,baker;Lou Piniella|3|piniella,sweet lou;Cito Gaston|3|gaston,cito;Jim Leyland|3|leyland;Mike Scioscia|3|scioscia;Ozzie Guillén|3|guillen,ozzie;Charlie Manuel|3|manuel;Joe Girardi|3|girardi;Ned Yost|3|yost;A.J. Hinch|3|hinch,aj hinch;Alex Cora|3|cora;Dave Martinez|3|martinez,davey martinez;Brian Snitker|3|snitker;Pat Murphy|3|murphy;Tom Kelly|4|kelly;Bob Brenly|4|brenly;John Farrell|4|farrell;*Jack McKeon|4|mckeon,trader jack"},
+{k:"wslose",pk:"october",q:"Name a team that lost a World Series",h:"World Series runners-up 2000–2026",f:"The Rockies reached their only World Series in 2007 and were swept by Boston.",a:
+ "New York Yankees|1|yankees;Los Angeles Dodgers|2|dodgers,la dodgers,los angeles;New York Mets|2|mets;St. Louis Cardinals|2|cardinals,cards,st louis;Houston Astros|2|astros,houston;Tampa Bay Rays|2|rays,tampa bay,tampa,devil rays;Philadelphia Phillies|2|phillies,philadelphia;Texas Rangers|2|rangers,texas;Cleveland Guardians|2|guardians,cleveland,indians,cleveland indians;Toronto Blue Jays|2|blue jays,toronto,jays;San Francisco Giants|3|giants,sf giants,san francisco;Detroit Tigers|3|tigers,detroit;Kansas City Royals|3|royals,kansas city;Arizona Diamondbacks|3|diamondbacks,d-backs,dbacks,arizona;*Colorado Rockies|4|rockies,colorado"},
+{k:"wsyank",pk:"october",q:"Name a team the Yankees beat in a World Series",h:"The Yankees’ 27 titles, 1923–2009; former names count",f:"The 1998 Yankees swept the Padres to finish 125–50 counting the postseason.",a:
+ "Los Angeles Dodgers|1|dodgers,la dodgers,brooklyn dodgers,brooklyn;San Francisco Giants|2|giants,sf giants,new york giants,ny giants,san francisco;Atlanta Braves|2|braves,atlanta,milwaukee braves;Philadelphia Phillies|2|phillies,philadelphia;New York Mets|2|mets;St. Louis Cardinals|3|cardinals,cards,st louis;Cincinnati Reds|4|reds,cincinnati;Chicago Cubs|4|cubs,chicago;Pittsburgh Pirates|4|pirates,pittsburgh;*San Diego Padres|4|padres,san diego"},
+{k:"ws3hr",pk:"october",q:"Name a player with a three-homer World Series game",h:"World Series games 1903–2026",f:"Pablo Sandoval homered in his first three at-bats of Game 1 in 2012, the first two off Justin Verlander.",a:
+ "Babe Ruth|1|ruth,bambino;Reggie Jackson|1|reggie,jackson,mr october;Albert Pujols|2|pujols;*Pablo Sandoval|3|sandoval,kung fu panda"},
+{k:"ws1",pk:"october",q:"Name a franchise with exactly one World Series title",h:"Title counts through the 2026 World Series",f:"The Diamondbacks won the 2001 title in just their fourth season, the fastest ever by an expansion team.",a:
+ "Milwaukee Brewers|2|brewers,milwaukee;Texas Rangers|2|rangers,texas;Washington Nationals|2|nationals,nats,washington,montreal expos,expos;Los Angeles Angels|2|angels,anaheim angels,anaheim,la angels;*Arizona Diamondbacks|3|diamondbacks,d-backs,dbacks,arizona"},
+{k:"wswild",pk:"october",q:"Name a franchise that won the World Series as a wild card",h:"Wild-card champions 1995–2026",f:"The 2023 Rangers went 11–0 on the road in the postseason on the way to their first title.",a:
+ "Boston Red Sox|2|red sox,boston;San Francisco Giants|2|giants,sf giants,san francisco;Washington Nationals|2|nationals,nats,washington;Miami Marlins|2|marlins,miami,florida marlins,florida;St. Louis Cardinals|3|cardinals,cards,st louis;Los Angeles Angels|3|angels,anaheim angels,anaheim,la angels;*Texas Rangers|3|rangers,texas"},
+{k:"ws2peat",pk:"october",q:"Name a franchise that won back-to-back World Series",h:"Consecutive titles, 1903–2026; former names count",f:"The New York Giants won back-to-back titles in 1921 and 1922, beating the Yankees both times.",a:
+ "New York Yankees|1|yankees;Los Angeles Dodgers|1|dodgers,la dodgers;Toronto Blue Jays|2|blue jays,toronto,jays;Athletics|2|a's,as,oakland athletics,oakland a's,oakland,philadelphia athletics;Cincinnati Reds|3|reds,cincinnati,big red machine;Chicago Cubs|4|cubs,chicago;Boston Red Sox|4|red sox,boston;*San Francisco Giants|4|giants,new york giants,ny giants,sf giants,san francisco"},
+{k:"wswalk",pk:"october",q:"Name a player who hit a walk-off homer in the World Series",h:"World Series games 1903–2026",f:"Pinch-hitter Dusty Rhodes won Game 1 in 1954 with a 10th-inning homer, the same game as Willie Mays’ famous catch.",a:
+ "Joe Carter|1|carter;Kirk Gibson|1|gibson;Freddie Freeman|1|freeman;Bill Mazeroski|2|mazeroski,maz;Carlton Fisk|2|fisk;Kirby Puckett|2|puckett;David Freese|2|freese;Derek Jeter|2|jeter,mr november;Max Muncy|3|muncy;Adolis García|3|adolis,garcia;Mark McGwire|4|mcgwire,big mac;Mickey Mantle|4|mantle;Scott Podsednik|4|podsednik;Eddie Mathews|5|mathews;Tommy Henrich|5|henrich;*Dusty Rhodes|5|rhodes;Chad Curtis|5|curtis;Alex Gonzalez|5|gonzalez"},
+{k:"ws80s",pk:"october",q:"Name a World Series champion of the 1980s",h:"Champions 1980–1989",f:"The 1983 Orioles beat the Phillies in five games for Baltimore’s third title.",a:
+ "Los Angeles Dodgers|1|dodgers,la dodgers,los angeles;New York Mets|1|mets,new york;St. Louis Cardinals|2|cardinals,cards,st louis;Minnesota Twins|2|twins,minnesota;Philadelphia Phillies|3|phillies,philadelphia;Detroit Tigers|3|tigers,detroit;Kansas City Royals|3|royals,kansas city;Athletics|3|a's,as,oakland athletics,oakland a's,oakland;*Baltimore Orioles|4|orioles,baltimore"},
+{k:"alcsmvp",pk:"october",q:"Name an ALCS MVP",h:"Winners 2000–2026",f:"Freddy Peralta won the 2026 ALCS MVP for Tampa Bay, then faced his old Brewers team in the World Series.",a:
+ "David Ortiz|1|ortiz,big papi;Jose Altuve|1|altuve;Mariano Rivera|2|rivera,mariano,mo;Justin Verlander|2|verlander;Randy Arozarena|2|arozarena;Giancarlo Stanton|2|stanton;Vladimir Guerrero Jr.|2|vlad jr,vladdy,guerrero;Andy Pettitte|3|pettitte;Paul Konerko|3|konerko;Josh Beckett|3|beckett;CC Sabathia|3|sabathia;Josh Hamilton|3|hamilton;Nelson Cruz|3|cruz;Koji Uehara|3|uehara;Jackie Bradley Jr.|3|jbj,bradley,jackie bradley;Yordan Alvarez|3|alvarez,yordan;Jeremy Peña|3|pena;Adolis García|3|adolis,garcia;David Justice|4|justice;Matt Garza|4|garza;Delmon Young|4|delmon,young;Lorenzo Cain|4|cain;Alcides Escobar|4|escobar;Andrew Miller|4|miller;*Freddy Peralta|4|peralta;Adam Kennedy|5|kennedy;Plácido Polanco|5|polanco"},
+{k:"nlcsmvp",pk:"october",q:"Name an NLCS MVP",h:"Winners 2000–2026; co-winners count",f:"Jake Bauers won the 2026 NLCS MVP as Milwaukee swept his hometown Dodgers.",a:
+ "Shohei Ohtani|1|ohtani,shohei;Albert Pujols|2|pujols;David Freese|2|freese;Madison Bumgarner|2|bumgarner,madbum;Corey Seager|2|seager;Bryce Harper|2|harper;Iván Rodríguez|3|pudge,i-rod,rodriguez;Matt Holliday|3|holliday;Cole Hamels|3|hamels;Ryan Howard|3|howard;Daniel Murphy|3|murphy;Jon Lester|3|lester;Javier Báez|3|baez,el mago;Justin Turner|3|turner;Cody Bellinger|3|bellinger;Howie Kendrick|3|kendrick;Eddie Rosario|3|rosario;Ketel Marte|3|marte;Tommy Edman|3|edman;Mike Hampton|4|hampton;Craig Counsell|4|counsell;Benito Santiago|4|santiago;Roy Oswalt|4|oswalt;Cody Ross|4|ross;Marco Scutaro|4|scutaro;Michael Wacha|4|wacha;Chris Taylor|4|taylor;Jeff Suppan|5|suppan;*Jake Bauers|5|bauers"},
+{k:"post26",pk:"october",q:"Name a team that made the 2026 postseason",h:"The 12 playoff teams of the 2026 season",f:"The White Sox made the 2026 playoffs two years after losing a modern-record 121 games.",a:
+ "Milwaukee Brewers|1|brewers,milwaukee;Tampa Bay Rays|1|rays,tampa bay,tampa;Los Angeles Dodgers|1|dodgers,la dodgers,los angeles;New York Yankees|1|yankees,new york;Cleveland Guardians|2|guardians,cleveland;Atlanta Braves|2|braves,atlanta;San Diego Padres|2|padres,san diego;Boston Red Sox|2|red sox,boston;Chicago Cubs|2|cubs;Philadelphia Phillies|2|phillies,philadelphia;Houston Astros|3|astros,houston;*Chicago White Sox|4|white sox"},
+{k:"ws31",pk:"october",q:"Name a team that came back from 3–1 down to win the World Series",h:"Best-of-seven World Series, 1905–2026",f:"The 1985 Royals rallied from 3–1 down in both the ALCS and the World Series.",a:
+ "Chicago Cubs|1|cubs,chicago;Pittsburgh Pirates|3|pirates,pittsburgh;New York Yankees|3|yankees,new york;Detroit Tigers|4|tigers,detroit;*Kansas City Royals|3|royals,kansas city"},
+// ===== COOPERSTOWN (legends) =====
+{k:"hr500",pk:"legends",q:"Name a member of the 500-home-run club",h:"Career homers through the 2026 season",f:"Eddie Mathews is the only player to suit up for the Braves in Boston, Milwaukee and Atlanta.",a:
+ "Barry Bonds|1|bonds;Hank Aaron|1|aaron,hammerin hank;Babe Ruth|1|ruth,bambino;Albert Pujols|1|pujols;Alex Rodriguez|1|a-rod,arod,rodriguez;Willie Mays|1|mays,say hey kid;Ken Griffey Jr.|1|griffey,junior,ken griffey;Sammy Sosa|1|sosa;Mickey Mantle|1|mantle;Jim Thome|2|thome;Mark McGwire|2|mcgwire,big mac;Reggie Jackson|2|reggie,jackson,mr october;Manny Ramirez|2|manny,ramirez;David Ortiz|2|ortiz,big papi;Ted Williams|2|williams,teddy ballgame;Miguel Cabrera|2|cabrera,miggy;Frank Robinson|3|robinson,f robinson;Harmon Killebrew|3|killebrew,killer;Rafael Palmeiro|3|palmeiro;Mike Schmidt|3|schmidt;Jimmie Foxx|3|foxx,double x;Willie McCovey|3|mccovey,stretch;Frank Thomas|3|thomas,big hurt;Ernie Banks|3|banks,mr cub;Gary Sheffield|3|sheffield;Eddie Murray|3|murray;Mel Ott|4|ott;*Eddie Mathews|4|mathews"},
+{k:"hit3000",pk:"legends",q:"Name a member of the 3,000-hit club",h:"Career hits through the 2026 season",f:"Cap Anson, the first player credited with 3,000 hits, starred for Chicago’s NL club from 1876 to 1897.",a:
+ "Pete Rose|1|rose,charlie hustle;Ty Cobb|1|cobb;Derek Jeter|1|jeter;Albert Pujols|1|pujols;Miguel Cabrera|1|cabrera,miggy;Ichiro Suzuki|1|ichiro,suzuki;Hank Aaron|2|aaron;Stan Musial|2|musial;Carl Yastrzemski|2|yastrzemski,yaz;Willie Mays|2|mays;Cal Ripken Jr.|2|ripken,cal ripken;Adrián Beltré|2|beltre;George Brett|2|brett;Tony Gwynn|2|gwynn;Alex Rodriguez|2|a-rod,arod,rodriguez;Roberto Clemente|2|clemente;Honus Wagner|3|wagner;Paul Molitor|3|molitor;Eddie Murray|3|murray;Robin Yount|3|yount;Dave Winfield|3|winfield;Craig Biggio|3|biggio;Rickey Henderson|3|rickey,henderson;Rod Carew|3|carew;Lou Brock|3|brock;Rafael Palmeiro|3|palmeiro;Wade Boggs|3|boggs;Al Kaline|3|kaline;Tris Speaker|4|speaker;Eddie Collins|4|collins;Nap Lajoie|4|lajoie;Paul Waner|4|waner,big poison;*Cap Anson|5|anson,adrian anson"},
+{k:"win300",pk:"legends",q:"Name a 300-game winner",h:"Career wins through the 2026 season",f:"Early Wynn earned his 300th win in 1963 at age 43, and it was the last victory of his career.",a:
+ "Cy Young|1|young;Greg Maddux|1|maddux,mad dog;Roger Clemens|1|clemens,rocket;Nolan Ryan|1|ryan;Randy Johnson|1|randy,big unit;Walter Johnson|2|big train;Steve Carlton|2|carlton;Tom Seaver|2|seaver,tom terrific;Tom Glavine|2|glavine;Warren Spahn|3|spahn;Christy Mathewson|3|mathewson,matty;Grover Cleveland Alexander|3|alexander,pete alexander,grover alexander,old pete;Don Sutton|3|sutton;Phil Niekro|3|niekro,knucksie;Gaylord Perry|3|perry;Lefty Grove|3|grove;Eddie Plank|4|plank;*Early Wynn|4|wynn;Pud Galvin|5|galvin;Kid Nichols|5|nichols;Tim Keefe|5|keefe;John Clarkson|5|clarkson;Old Hoss Radbourn|5|radbourn,hoss radbourn,charles radbourn;Mickey Welch|5|welch"},
+{k:"k3000",pk:"legends",q:"Name a pitcher with 3,000 career strikeouts",h:"Career strikeouts through the 2026 season",f:"Bert Blyleven, born in the Netherlands, ranks fifth all-time with 3,701 strikeouts.",a:
+ "Nolan Ryan|1|ryan;Randy Johnson|1|randy,big unit;Roger Clemens|1|clemens,rocket;Justin Verlander|1|verlander;Max Scherzer|1|scherzer,mad max;Clayton Kershaw|1|kershaw;Steve Carlton|2|carlton,lefty;Tom Seaver|2|seaver,tom terrific;Greg Maddux|2|maddux,mad dog;Pedro Martínez|2|pedro,martinez;Bob Gibson|2|gibson;Don Sutton|3|sutton;Gaylord Perry|3|perry;Walter Johnson|3|big train;Phil Niekro|3|niekro,knucksie;Fergie Jenkins|3|jenkins,ferguson jenkins;Curt Schilling|3|schilling;CC Sabathia|3|sabathia;John Smoltz|3|smoltz;*Bert Blyleven|4|blyleven"},
+{k:"perfect",pk:"legends",q:"Name a pitcher who threw a perfect game",h:"MLB’s 24 official perfect games, 1880–2026",f:"Dallas Braden threw his 2010 perfect game on Mother’s Day with his grandmother in the stands.",a:
+ "Don Larsen|1|larsen;Roy Halladay|1|halladay,doc halladay;Félix Hernández|1|felix,king felix,hernandez;Cy Young|2|young;Sandy Koufax|2|koufax;David Wells|2|wells,boomer;David Cone|2|cone;Randy Johnson|2|randy,johnson,big unit;Mark Buehrle|2|buehrle;Matt Cain|2|cain;Domingo Germán|2|german;Jim Bunning|3|bunning;Catfish Hunter|3|catfish,hunter;Kenny Rogers|3|rogers;Philip Humber|3|humber;*Dallas Braden|3|braden;Addie Joss|4|joss;Len Barker|4|barker;Mike Witt|4|witt;Tom Browning|4|browning;Dennis Martínez|4|martinez,el presidente;Lee Richmond|5|richmond;John Montgomery Ward|5|monte ward,john ward,ward;Charlie Robertson|5|robertson"},
+{k:"tcbat",pk:"legends",q:"Name a batting Triple Crown winner",h:"Led the AL or NL in average, homers and RBI; 1901–2026",f:"Joe Medwick’s 1937 season with the Cardinals is still the last batting Triple Crown in the National League.",a:
+ "Miguel Cabrera|1|cabrera,miggy;Mickey Mantle|1|mantle;Ted Williams|1|williams,teddy ballgame;Carl Yastrzemski|2|yastrzemski,yaz;Frank Robinson|2|robinson,f robinson;Lou Gehrig|2|gehrig;Jimmie Foxx|3|foxx,double x;Rogers Hornsby|3|hornsby,rajah;Ty Cobb|3|cobb;Chuck Klein|4|klein;Nap Lajoie|4|lajoie;*Joe Medwick|4|medwick,ducky;Heinie Zimmerman|5|zimmerman"},
+{k:"ptc",pk:"legends",q:"Name a pitching Triple Crown winner",h:"Led his league in wins, ERA and strikeouts; 1950–2026",f:"Dwight Gooden won the 1985 Triple Crown at age 20, going 24–4 with a 1.53 ERA and 268 strikeouts.",a:
+ "Sandy Koufax|1|koufax;Roger Clemens|2|clemens,rocket;Pedro Martínez|2|pedro,martinez;Randy Johnson|2|randy,johnson,big unit;Justin Verlander|2|verlander;Clayton Kershaw|2|kershaw;Tarik Skubal|2|skubal;Steve Carlton|3|carlton,lefty;Johan Santana|3|santana,johan;Shane Bieber|3|bieber;Chris Sale|3|sale;*Dwight Gooden|3|gooden,doc gooden;Jake Peavy|4|peavy"},
+{k:"hr60",pk:"legends",q:"Name a player with a 60-homer season",h:"Single seasons through 2026",f:"Mariners catcher Cal Raleigh hit 60 in 2025, the most ever by a catcher or a switch-hitter.",a:
+ "Babe Ruth|1|ruth,bambino;Roger Maris|1|maris;Mark McGwire|1|mcgwire,big mac;Sammy Sosa|1|sosa;Barry Bonds|1|bonds;Aaron Judge|1|judge;*Cal Raleigh|3|raleigh,big dumper"},
+{k:"hr4",pk:"legends",q:"Name a player with a four-homer game",h:"Regular-season games, 1894–2026",f:"Mark Whiten drove in 12 runs in his 1993 four-homer game, tying the single-game RBI record.",a:
+ "Lou Gehrig|1|gehrig;Willie Mays|1|mays;Mike Schmidt|2|schmidt;Josh Hamilton|2|hamilton;Shawn Green|2|green;J.D. Martinez|2|jd martinez,martinez;Scooter Gennett|2|gennett,scooter;Kyle Schwarber|2|schwarber;Carlos Delgado|3|delgado;Mike Cameron|3|cameron;Nick Kurtz|3|kurtz;Eugenio Suárez|3|suarez,geno;Gil Hodges|4|hodges;Rocky Colavito|4|colavito;Bob Horner|4|horner;Chuck Klein|4|klein;*Mark Whiten|4|whiten,hard hittin mark;Joe Adcock|5|adcock;Pat Seerey|5|seerey;Ed Delahanty|5|delahanty;Bobby Lowe|5|lowe"},
+{k:"hr50",pk:"legends",q:"Name a player with a 50-homer season",h:"Single seasons through 2026",f:"Brady Anderson hit 50 homers for Baltimore in 1996; his next-best season was 24.",a:
+ "Babe Ruth|1|ruth,bambino;Mickey Mantle|1|mantle;Roger Maris|1|maris;Mark McGwire|1|mcgwire,big mac;Sammy Sosa|1|sosa;Barry Bonds|1|bonds;Aaron Judge|1|judge;Shohei Ohtani|1|ohtani,shohei;Willie Mays|2|mays;Ken Griffey Jr.|2|griffey,junior,ken griffey;Alex Rodriguez|2|a-rod,arod,rodriguez;Ryan Howard|2|howard;David Ortiz|2|ortiz,big papi;Giancarlo Stanton|2|stanton;Pete Alonso|2|alonso,polar bear;Cal Raleigh|2|raleigh,big dumper;Kyle Schwarber|2|schwarber;Jimmie Foxx|3|foxx,double x;Hank Greenberg|3|greenberg;Cecil Fielder|3|cecil;Albert Belle|3|belle;Luis Gonzalez|3|gonzalez,gonzo;Jim Thome|3|thome;Andruw Jones|3|andruw,jones;Prince Fielder|3|prince;José Bautista|3|bautista,joey bats;Chris Davis|3|crush davis,davis;Matt Olson|3|olson;Hack Wilson|4|hack,wilson;Johnny Mize|4|mize,big cat;Ralph Kiner|4|kiner;George Foster|4|foster;Greg Vaughn|5|vaughn;*Brady Anderson|5|anderson"},
+{k:"hof",pk:"legends",q:"Name a player elected to the Hall of Fame by the writers since 2015",h:"BBWAA elections 2015–2026; committee picks don’t count",f:"Andruw Jones, elected in 2026 on his ninth ballot, is the first Hall of Famer from Curaçao.",a:
+ "Derek Jeter|1|jeter;Mariano Rivera|1|rivera,mariano,mo;Ken Griffey Jr.|1|griffey,junior,ken griffey;Ichiro Suzuki|1|ichiro,suzuki;David Ortiz|1|ortiz,big papi;Randy Johnson|1|randy,johnson,big unit;Pedro Martínez|1|pedro;Mike Piazza|2|piazza;Chipper Jones|2|chipper;Roy Halladay|2|halladay,doc halladay;John Smoltz|2|smoltz;Adrián Beltré|2|beltre;CC Sabathia|2|sabathia;Carlos Beltrán|2|beltran;Craig Biggio|3|biggio;Jeff Bagwell|3|bagwell;Tim Raines|3|raines,rock raines;Iván Rodríguez|3|pudge,i-rod,rodriguez;Vladimir Guerrero|3|vlad,guerrero;Jim Thome|3|thome;Trevor Hoffman|3|hoffman;Edgar Martínez|3|edgar;Mike Mussina|3|mussina,moose;Larry Walker|3|walker;Scott Rolen|3|rolen;Todd Helton|3|helton;Joe Mauer|3|mauer;Billy Wagner|3|wagner;*Andruw Jones|3|andruw"},
+{k:"nohit3",pk:"legends",q:"Name a pitcher with three or more no-hitters",h:"Career no-hitters through the 2026 season",f:"Larry Corcoran threw three no-hitters for Chicago’s NL club in the 1880s.",a:
+ "Nolan Ryan|1|ryan;Sandy Koufax|2|koufax;Justin Verlander|2|verlander;Bob Feller|3|feller,rapid robert;Cy Young|3|young;*Larry Corcoran|5|corcoran"},
+{k:"avg400",pk:"legends",q:"Name a player who hit .400 in a season",h:"AL or NL, 1901–2026 (Negro Leagues not included)",f:"Shoeless Joe Jackson hit .408 for Cleveland in 1911, his first full season.",a:
+ "Ted Williams|1|williams,teddy ballgame;Ty Cobb|2|cobb;Rogers Hornsby|2|hornsby,rajah;George Sisler|3|sisler;Nap Lajoie|3|lajoie;*Shoeless Joe Jackson|3|joe jackson,shoeless joe,jackson;Harry Heilmann|4|heilmann;Bill Terry|4|terry,memphis bill"},
+{k:"h3hr5",pk:"legends",q:"Name a player with 3,000 hits and 500 homers",h:"Career totals through the 2026 season",f:"Eddie Murray and Mickey Mantle are the only switch-hitters with 500 career homers.",a:
+ "Hank Aaron|1|aaron;Willie Mays|1|mays;Albert Pujols|1|pujols;Alex Rodriguez|2|a-rod,arod,rodriguez;Miguel Cabrera|2|cabrera,miggy;Rafael Palmeiro|3|palmeiro;*Eddie Murray|4|murray,steady eddie"},
+{k:"hit1team",pk:"legends",q:"Name a 3,000-hit player who spent his whole career with one team",h:"Entire AL/NL career with one franchise; through 2026",f:"Craig Biggio collected all 3,060 of his hits for Houston after starting his career as a catcher.",a:
+ "Derek Jeter|1|jeter;Cal Ripken Jr.|1|ripken,cal ripken;Tony Gwynn|1|gwynn;George Brett|2|brett;Carl Yastrzemski|2|yastrzemski,yaz;Stan Musial|2|musial;Roberto Clemente|2|clemente;Al Kaline|3|kaline;Robin Yount|3|yount;*Craig Biggio|3|biggio;Cap Anson|5|anson,adrian anson"},
+{k:"bb2000",pk:"legends",q:"Name a player with 2,000 career walks",h:"Career walks through the 2026 season",f:"Rickey Henderson ranks second all-time with 2,190 walks, behind only Barry Bonds.",a:
+ "Barry Bonds|1|bonds;Babe Ruth|2|ruth,bambino;Ted Williams|2|williams,teddy ballgame;*Rickey Henderson|3|rickey,henderson"},
+{k:"k300",pk:"legends",q:"Name a pitcher with a 300-strikeout season",h:"AL or NL single seasons, 1901–2026",f:"Astros ace J.R. Richard struck out 303 in 1978 and 313 in 1979 before a 1980 stroke ended his career.",a:
+ "Nolan Ryan|1|ryan;Randy Johnson|1|randy,big unit;Sandy Koufax|2|koufax;Pedro Martínez|2|pedro,martinez;Clayton Kershaw|2|kershaw;Max Scherzer|2|scherzer,mad max;Gerrit Cole|2|cole;Justin Verlander|2|verlander;Curt Schilling|3|schilling;Chris Sale|3|sale;Steve Carlton|3|carlton,lefty;Bob Feller|3|feller,rapid robert;Walter Johnson|3|big train;Rube Waddell|4|waddell;Vida Blue|4|blue;Mickey Lolich|4|lolich;Mike Scott|4|scott;*J.R. Richard|4|jr richard,richard;Sam McDowell|5|mcdowell,sudden sam"},
+{k:"k20",pk:"legends",q:"Name a pitcher who struck out 20 batters in a game",h:"AL or NL games, 1901–2026; extra innings count",f:"Senators righty Tom Cheney struck out 21 in a 16-inning complete game in 1962, still the single-game record.",a:
+ "Roger Clemens|1|clemens,rocket;Kerry Wood|1|wood;Randy Johnson|2|randy,johnson,big unit;Max Scherzer|2|scherzer,mad max;*Tom Cheney|5|cheney"},
+{k:"sv400",pk:"legends",q:"Name a pitcher with 400 career saves",h:"Career saves through the 2026 season",f:"Aroldis Chapman became the ninth pitcher with 400 saves on Sept. 6, 2026, closing for Boston.",a:
+ "Mariano Rivera|1|rivera,mariano,mo;Trevor Hoffman|2|hoffman;Kenley Jansen|2|jansen;Craig Kimbrel|2|kimbrel;Lee Smith|3|smith;Francisco Rodríguez|3|k-rod,krod,rodriguez;Billy Wagner|3|wagner;*Aroldis Chapman|3|chapman;John Franco|4|franco"},
+{k:"sb700",pk:"legends",q:"Name a player with 700 career stolen bases",h:"Career steals through 2026, per Baseball-Reference",f:"Sliding Billy Hamilton stole 914 bases from 1888 to 1901, still third all-time.",a:
+ "Rickey Henderson|1|rickey,henderson;Lou Brock|2|brock;Ty Cobb|2|cobb;Tim Raines|3|raines,rock raines;Vince Coleman|3|coleman;Honus Wagner|4|wagner;Eddie Collins|4|collins;*Billy Hamilton|5|hamilton,sliding billy;Arlie Latham|5|latham;Max Carey|5|carey"},
+{k:"w300k3k",pk:"legends",q:"Name a pitcher with 300 wins and 3,000 strikeouts",h:"Career totals through the 2026 season",f:"Walter Johnson held the career strikeout record until Nolan Ryan passed him in 1983.",a:
+ "Nolan Ryan|1|ryan;Roger Clemens|1|clemens,rocket;Randy Johnson|1|randy,big unit;Greg Maddux|2|maddux,mad dog;Steve Carlton|2|carlton,lefty;Tom Seaver|2|seaver,tom terrific;Gaylord Perry|3|perry;Don Sutton|3|sutton;Phil Niekro|3|niekro,knucksie;*Walter Johnson|4|big train"},
+{k:"catmvp",pk:"legends",q:"Name a catcher who won a regular-season MVP award",h:"Won as a catcher, 1911–2025; 1920s League Awards count",f:"Bob O’Farrell won the 1926 NL MVP and threw out Babe Ruth trying to steal to end that year’s World Series.",a:
+ "Johnny Bench|1|bench;Yogi Berra|1|berra,yogi;Buster Posey|1|posey;Roy Campanella|2|campanella,campy;Joe Mauer|2|mauer;Iván Rodríguez|2|pudge,i-rod,rodriguez;Thurman Munson|3|munson;Mickey Cochrane|4|cochrane,black mike;Elston Howard|4|howard,ellie howard;Gabby Hartnett|4|hartnett;Ernie Lombardi|4|lombardi,schnozz;*Bob O'Farrell|5|ofarrell,bob ofarrell"},
+// ===== JOURNEYMEN =====
+{k:"ejackson",pk:"journey",q:"Name an MLB team Edwin Jackson pitched for",h:"Regular season or postseason, 2003–2019; a record 14 teams",f:"Toronto, in 2019, was Edwin Jackson’s 14th MLB team, a record Rich Hill later matched.",a:
+ "Chicago Cubs|1|cubs;Washington Nationals|2|nationals,nats,washington;St. Louis Cardinals|2|cardinals,cards,st louis;Los Angeles Dodgers|2|dodgers,la dodgers,los angeles;Detroit Tigers|2|tigers,detroit;Tampa Bay Rays|2|rays,tampa bay,devil rays,tampa bay devil rays;Chicago White Sox|3|white sox;Arizona Diamondbacks|3|diamondbacks,d-backs,dbacks,arizona;Atlanta Braves|3|braves,atlanta;Miami Marlins|4|marlins,miami;San Diego Padres|4|padres,san diego;Baltimore Orioles|4|orioles,baltimore;Oakland Athletics|4|athletics,a's,as,oakland,oakland a's;*Toronto Blue Jays|4|blue jays,toronto,jays"},
+{k:"dotel",pk:"journey",q:"Name an MLB team Octavio Dotel pitched for",h:"Regular season or postseason, 1999–2013",f:"Octavio Dotel won his only World Series ring with the 2011 Cardinals, his 12th team.",a:
+ "Houston Astros|2|astros,houston;New York Mets|3|mets;New York Yankees|3|yankees;Oakland Athletics|3|athletics,a's,as,oakland,oakland a's;Chicago White Sox|3|white sox,chicago;Detroit Tigers|3|tigers,detroit;*St. Louis Cardinals|3|cardinals,cards,st louis;Kansas City Royals|4|royals,kansas city;Atlanta Braves|4|braves,atlanta;Pittsburgh Pirates|4|pirates,pittsburgh;Los Angeles Dodgers|4|dodgers,la dodgers,los angeles;Toronto Blue Jays|4|blue jays,toronto,jays;Colorado Rockies|5|rockies,colorado"},
+{k:"richhill",pk:"journey",q:"Name an MLB team Rich Hill pitched for",h:"Regular season or postseason, 2005–2025; a record-tying 14 teams",f:"Rich Hill tied the MLB record with his 14th team when he started for the Royals in July 2025 at age 45.",a:
+ "Los Angeles Dodgers|1|dodgers,la dodgers;Boston Red Sox|2|red sox,boston;Chicago Cubs|2|cubs,chicago;Oakland Athletics|3|athletics,a's,as,oakland,oakland a's;Minnesota Twins|3|twins,minnesota;Tampa Bay Rays|3|rays,tampa bay;New York Mets|3|mets;Pittsburgh Pirates|3|pirates,pittsburgh;San Diego Padres|3|padres,san diego;Baltimore Orioles|4|orioles,baltimore;Cleveland Indians|4|indians,cleveland,guardians,cleveland guardians;Los Angeles Angels|4|angels,la angels,anaheim angels,anaheim;New York Yankees|4|yankees;*Kansas City Royals|4|royals,kansas city"},
+{k:"colon",pk:"journey",q:"Name an MLB team Bartolo Colón pitched for",h:"Regular season or postseason, 1997–2018",f:"Bartolo Colón pitched half a season for the 2002 Montreal Expos after a blockbuster trade from Cleveland.",a:
+ "New York Mets|1|mets;Cleveland Indians|2|indians,cleveland,guardians,cleveland guardians;Los Angeles Angels|2|angels,la angels,anaheim angels,anaheim;New York Yankees|3|yankees;Oakland Athletics|3|athletics,a's,as,oakland,oakland a's;Chicago White Sox|3|white sox,chicago;Texas Rangers|3|rangers,texas;Boston Red Sox|4|red sox,boston;Atlanta Braves|4|braves,atlanta;Minnesota Twins|4|twins,minnesota;*Montreal Expos|4|expos,montreal"},
+{k:"rickey",pk:"journey",q:"Name an MLB team Rickey Henderson played for",h:"Regular season or postseason, 1979–2003",f:"Rickey Henderson joined the 2000 Mariners after the Mets released him in May, and helped Seattle reach the ALCS.",a:
+ "Oakland Athletics|1|athletics,a's,as,oakland,oakland a's;New York Yankees|1|yankees;Toronto Blue Jays|3|blue jays,toronto,jays;San Diego Padres|3|padres,san diego;New York Mets|3|mets;Anaheim Angels|4|angels,la angels,los angeles angels,anaheim;Boston Red Sox|4|red sox,boston;Los Angeles Dodgers|4|dodgers,la dodgers;*Seattle Mariners|5|mariners,seattle"},
+{k:"piazza",pk:"journey",q:"Name an MLB team Mike Piazza played for",h:"Regular season or postseason, 1992–2007",f:"Mike Piazza played just five games for the 1998 Marlins between trades from the Dodgers and to the Mets.",a:
+ "Los Angeles Dodgers|1|dodgers,la dodgers,los angeles;New York Mets|1|mets,new york;San Diego Padres|3|padres,san diego;Oakland Athletics|4|athletics,a's,as,oakland,oakland a's;*Florida Marlins|5|marlins,miami marlins,florida,miami"},
+{k:"rjohnson",pk:"journey",q:"Name an MLB team Randy Johnson pitched for",h:"Regular season or postseason, 1988–2009",f:"Randy Johnson went 10–1 with a 1.28 ERA for Houston after a 1998 deadline trade.",a:
+ "Arizona Diamondbacks|1|diamondbacks,d-backs,dbacks,arizona;Seattle Mariners|1|mariners,seattle;New York Yankees|2|yankees,new york;San Francisco Giants|3|giants,sf giants,san francisco;Montreal Expos|4|expos,montreal;*Houston Astros|4|astros,houston"},
+{k:"pedro",pk:"journey",q:"Name an MLB team Pedro Martínez pitched for",h:"Regular season or postseason, 1992–2009",f:"Pedro Martínez finished his career with the 2009 Phillies and started two games against the Yankees in that World Series.",a:
+ "Boston Red Sox|1|red sox,boston;Montreal Expos|2|expos,montreal;New York Mets|2|mets,new york;Los Angeles Dodgers|3|dodgers,la dodgers,los angeles;*Philadelphia Phillies|4|phillies,philadelphia"},
+{k:"ryan",pk:"journey",q:"Name an MLB team Nolan Ryan pitched for",h:"Regular season or postseason, 1966–1993",f:"Nolan Ryan won his only World Series ring with the 1969 Mets, saving Game 3 against Baltimore.",a:
+ "Texas Rangers|1|rangers,texas;Houston Astros|1|astros,houston;California Angels|2|angels,la angels,los angeles angels,anaheim angels,california;*New York Mets|3|mets,new york"},
+{k:"manny",pk:"journey",q:"Name an MLB team Manny Ramirez played for",h:"Regular season or postseason, 1993–2011",f:"Manny Ramirez played just five games for the 2011 Rays before retiring rather than serve a drug suspension.",a:
+ "Boston Red Sox|1|red sox,boston;Cleveland Indians|2|indians,cleveland,guardians,cleveland guardians;Los Angeles Dodgers|2|dodgers,la dodgers,los angeles;Chicago White Sox|4|white sox,chicago;*Tampa Bay Rays|5|rays,tampa bay"},
+{k:"maddux",pk:"journey",q:"Name an MLB team Greg Maddux pitched for",h:"Regular season or postseason, 1986–2008",f:"Greg Maddux pitched for San Diego in 2007 and 2008 before a final stint with the Dodgers.",a:
+ "Atlanta Braves|1|braves,atlanta;Chicago Cubs|1|cubs,chicago;Los Angeles Dodgers|3|dodgers,la dodgers,los angeles;*San Diego Padres|4|padres,san diego"},
+{k:"sheff",pk:"journey",q:"Name an MLB team Gary Sheffield played for",h:"Regular season or postseason, 1988–2009",f:"Gary Sheffield hit his 500th home run as a Met in April 2009.",a:
+ "New York Yankees|1|yankees;Los Angeles Dodgers|2|dodgers,la dodgers,los angeles;Atlanta Braves|2|braves,atlanta;Florida Marlins|2|marlins,miami marlins,florida,miami;Milwaukee Brewers|3|brewers,milwaukee;San Diego Padres|3|padres,san diego;Detroit Tigers|3|tigers,detroit;*New York Mets|4|mets"},
+// ===== WORLD BASEBALL =====
+{k:"wbcwin",pk:"world",q:"Name a country that won the World Baseball Classic",h:"Champions 2006–2026",f:"Venezuela won its first WBC title in 2026, beating the United States 3–2 in Miami.",a:
+ "Japan|1|nippon,samurai japan;United States|1|usa,us,team usa,america,united states of america;Dominican Republic|2|dr,dominican,republica dominicana;*Venezuela|3"},
+{k:"wbcsemi",pk:"world",q:"Name a country that reached a WBC semifinal",h:"Final four teams, 2006–2026",f:"The Netherlands reached back-to-back WBC semifinals in 2013 and 2017.",a:
+ "Japan|1|nippon,samurai japan;United States|1|usa,us,team usa,america;Dominican Republic|1|dr,dominican;Cuba|2;South Korea|2|korea;Venezuela|2;Puerto Rico|2|pr;Mexico|3;Italy|4|italia;*Netherlands|4|holland,dutch"},
+{k:"wbcmvp",pk:"world",q:"Name a World Baseball Classic MVP",h:"Tournament MVPs 2006–2026",f:"Royals third baseman Maikel García hit .385 to lead Venezuela to the 2026 title.",a:
+ "Shohei Ohtani|1|ohtani,shohei;Daisuke Matsuzaka|2|matsuzaka,dice-k;Robinson Canó|3|cano;Marcus Stroman|3|stroman;*Maikel García|4|garcia"},
+{k:"wbc26",pk:"world",q:"Name a country that played in the 2026 World Baseball Classic",h:"The 20 teams in the 2026 tournament",f:"Brazil returned to the WBC in 2026 for the first time since 2013.",a:
+ "United States|1|usa,us,team usa,america;Japan|1|nippon,samurai japan;Dominican Republic|1|dr,dominican;Venezuela|1;Puerto Rico|1|pr;Mexico|1;Cuba|2;South Korea|2|korea;Canada|2;Italy|3|italia;Netherlands|3|holland,dutch;Israel|3;Australia|3;Chinese Taipei|3|taiwan;Panama|3;Colombia|4;Nicaragua|4;Great Britain|4|britain,uk,united kingdom,england,team gb;Czechia|4|czech republic;*Brazil|5|brasil"},
+{k:"npb",pk:"world",q:"Name a Nippon Professional Baseball team",h:"Japan’s 12 NPB clubs in the 2026 season",f:"Yu Darvish and Shohei Ohtani both starred for the Hokkaido Nippon-Ham Fighters before moving to MLB.",a:
+ "Yomiuri Giants|1|giants,yomiuri,tokyo giants;Hanshin Tigers|1|tigers,hanshin;Fukuoka SoftBank Hawks|2|hawks,softbank,softbank hawks,daiei hawks;Hiroshima Toyo Carp|2|carp,hiroshima,hiroshima carp;Chunichi Dragons|3|dragons,chunichi;Tokyo Yakult Swallows|3|swallows,yakult;Yokohama DeNA BayStars|3|baystars,yokohama,dena;Orix Buffaloes|3|buffaloes,orix;Saitama Seibu Lions|3|lions,seibu,seibu lions;Chiba Lotte Marines|3|marines,lotte,chiba lotte;*Hokkaido Nippon-Ham Fighters|3|fighters,nippon-ham,nippon ham fighters,ham fighters;Tohoku Rakuten Golden Eagles|4|rakuten,golden eagles,eagles"},
+{k:"kbo",pk:"world",q:"Name a KBO League team",h:"South Korea’s 10 KBO clubs in the 2026 season",f:"Ha-seong Kim and Jung Hoo Lee both jumped to MLB from the Kiwoom Heroes.",a:
+ "Doosan Bears|2|bears,doosan;LG Twins|2|twins,lg;Kia Tigers|2|tigers,kia,haitai tigers;Samsung Lions|2|lions,samsung;Lotte Giants|3|giants,lotte;Hanwha Eagles|3|eagles,hanwha;NC Dinos|3|dinos,nc;SSG Landers|4|landers,ssg,sk wyverns,wyverns;KT Wiz|4|wiz,kt;*Kiwoom Heroes|4|heroes,kiwoom,nexen heroes,nexen"},
+{k:"olymp",pk:"world",q:"Name a country that won an Olympic baseball medal",h:"Official medal events, 1992–2008 and 2020",f:"Australia upset Japan in the 2004 semifinals and took silver in Athens.",a:
+ "Cuba|1;United States|1|usa,us,team usa,america;Japan|1|nippon,samurai japan;South Korea|2|korea;Dominican Republic|3|dr,dominican;Chinese Taipei|4|taiwan;*Australia|4"},
+{k:"carib",pk:"world",q:"Name a country that won the Caribbean Series",h:"Champions 1949–2026",f:"Colombia won its first Caribbean Series in 2022 with the Caimanes de Barranquilla.",a:
+ "Dominican Republic|1|dr,dominican;Puerto Rico|2|pr;Venezuela|2;Mexico|2;Cuba|3;Panama|4;*Colombia|5"},
+{k:"japaw",pk:"world",q:"Name a Japanese player who won MVP, Rookie of the Year or World Series MVP",h:"MLB regular-season MVP, ROY or World Series MVP, 1995–2025",f:"Mariners closer Kazuhiro Sasaki won the 2000 AL Rookie of the Year at age 32 with 37 saves.",a:
+ "Shohei Ohtani|1|ohtani,shohei;Ichiro Suzuki|1|ichiro,suzuki;Hideo Nomo|2|nomo;Hideki Matsui|2|matsui,godzilla;Yoshinobu Yamamoto|2|yamamoto;*Kazuhiro Sasaki|4|sasaki"},
+{k:"latmvp",pk:"world",q:"Name an MLB MVP born in Latin America",h:"Puerto Rico counts; BBWAA MVPs 1931–2025",f:"Twins shortstop Zoilo Versalles, from Havana, became the first Latin American-born MVP in 1965.",a:
+ "Albert Pujols|1|pujols;Miguel Cabrera|1|cabrera,miggy;Ronald Acuña Jr.|1|acuna,acuna jr;Jose Altuve|2|altuve;Vladimir Guerrero|2|vlad,guerrero;Sammy Sosa|2|sosa;Roberto Clemente|2|clemente;Iván Rodríguez|3|pudge,i-rod,rodriguez;Juan González|3|gonzalez,juan gone;Miguel Tejada|3|tejada;José Abreu|3|abreu;José Canseco|3|canseco;Orlando Cepeda|3|cepeda;Rod Carew|3|carew;George Bell|4|bell;Willie Hernández|5|hernandez;*Zoilo Versalles|5|versalles,zoilo"},
+{k:"nomo",pk:"world",q:"Name an MLB team Hideo Nomo pitched for",h:"Regular season or postseason, 1995–2008",f:"Hideo Nomo threw no-hitters for the Dodgers in 1996 and the Red Sox in 2001.",a:
+ "Los Angeles Dodgers|1|dodgers,la dodgers,los angeles;*Boston Red Sox|3|red sox,boston;New York Mets|3|mets,new york;Milwaukee Brewers|4|brewers,milwaukee;Detroit Tigers|4|tigers,detroit;Tampa Bay Devil Rays|4|devil rays,rays,tampa bay rays,tampa bay;Kansas City Royals|5|royals,kansas city"}
+];
+const PACKS={
+  mlb:{n:"THE SHOW",tag:"OPENING DAY",d:"MLB champions, MVPs, Cy Youngs and records",go:"PLAY BALL →"},
+  october:{n:"OCTOBER",tag:"THE FALL CLASSIC",d:"World Series winners, heroes and postseason history",go:"TAKE THE FIELD →"},
+  legends:{n:"COOPERSTOWN",tag:"HALL OF FAME",d:"all-time greats, milestones and the record book",go:"OPEN THE PLAQUES →"},
+  journey:{n:"JOURNEYMEN",tag:"BAGS PACKED",d:"every team a star suited up for",go:"HIT THE ROAD →"},
+  world:{n:"WORLD BASEBALL",tag:"PASSPORT READY",d:"the World Baseball Classic, Japan, Korea and the Caribbean",go:"BOARD THE PLANE →"}
+};
+const KNOWN_EXTRA="jackie robinson|satchel paige|josh gibson|oscar charleston|cool papa bell|buck o'neil|dizzy dean|don drysdale|juan marichal|hoyt wilhelm|goose gossage|bruce sutter|jim kaat|tony oliva|minnie minoso|ted simmons|harold baines|alan trammell|lou whitaker|dave parker|dick allen|fred mcgriff|don mattingly|dale murphy|keith hernandez|darryl strawberry|gary carter|bo jackson|deion sanders|ken griffey sr|barry larkin|ozzie smith|ryne sandberg|tony perez|joe morgan|johnny damon|andre dawson|dave kingman|adam dunn|duke snider|willie stargell|omar vizquel|steve garvey|roberto alomar|sandy alomar|jorge posada|bernie williams|paul o'neill|tino martinez|jason varitek|kevin youkilis|jacoby ellsbury|curt flood|tommy john|jamie moyer|robin roberts|kevin brown|armando galarraga|harvey haddix|johnny vander meer|sparky anderson|tommy lasorda|earl weaver|casey stengel|connie mack|whitey herzog|aaron boone|kevin cash|yu darvish|masahiro tanaka|kenta maeda|kodai senga|roki sasaki|shota imanaga|seiya suzuki|munetaka murakami|tatsuya imai|kosuke fukudome|kenji johjima|hideki okajima|tadahito iguchi|hyun jin ryu|chan ho park|shin soo choo|ha seong kim|jung hoo lee|francisco lindor|manny machado|rafael devers|jose ramirez|elly de la cruz|adley rutschman|bo bichette|kyle tucker|austin riley|ozzie albies|spencer strider|zack wheeler|aaron nola|logan webb|garrett crochet|zac gallen|framber valdez|george kirby|max fried|hunter greene|jacob misiorowski|cam schlittler|gavin williams|jackson chourio|cooper pratt|james wood|jackson holliday|jackson merrill|junior caminero|roman anthony|willson contreras|jt realmuto|will smith|xander bogaerts|matt chapman|sonny gray|dylan cease|kevin gausman|walker buehler|julio urias|kansas city monarchs|homestead grays|china|spain|south africa|germany|curacao|new zealand|argentina";
+
+const PARTY={name:"THREE STRIKES",sub:"pass the ball · beat the hidden clock",lives:3,mark:"K",go:"► PLAY BALL ◄",miss:"foul ball",
+  intro:"One phone, 2–8 players. Name an answer and pass before the hidden clock runs out. Whoever's holding the ball takes a strike. Three strikes and you're out. Last one standing wins.",
+  lose:(n,k)=>`time! ${n} takes strike ${["one","two","three"][k-1]}.`,out:n=>`${n} strikes out.`,win:"wins the game",last:"struck out last."};
+</script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ROUND=25,WARM=3,U_PER_PT=400/700; // 700 points clears the 400-foot wall
+
+// tiers: 0 strikeout, 1 single … 6 walk-off (mirrors the six-step rarity ladder)
+const T=[
+ {n:"Strikeout",p:0,e:"⬛",fl:"Caught looking. The clock beat you."},
+ {n:"Single",p:10,e:"⚪",fl:"The answer the whole park shouts."},
+ {n:"Bunt",p:15,e:"🟠",fl:"Felt sneaky. The infield saw it coming."},
+ {n:"Double",p:30,e:"🟢",fl:"In the gap. Makes the highlights."},
+ {n:"Triple",p:60,e:"🔵",fl:"Legging it out. Not many saw that."},
+ {n:"Home run",p:85,e:"🟣",fl:"Deep cut. The dugout is on its feet."},
+ {n:"Walk-off",p:100,e:"🌟",fl:""}];
+const SCOUT=[[0,150,1,"Sandlot","Pickup game. Grab a glove and run it back."],[151,250,3,"Single-A","Long bus rides. The tape holds up."],[251,350,4,"Double-A","Prospect watch. Nearly halfway to the wall."],[351,449,5,"Triple-A","One call away. The scouts are in the stands."],[450,700,6,"The Show","Big-league stuff. The whole park knows your name."]];
+
+// 8×8 pixel icons per tier
+const ICONS=[
+ "##...##.|##..##..|##.##...|####....|##.##...|##..##..|##...##.|........",
+ "...##...|..###...|...##...|...##...|...##...|...##...|..####..|........",
+ "......##|.....##.|....##..|...##...|..##....|.##.....|##......|#.......",
+ "..####..|.##..##.|.....##.|....##..|...##...|..##....|.######.|........",
+ "..####..|.##..##.|.....##.|...###..|.....##.|.##..##.|..####..|........",
+ "#.#.##..|#.#.#.#.|###.##..|#.#.#.#.|#.#.#.#.|........|........|........",
+ "#..#..#.|.#.#.#..|..###...|#######.|..###...|.#.#.#..|#..#..#.|........"];
+function icon(t,cls){const rows=ICONS[t].split("|");let r="";rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==="#")r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}));
+  return `<svg class="px ${cls||""}" viewBox="0 0 8 8" data-t="${t}" style="fill:var(--tc)" aria-hidden="true">${r}</svg>`}
+const BALLMAP=".WWWW.|RWWWWR|WRWWRW|WRWWRW|RWWWWR|.WWWW.",BPAL={W:"#f4f1e8",R:"#d8342c"};function pixels(map,pal,s=1){let r="";map.split("|").forEach((row,y)=>[...row].forEach((c,x)=>{if(pal[c])r+=`<rect x="${x*s}" y="${y*s}" width="${s}" height="${s}" fill="${pal[c]}"/>`}));return r}
+
+// data
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/ø/g,"o").replace(/ß/g,"ss").replace(/&/g,"and").replace(/[^a-z0-9 ]/g," ").replace(/\b(fc|cf|the)\b/g," ").replace(/\s+/g," ").trim();
+const tierOf=(r,gem,clever)=>gem?6:clever?2:r<=1?1:r===2?3:r===3?4:5;
+const P=RAW.map(p=>({...p,a:p.a.split(";").map(s=>{let[n,r,al]=s.split("|");const gem=n[0]==="*",clever=n[0]==="~";if(gem||clever)n=n.slice(1);const t=tierOf(+r,gem,clever);
+  return{name:n,t,p:T[t].p,keys:[n,...(al?al.split(","):[])].map(norm).filter(Boolean)}})}));
+const byK=Object.fromEntries(P.map((p,i)=>[p.k,i]));
+
+// spelling help: edit distance where a swapped pair of letters counts once; gives up past `max`
+function lev(a,b,max=4){const n=a.length,m=b.length;if(Math.abs(n-m)>max)return max+1;
+  let p2=new Array(m+1).fill(0),p1=[...Array(m+1).keys()],c=new Array(m+1);
+  for(let i=1;i<=n;i++){c[0]=i;let lo=i;
+    for(let j=1;j<=m;j++){let v=Math.min(p1[j]+1,c[j-1]+1,p1[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])v=Math.min(v,p2[j-2]+1);c[j]=v;if(v<lo)lo=v}
+    if(lo>max)return max+1;const t=p2;p2=p1;p1=c;c=t}
+  return p1[m]}
+// sound-alike skeleton, so "Kryzewski" and "Krzyzewski" land next to each other
+function sk(s){s=s.replace(/[^a-z]/g,"").replace(/ph/g,"f").replace(/sch|sh/g,"s").replace(/ch|ck|c|q/g,"k").replace(/x/g,"ks").replace(/z/g,"s").replace(/y/g,"i").replace(/w/g,"v").replace(/h/g,"");
+  return s?(s[0]+s.slice(1).replace(/[aeiou]/g,"")).replace(/(.)\1+/g,"$1"):""}
+const tolFor=L=>L<=3?0:L<=5?1:L<=8?2:L<=12?3:4;
+P.forEach(p=>p.a.forEach(a=>a.kx=a.keys.map(k=>({k,ns:k.replace(/ /g,""),sk:sk(k),tk:k.split(" ")}))));
+// real names that aren't answers here should never be "corrected" into one that is
+const KNOWN=new Set([...P.flatMap(p=>p.a.flatMap(a=>a.keys)),...KNOWN_EXTRA.split("|").map(norm)]);
+const STOP=new Set("the new los angeles san saint city state university college of at and de la le el van der von north south east west team club".split(" "));
+// "Texas" is a school of its own, not shorthand for "Texas Western"
+const QUAL=/\b(state|tech|western|eastern|northern|southern|central|commonwealth|dominion|christian|west|a and m)\b/;
+// exact: counts. near: correction preview. vague: too generic. {}: not an answer.
+function match(p,guess){
+  const g=norm(guess);if(!g)return{};
+  const bag=s=>s.split(" ").sort().join(" "),gb=bag(g),gn=g.replace(/ /g,"");
+  for(const a of p.a)if(a.kx.some(x=>x.k===g||x.ns===gn||bag(x.k)===gb))return{exact:a};
+  const gt=g.split(" "),gs=sk(g),gk=KNOWN.has(g),gq=QUAL.test(g);
+  if(gt.every(w=>w.length<3||STOP.has(w)))return p.a.some(a=>a.kx.some(x=>x.tk.some(t=>gt.includes(t))))?{vague:true}:{};
+  const cand=[];
+  for(const a of p.a){let best=9,tokHit=false;
+    for(const x of a.kx){
+      const L=Math.max(gn.length,x.ns.length),tl=tolFor(L);
+      if(tl){const d=lev(gn,x.ns,tl);if(d<=tl)best=Math.min(best,d/L)}
+      if(gs.length>=2&&x.sk.length>=2&&gs[0]===x.sk[0]){const tol=x.sk.length<=3?0:x.sk.length<=6?1:2,ds=lev(gs,x.sk,tol);if(ds<=tol)best=Math.min(best,.12+ds/x.sk.length)}
+      if(gk&&!gq&&QUAL.test(x.k))continue;
+      if(gt.length===1&&x.tk.length>1)for(const t of x.tk){if(t.length<4||STOP.has(t))continue;
+        if(t===g){best=Math.min(best,.1);tokHit=true;continue}
+        const tt=tolFor(t.length),dt=lev(g,t,tt);if(tt&&dt<=tt)best=Math.min(best,.18+dt/t.length);
+        else if(g.length>=5&&g.length>=t.length*.5&&t.startsWith(g))best=Math.min(best,.3)}
+      if(g.length>=5&&gn.length>=x.ns.length*.5&&x.ns.startsWith(gn))best=Math.min(best,.25)}
+    if(best<.6)cand.push({a,s:best,tokHit})}
+  if(!cand.length||(gk&&!cand.some(c=>c.tokHit)))return{};
+  cand.sort((x,y)=>x.s-y.s||x.a.name.localeCompare(y.a.name));
+  const top=cand.filter(c=>c.s<=cand[0].s+.12);
+  return top.length>3?{vague:true}:{near:top.map(c=>c.a),conf:cand[0].s};
+}
+
+// days
+const EPOCH=Date.UTC(2026,10,1);
+const dayNum=()=>Math.max(1,Math.floor((Date.now()-EPOCH)/864e5)+1);
+const dayDate=n=>new Date(EPOCH+(n-1)*864e5).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"});
+function rng(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
+function shuffle(arr,r=Math.random){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const dailyOrder=n=>shuffle(P.map((_,i)=>i),rng(n*7919+13)).slice(0,7);
+
+// settings and saved runs (per-viewer conveniences)
+const SET=Object.assign({snd:true,low:false,cb:false,corr:true,clr:false},LS.get("wk1-set",{}));
+function applySet(){document.documentElement.classList.toggle("low",SET.low);document.documentElement.classList.toggle("cb",SET.cb);
+  $$(".sw").forEach(b=>{const on=!!SET[b.dataset.k];b.setAttribute("aria-checked",on);b.querySelector("i").textContent=on?"ON":"OFF"});
+  $("#snd").textContent=SET.snd?"♪":"×";$("#snd").setAttribute("aria-label",SET.snd?"Mute sound":"Turn sound on")}
+const RUNS=LS.get("wk1-runs",{});
+const saveRuns=()=>LS.set("wk1-runs",RUNS);
+function streak(){let s=0;for(let d=dayNum();d>=1;d--){if(RUNS["d"+d]?.done)s++;else if(d===dayNum())continue;else break}return s}
+
+// sound: tiny synth, starts only after a tap
+const SFX={ctx:null,
+  ok(){if(!SET.snd)return null;try{this.ctx=this.ctx||new (window.AudioContext||window.webkitAudioContext)();if(this.ctx.state==="suspended")this.ctx.resume();return this.ctx}catch(e){return null}},
+  tone(f,d,type="sine",v=.12,f2,at=0){const c=this.ok();if(!c)return;const t=c.currentTime+at,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(c.destination);o.start(t);o.stop(t+d+.02)},
+  noise(d,v=.15,freq=900,at=0){const c=this.ok();if(!c)return;const t=c.currentTime+at,n=c.sampleRate*d,b=c.createBuffer(1,n,c.sampleRate),ch=b.getChannelData(0);for(let i=0;i<n;i++)ch[i]=(Math.random()*2-1)*(1-i/n);
+    const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=b;f.type="bandpass";f.frequency.value=freq;f.Q.value=.7;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+d*.3);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f).connect(g).connect(c.destination);s.start(t)},
+  shot(){this.noise(.07,.2,3400);this.tone(1100,.05,"square",.05,400)},
+  start(){[392,523,659].forEach((f,i)=>this.tone(f,.16,"triangle",.07,0,i*.11))},  whistle(n=1){for(let i=0;i<n;i++){this.tone(2900,.22,"square",.035,2700,i*.3);this.tone(2950,.22,"sine",.05,2800,i*.3)}},
+  horn(d=.8){const c=this.ok();if(!c)return;const t=c.currentTime,g=c.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.06,t+.02);g.gain.setValueAtTime(.06,t+d*.85);g.gain.exponentialRampToValueAtTime(.0001,t+d);g.connect(c.destination);
+    [[220,"square",.6],[233,"sawtooth",.5],[440,"square",.2]].forEach(([f,type,v])=>{const o=c.createOscillator(),gg=c.createGain();o.type=type;o.frequency.value=f;gg.gain.value=v;o.connect(gg).connect(g);o.start(t);o.stop(t+d+.02)})},
+  tick(){this.tone(1300,.05,"square",.03)},
+  buzz(){this.tone(150,.2,"sawtooth",.07,110)},
+  blip(){this.tone(880,.08,"triangle",.07,1320)},
+  cheer(t){if(t<3)return;this.noise(.6+t*.25,.05+t*.03,700);if(t>=5)this.noise(1.6,.12,1100,.1);if(t===6)[523,659,784,1047].forEach((f,i)=>this.tone(f,.3,"triangle",.08,0,.15+i*.09))}
+};
+</script>
+<script>
+// ---------- the ballpark scene ----------
+const NS="http://www.w3.org/2000/svg";
+const LANDMARKS=[[0,"home plate"],[60.5,"the mound"],[127.3,"second base"],[200,"SHALLOW CENTER"],[300,"DEEP CENTER"],[385,"the warning track"],[400,"THE WALL · a perfect game clears it"]];
+const BATTER="....CCCC....|...CCCCCC.T.|...CSSSS.T..|....SSSST...|.....SSG....|...JJJJG....|..JJJJJJJ...|..JJJNJJJ...|..JJJJJJJ...|...WWWWW....|...WWWWW....|..WW...WW...|..KK...KK...|..KK...KK...|.BBB...BBB..";
+const PAL={C:"#0f2a5a",S:"#c48a5c",T:"#c89a5a",G:"#222",J:"#f2efe6",N:"#0f2a5a",W:"#e6e2d6",K:"#0f2a5a",B:"#111"};
+const Y0=75;
+const SC={cam:0,px:0,K:.42,
+  layout(){const W=innerWidth,H=innerHeight;Object.assign(this,{W,H,S:Math.max(3.5,Math.min(11,W/120)),D:H*.34/150,PB:H*.9,OX:W*.16,ps:Math.max(3,Math.min(5,Math.round(H/180)))});this.V=this.S*.9;this.bs=Math.max(2,this.ps*.8)},
+  proj(x,y){return[x*this.S+y*this.D*this.K+this.OX,this.PB-y*this.D]},
+  el(tag,attrs,parent,html){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(html)e.innerHTML=html;if(parent)parent.appendChild(e);return e},
+  build(){
+    this.layout();const{W,H,S,D,PB,ps,V,bs}=this,svg=$("#scn"),el=this.el.bind(this),pts=a=>a.map(p=>p.map(v=>v.toFixed(1)).join(",")).join(" ");
+    svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.innerHTML="";
+    el("defs",{},svg,`<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#040a08"/><stop offset=".6" stop-color="#0a1a16"/><stop offset="1" stop-color="#12302a"/></linearGradient>
+      <radialGradient id="glow"><stop offset="0" stop-color="#fff2c8" stop-opacity=".55"/><stop offset="1" stop-color="#fff2c8" stop-opacity="0"/></radialGradient>
+      <clipPath id="band"><rect x="-90" y="-8" width="540" height="166"/></clipPath>
+      <clipPath id="fair"><polygon points="0,75 470,-395 470,545"/></clipPath>
+      <pattern id="crowdA" width="12" height="11" patternUnits="userSpaceOnUse">${pixels("....|.ab.|.cc.",{a:"#3a5a4e",b:"#5a8070",c:"#24382f"},2)}<g transform="translate(6,5)">${pixels(".dd|.ee",{d:"#8a2a2a",e:"#401616"},2)}</g></pattern>
+      <pattern id="crowdB" width="17" height="14" patternUnits="userSpaceOnUse"><g transform="translate(3,2)">${pixels("ff|gg",{f:"#d8d2c0",g:"#6a6656"},2)}</g><g transform="translate(11,8)">${pixels("hh|ii",{h:"#2e4a8a",i:"#162a4a"},2)}</g></pattern>`);
+    el("rect",{width:W,height:H,fill:"url(#sky)"},svg);
+    const stars=el("g",{},svg);for(let i=0;i<40;i++)el("rect",{x:Math.random()*W|0,y:Math.random()*H*.12|0,width:2,height:2,fill:"#c9e0d2",class:"star",style:`animation-delay:${(Math.random()*3).toFixed(2)}s`},stars);
+    const sTop=H*.3,sBot=PB-158*D-H*.03;
+    el("rect",{x:0,y:sTop-12,width:W,height:12,fill:"#08120e"},svg);
+    el("rect",{x:0,y:sTop,width:W,height:Math.max(0,sBot-sTop),fill:"#0b1814"},svg);
+    this.crowdA=el("rect",{x:-40,y:sTop+10,width:W+80,height:Math.max(0,sBot-sTop-16),fill:"url(#crowdA)",class:"crowd",opacity:.5},svg);
+    this.crowdB=el("rect",{x:-40,y:sTop+10,width:W+80,height:Math.max(0,sBot-sTop-16),fill:"url(#crowdB)",opacity:.42},svg);
+    for(let y=sTop+18;y<sBot;y+=22)el("rect",{x:0,y,width:W,height:2,fill:"#06100c",opacity:.7},svg);
+    this.flashG=el("g",{},svg);
+    this.towers=el("g",{},svg);
+    for(let x=W*.03;x<W+1400;x+=Math.max(330,W*.88)){const tw=el("g",{},this.towers),nc=W<600?4:6;
+      el("rect",{x:x-3,y:sTop-H*.07,width:6,height:H*.09,fill:"#16261f"},tw);
+      el("circle",{cx:x,cy:sTop-H*.085,r:H*.09,fill:"url(#glow)",class:"lamp"},tw);
+      const lg=el("g",{class:"lamp"},tw);for(let r=0;r<3;r++)for(let c=0;c<nc;c++)el("rect",{x:x-nc*4.5+c*9,y:sTop-H*.11+r*8,width:7,height:6,fill:r===1?"#fff6d8":"#ffdf9a"},lg)}
+    // the field, in feet: home plate at 0, straightaway center at 400
+    this.world=el("g",{},svg);const w=el("g",{"clip-path":"url(#band)"},this.world);
+    el("rect",{x:-90,y:-8,width:540,height:166,fill:"#16582f"},w);
+    for(let x=-60;x<440;x+=20)el("rect",{x,y:-8,width:10,height:166,fill:"#1d6c3b",opacity:.85},w);
+    el("rect",{x:385,y:-8,width:15,height:166,fill:"#a86d43"},w);
+    el("rect",{x:400,y:-8,width:50,height:166,fill:"#0f3a22"},w);
+    el("circle",{cx:60.5,cy:Y0,r:95,fill:"#b9784a","clip-path":"url(#fair)"},w);
+    el("circle",{cx:0,cy:Y0,r:13,fill:"#b9784a"},w);
+    el("polygon",{points:`9,${Y0} 63.64,${Y0-54.6} 118.3,${Y0} 63.64,${Y0+54.6}`,fill:"#2a8a4c"},w);
+    el("circle",{cx:60.5,cy:Y0,r:9,fill:"#c4865c"},w);el("rect",{x:60.2,y:Y0-1,width:.6,height:2,fill:"#f4f1e8"},w);
+    const L=el("g",{class:"ln",fill:"none",stroke:"#f4f1e8","stroke-opacity":".92","stroke-width":2.5},w);
+    el("path",{d:`M0 ${Y0}L460 ${Y0-460}M0 ${Y0}L460 ${Y0+460}`},L);
+    el("rect",{x:-3,y:Y0+2,width:6,height:4},L);el("rect",{x:-3,y:Y0-6,width:6,height:4},L);
+    [[63.64,Y0-63.64],[127.28,Y0],[63.64,Y0+63.64]].forEach(([cx,cy])=>el("polygon",{points:`${cx-2.2},${cy} ${cx},${cy-2.2} ${cx+2.2},${cy} ${cx},${cy+2.2}`,fill:"#f4f1e8"},w));
+    el("polygon",{points:`1.6,${Y0-1.6} -.4,${Y0-1.6} -2,${Y0} -.4,${Y0+1.6} 1.6,${Y0+1.6}`,fill:"#f4f1e8"},w);
+    // upright layer: boards, the wall, captions, batter, markers, ball
+    this.up=el("g",{},svg);const up=this.up,P=(xx,yy,h=0)=>{const[a,b]=this.proj(xx,yy);return[a,b-h*V]},bh=Math.max(10,H*.024),[bx0,by]=this.proj(-80,162),[bx1]=this.proj(450,162);
+    el("rect",{x:bx0,y:by-bh,width:bx1-bx0,height:bh,fill:"#0f1d17"},up);
+    for(let x=bx0+10,i=0;x<bx1;x+=220,i++)el("text",{x,y:by-bh*.22,fill:i%2?"#6fd3ff":"#f5c542","font-family":"VT323,monospace","font-size":bh*.9},up).textContent=i%2?"FIND THE WALK-OFF":"◆ WALKOFF ◆";
+    el("polygon",{points:pts([P(400,-8),P(400,158),P(400,158,10),P(400,-8,10)]),fill:"#1d5a36",stroke:"#103a24"},up);
+    el("polyline",{points:pts([P(400,-8,10),P(400,158,10)]),stroke:"#f5c542","stroke-width":3,fill:"none"},up);
+    const[nx,ny]=P(400,Y0,4.5);el("text",{x:nx,y:ny,"text-anchor":"middle",fill:"#f4f1e8","font-family":"VT323,monospace","font-size":Math.max(14,4*V)},up).textContent="400";
+    const cap=el("g",{"font-family":"VT323,monospace","font-size":Math.max(15,Math.min(19,H*.022))},up);
+    LANDMARKS.forEach(([x,t],i)=>{const[X,Y]=this.proj(x,162),yy=Y-bh-10-(i%2)*20,big=t===t.toUpperCase();
+      el("line",{x1:X,y1:yy+4,x2:X,y2:Y-bh,stroke:big?"#6fd3ff":"#9fb5a6","stroke-dasharray":"2 3",opacity:.8},cap);
+      const tx=el("text",{x:X+4,y:yy,fill:big?"#6fd3ff":"#cfe0d4",stroke:"#07100b","stroke-width":3,style:"paint-order:stroke"},cap);tx.textContent="── "+t});
+    const[hx,hy]=this.proj(-4,Y0+4);el("g",{transform:`translate(${hx-6*ps},${hy-15*ps})`},up,`<ellipse cx="${6*ps}" cy="${15*ps}" rx="${5*ps}" ry="${ps*1.2}" fill="#000" opacity=".35"/>`+pixels(BATTER,PAL,ps));
+    this.mk=el("g",{},up);this.lab=el("g",{},up);
+    this.pl=el("g",{id:"pl"},up);
+    el("ellipse",{cx:3*bs,cy:6*bs+2,rx:3*bs,ry:bs*.7,fill:"#000",opacity:.35},this.pl);
+    el("g",{class:"hop"},this.pl,pixels(BALLMAP,BPAL,bs));
+    this.place(this.px);this.setCam(this.cam);
+  },
+  clock(){},
+  camFor(px){return px+(Y0*this.D*this.K+this.OX-this.W*.42)/this.S},
+  setCam(x){this.cam=x;const{S,D,K,OX,PB}=this;this.world.setAttribute("transform",`matrix(${S},0,${K*D},${-D},${OX-x*S},${PB})`);
+    this.up.setAttribute("transform",`translate(${-x*S},0)`);this.towers.setAttribute("transform",`translate(${-x*S*.35},0)`);
+    const o=(-x*S*.5)%24;this.crowdA.setAttribute("x",-40+o);this.crowdB.setAttribute("x",-40+(-x*S*.42)%34)},
+  place(px){this.px=px;const[X,Y]=this.proj(px,Y0);this.pl.setAttribute("transform",`translate(${X-3*this.bs},${Y-6*this.bs-2})`)},
+  screen(x){const[X,Y]=this.proj(x,Y0);return[X-this.cam*this.S,Y]},
+  async runTo(x1,ms){const x0=this.px;this.pl.classList.add("run");
+    await tween(ms,k=>{const x=x0+(x1-x0)*k;this.place(x);this.setCam(this.camFor(x))},e=>e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2);this.pl.classList.remove("run")},
+  markers(m0){this.mk.innerHTML="";[1,2,3,4,5,6].forEach((t,i)=>{const x=m0+T[t].p*U_PER_PT,[X,Y]=this.proj(x,Y0),top=Y-18*this.ps-18-(i%3)*22;
+    const g=this.el("g",{class:"mk","data-t":t,style:`animation-delay:${i*.05}s`},this.mk);
+    this.el("line",{x1:X,y1:Y,x2:X,y2:top,style:"stroke:var(--tc)","stroke-dasharray":"3 3","stroke-width":1.5},g);
+    this.el("text",{x:X+4,y:top+4,style:"fill:var(--tc);paint-order:stroke",stroke:"#07100b","stroke-width":3,"font-family":"VT323,monospace","font-size":16},g).textContent=`${T[t].n.toUpperCase()} · ${T[t].p}`})},
+  clearMarkers(){this.mk.innerHTML="";this.lab.innerHTML=""},
+  async fly(text,x0,x1,ms){this.lab.innerHTML="";const g=this.el("g",{},this.lab),t=this.el("text",{"font-family":"VT323,monospace","font-size":20,fill:"#fff","text-anchor":"middle"},g);t.textContent=`“${text.toUpperCase()}”`;
+    const w=t.getComputedTextLength?t.getComputedTextLength()+16:text.length*10+20,r=this.el("rect",{x:-w/2,y:-17,width:w,height:24,fill:"#10201a",stroke:"#f4f1e6","stroke-width":1.5},g);g.insertBefore(r,t);t.setAttribute("y",1);
+    await tween(ms,k=>{const[X,Y]=this.proj(x0+(x1-x0)*k,Y0);g.setAttribute("transform",`translate(${X},${Y-14*this.ps-6-Math.sin(k*Math.PI)*40})`);if(Math.random()<.5&&k<1)sparkle(this.screen(x0+(x1-x0)*k))},e=>1-Math.pow(1-e,3))},
+  crowdFlash(n){if(SET.low||RM)return;for(let i=0;i<n;i++){const r=this.el("rect",{x:Math.random()*this.W,y:this.H*.15+Math.random()*Math.max(10,this.PB-158*this.D-this.H*.2),width:3,height:3,fill:"#fff"},this.flashG);setTimeout(()=>r.remove(),180+Math.random()*500)}}
+};
+function tween(ms,step,ease=e=>e){return new Promise(res=>{if(RM||ms<=0){step(1);return res()}const t0=performance.now(),f=now=>{const k=Math.min(1,(now-t0)/ms);step(ease(k));if(k<1)requestAnimationFrame(f);else res()};requestAnimationFrame(f)})}
+
+// pixel sparks and confetti on one canvas
+const fx=$("#fx"),fctx=fx.getContext("2d"),parts=[];let fxOn=false,fxLast=0;
+function burst(x,y,colors,n,o={}){if(RM||SET.low&&n>20)n=Math.min(n,12);if(RM)return;const now=performance.now();
+  for(let i=0;i<n;i++){const a=(o.angle??-Math.PI/2)+(Math.random()-.5)*(o.spread??Math.PI*.9),v=(o.speed??8)*(.4+Math.random()*.8);
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:o.gravity??.3,s:(o.size??4)*(.6+Math.random()*.7),c:colors[i%colors.length],born:now,life:(o.life??1500)*(.7+Math.random()*.5)})}
+  if(!fxOn){fxOn=true;fx.hidden=false;const d=Math.min(2,devicePixelRatio||1);fx.width=innerWidth*d;fx.height=innerHeight*d;fctx.setTransform(d,0,0,d,0,0);fxLast=now;requestAnimationFrame(fxTick)}}
+function sparkle([x,y]){burst(x,y-30,["#ffd166","#fff","#6fd3ff"],1,{speed:2,spread:6.3,gravity:.05,life:500,size:3})}
+function fxTick(now){const dt=Math.min(3,Math.max(0,(now-fxLast)/16.67));fxLast=now;fctx.clearRect(0,0,innerWidth,innerHeight);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i],age=now-p.born;if(age>p.life||p.y>innerHeight+20){parts.splice(i,1);continue}
+    p.vy+=p.g*dt;p.vx*=Math.pow(.985,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;fctx.globalAlpha=Math.max(0,Math.min(1,(1-age/p.life)*1.5));fctx.fillStyle=p.c;fctx.fillRect(Math.round(p.x),Math.round(p.y),Math.round(p.s),Math.round(p.s))}
+  if(parts.length)requestAnimationFrame(fxTick);else{fxOn=false;fctx.clearRect(0,0,innerWidth,innerHeight);fx.hidden=true}}
+</script>
+<script>
+// ---------- a match: seven rounds ----------
+let G=LS.get("wk1-cur",null),CLK=null,RES=null;
+const saveG=()=>LS.set("wk1-cur",G);
+const sleep=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
+const total=res=>res.reduce((s,r)=>s+r.p,0);
+
+function startGame(mode,opt={}){
+  let order,key,title,day=null;
+  if(mode==="daily"||mode==="archive"){day=opt.day??dayNum();order=dailyOrder(day);key="d"+day;title="GAME #"+day;
+    if(RUNS[key]?.done){RES=RUNS[key];return go("results")}}
+  else if(mode==="unl"){order=shuffle(P.map((_,i)=>i)).slice(0,7);key="u";title="UNLIMITED"}
+  else{order=shuffle(P.map((_,i)=>i).filter(i=>P[i].pk===opt.pk)).slice(0,7);key="p:"+opt.pk;title=PACKS[opt.pk].n}
+  G={mode,key,day,title,pk:opt.pk||null,order,i:0,res:[],m:0,late:mode==="archive"&&day!==dayNum()};
+  saveG();SC.place(0);SC.setCam(SC.camFor(0));go("play")}
+
+function enterGame(){if(!G)return go("");SC.place(G.m);SC.setCam(SC.camFor(G.m));hud();
+  if(G.res.length>G.i){showReveal(G.res[G.i],false)}else startRound()}
+
+function hud(){$("#hm").textContent=G.m.toFixed(1);$("#hs").textContent=total(G.res);
+  $("#sq").innerHTML=G.order.map((_,k)=>{const r=G.res[k];return r?`<i data-t="${r.t}"></i>`:`<i class="${k===G.i?"cur":""}"></i>`}).join("");
+  $("#hr").textContent=G.i>=G.order.length?"FULL TIME":`ROUND ${G.i+1} OF ${G.order.length}`}
+
+function startRound(){
+  const p=P[G.order[G.i]],ai=$("#ai");stopClock();G.pend=null;
+  $("#rv").hidden=true;$("#next").hidden=true;$("#bar").hidden=false;$("#pp").hidden=false;SC.clearMarkers();
+  $("#ppr").textContent=`ROUND ${G.i+1} OF ${G.order.length}`;$("#ppq").textContent=p.q;
+  $(".pph").textContent=`${p.h} · ► rarer answers fly farther ►`;
+  const pp=$("#pp");pp.style.animation="none";void pp.offsetWidth;pp.style.animation="";
+  ai.value="";ai.disabled=true;$("#shoot").disabled=true;setDial(1,ROUND);hud();
+  let n=RM?0:WARM;const fb=$("#fb");
+  const warm=()=>{if(!G||$("#game").classList.contains("on")===false)return;
+    if(n>0){fb.innerHTML=`<div class="warm">warming up · first pitch in ${n}</div>`;n--;setTimeout(warm,1000)}
+    else{fb.innerHTML="";SFX.start();ai.disabled=false;$("#shoot").disabled=false;ai.focus({preventScroll:true});startClock()}};
+  warm()}
+
+function setDial(f,secs){const d=$("#dial");d.style.setProperty("--f",f);$("#tb").style.setProperty("--f",f);$("#dn").textContent=Math.max(0,Math.ceil(secs));d.classList.toggle("low",secs<=5);SC.clock(Math.max(0,Math.ceil(secs)))}
+function startClock(){const t0=performance.now();let last=ROUND;
+  CLK=setInterval(()=>{const left=ROUND-(performance.now()-t0)/1000;setDial(Math.max(0,left/ROUND),left);
+    const s=Math.ceil(left);if(s<last&&s<=5&&s>0){SFX.tick()}last=s;if(left<=0)timeout()},100)}
+function stopClock(){clearInterval(CLK);CLK=null}
+
+$("#ai").addEventListener("input",()=>{if(G)G.pend=null;const fb=$("#fb");if(fb.querySelector(".fix,.nope"))fb.innerHTML=""});
+$("#af").addEventListener("submit",e=>{e.preventDefault();if(!G||!CLK)return;
+  const ai=$("#ai"),v=ai.value.trim(),p=P[G.order[G.i]],fb=$("#fb");
+  if(!v)return nudge(ai);
+  if(G.pend&&G.pend.v===v)return lockIn(G.pend.a,v);
+  const m=match(p,v);
+  if(m.exact)return lockIn(m.exact,v);
+  if(m.near){
+    if(!SET.corr&&m.near.length===1)return lockIn(m.near[0],m.near[0].name);
+    SFX.blip();
+    if(m.near.length===1){const a=m.near[0];ai.value=a.name;G.pend={v:a.name,a};
+      fb.innerHTML=`<div class="fix">“${esc(v)}” → <span class="to">“${esc(a.name)}”</span><small>submit again to confirm · or edit</small></div>`}
+    else{fb.innerHTML=`<div class="fix">“${esc(v)}” could be…<div class="opts">${m.near.map((a,i)=>`<button type="button" data-i="${i}">${esc(a.name)}</button>`).join("")}</div><small>tap one to confirm · or edit</small></div>`;
+      fb.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{const a=m.near[+b.dataset.i];ai.value=a.name;lockIn(a,a.name)})}
+    return}
+  SFX.buzz();fb.innerHTML=`<div class="nope">“${esc(v)}”: ${m.vague?"too vague. add more of the name":"foul ball. not on the list"}</div>`;
+  if(SET.clr)ai.value="";else ai.select();nudge(ai)});
+function nudge(el){if(RM)return;el.animate([{transform:"none"},{transform:"translateX(-6px)"},{transform:"translateX(5px)"},{transform:"none"}],{duration:280})}
+
+async function lockIn(a,guess){if(!G||!CLK)return;stopClock();
+  const p=P[G.order[G.i]],x0=G.m,x1=G.m+a.p*U_PER_PT;
+  $("#ai").disabled=true;$("#shoot").disabled=true;$("#fb").innerHTML="";
+  G.res.push({q:p.k,a:a.name,g:guess,t:a.t,p:a.p});G.m=x1;G.pend=null;saveG();
+  SFX.shot();SC.markers(x0);
+  await Promise.all([SC.fly(a.name,x0,x1,1300),sleep(260).then(()=>SC.runTo(x1,1100))]);
+  SFX.cheer(a.t);celebrate(a.t,x1);
+  await sleep(250);SC.clearMarkers();showReveal(G.res[G.i],true)}
+function timeout(){if(!G)return;stopClock();const p=P[G.order[G.i]];
+  G.res.push({q:p.k,a:null,g:$("#ai").value.trim(),t:0,p:0});G.pend=null;saveG();
+  $("#ai").disabled=true;$("#shoot").disabled=true;$("#fb").innerHTML="";SFX.horn(.7);showReveal(G.res[G.i],true)}
+function celebrate(t,x){const[X,Y]=SC.screen(x);
+  if(t>=4)burst(X,Y-40,["#ffd166","#6fd3ff","#fff","#ff4a3d"],t*14,{speed:7});
+  if(t>=5)SC.crowdFlash(t===6?60:25);
+  if(t===6){burst(innerWidth*.15,innerHeight*.5,["#ffd166","#fff"],40,{angle:-Math.PI/3,speed:11});burst(innerWidth*.85,innerHeight*.5,["#ffd166","#fff"],40,{angle:-2*Math.PI/3,speed:11})}}
+
+function showReveal(r,fresh){const rv=$("#rv"),last=G.i>=G.order.length-1;
+  rv.dataset.t=r.t;$("#pp").hidden=true;$("#bar").hidden=true;
+  rv.innerHTML=`${icon(r.t,"ico")}<h2>${T[r.t].n}</h2><div class="ans">${r.a?`“${esc(r.a)}”`:"—"}</div>
+    <div class="pts"><b>+${r.p} PTS</b>${r.p?` · ${(r.p*U_PER_PT).toFixed(1)} ft farther`:""}</div><p>${esc(r.t===6?P[byK[r.q]].f:T[r.t].fl)}</p>`;
+  rv.hidden=false;if(!fresh)rv.style.animation="none";else rv.style.animation="";
+  hud();$("#hr").textContent=last?"FULL TIME":`ROUND ${G.i+2} OF ${G.order.length}`;
+  const nx=$("#next");nx.textContent=last?"FINAL OUT":"NEXT AT-BAT →";nx.hidden=false;setTimeout(()=>nx.isConnected&&!nx.hidden&&nx.focus({preventScroll:true}),400)}
+$("#next").onclick=()=>{if(!G)return;G.i++;saveG();if(G.i>=G.order.length)return finish();startRound()};
+
+function finish(){SFX.horn(1.3);
+  const rec={key:G.key,mode:G.mode,day:G.day,pk:G.pk,title:G.title,order:G.order,res:G.res,score:total(G.res),m:G.m,done:true,late:G.late,at:Date.now()};
+  if(G.day&&!RUNS[G.key]?.done){RUNS[G.key]=rec;saveRuns();logRun(rec)}
+  const hist=LS.get("wk1-hist",[]);hist.push(rec.score);LS.set("wk1-hist",hist.slice(-300));
+  LS.set("wk1-last",rec);G=null;LS.set("wk1-cur",null);RES=rec;RES.fresh=true;go("results")}
+
+// ---------- shared stats (optional: db capability) ----------
+let DB=null,UID=null;
+(async()=>{try{if(!window.claude?.use)return;const[db,user]=await Promise.all([claude.use("db"),claude.use("user")]);if(db&&user){const id=await user.id();if(id){DB=db;UID=id}}}catch(e){}})();
+async function logRun(rec){if(!DB||rec.late)return;try{const ref=DB.doc("runs/"+UID),s=await ref.get(),d=s.exists?{...(s.data().d||{})}:{};if(d[rec.day]!=null)return;d[rec.day]=rec.score;await ref.set({d})}catch(e){}}
+async function dayScores(day){if(!DB)return null;try{const q=await DB.collection("runs").get();return q.docs.map(s=>s.data()?.d?.[day]).filter(v=>typeof v==="number")}catch(e){return null}}
+
+// ---------- full time ----------
+function showResults(rec){const s=rec.score,fresh=rec.fresh;rec.fresh=false;
+  const band=SCOUT.find(b=>s>=b[0]&&s<=b[1])||SCOUT[0];
+  const tag=rec.day?`GAME #${rec.day}`:rec.title;
+  $("#rcol").innerHTML=`<div class="rhead"><span class="logo sm">WALKOFF</span><span>${esc(tag)} — FINAL</span></div>
+  <div class="big"><b id="rs">${fresh&&!RM?0:s}</b><span>/700</span><em>${rec.m.toFixed(1)} ft</em></div>
+  <svg class="chart" id="dist" viewBox="0 0 560 130" role="img" aria-label="Score distribution"></svg><div class="cy" id="dtxt">&nbsp;</div>
+  <h3 class="sec">THE SPRAY CHART <small>FARTHER = RARER</small></h3>${runChart(rec)}
+  <h3 class="sec">THE SCOUTING REPORT</h3><div class="scout">${SCOUT.map(b=>`<div class="${b===band?"me":""}" data-t="${b[2]}">${icon(b[2])}<b>${b[0]}–${b[1]===700?"700":b[1]}</b><span><b>${b[3]}.</b> ${b[4]}</span></div>`).join("")}</div>
+  <div class="copyrow"><button class="cta pink" id="copy">COPY RESULT</button></div><div class="cy" id="cmsg" aria-live="polite"></div>
+  <h3 class="sec">THE BOX SCORE <small>TAP A ROUND FOR EVERY ANSWER</small></h3><div class="box">${rec.res.map((r,i)=>{const p=P[byK[r.q]];
+    return `<button class="brow" data-t="${r.t}" data-i="${i}" aria-expanded="false"><span class="dim">${i+1}</span>${icon(r.t)}<span><small>${esc(p.q)}</small><span class="a">${r.a?esc(r.a):"—"}</span></span><span class="p">${r.p}</span><span class="dim">+</span></button>
+    <ul class="all" hidden>${[...p.a].sort((x,y)=>y.p-x.p||x.name.localeCompare(y.name)).map(a=>`<li data-t="${a.t}" class="${a.name===r.a?"me":""}">${icon(a.t)}<span>${esc(a.name)}${a.name===r.a?"<em>YOU</em>":""}</span><b>+${a.p}</b></li>`).join("")}</ul>`}).join("")}</div>
+  <div class="btnrow">${rec.mode==="unl"?`<button class="btn2" data-go="unlimited">PLAY AGAIN ↻</button>`:rec.mode==="pack"?`<button class="btn2" data-pack="${rec.pk}">PLAY AGAIN ↻</button>`:`<button class="btn2" data-go="unlimited">UNLIMITED ∞</button>`}
+    <button class="btn2" data-go="archive">ARCHIVE ⟲</button><button class="btn2" data-go="packs">THEMED PACKS →</button><button class="btn2" data-go="">TODAY'S GAME →</button></div>`;
+  $("#results").scrollTop=0;
+  if(fresh&&!RM)tween(1100,k=>$("#rs").textContent=Math.round(s*k),e=>1-Math.pow(1-e,3));
+  $$("#rcol .brow").forEach(b=>b.onclick=()=>{const ul=b.nextElementSibling,open=ul.hidden;ul.hidden=!open;b.setAttribute("aria-expanded",open);b.lastElementChild.textContent=open?"–":"+"});
+  $("#copy").onclick=()=>{const head=`Walkoff ⚾ ${rec.day?"#"+rec.day:rec.mode==="unl"?"∞":rec.title}`,txt=`${head}\n${s} · ${rec.m.toFixed(1)} ft\n\n${rec.res.map(r=>T[r.t].e).join("")}`,msg=$("#cmsg");
+    const fall=()=>{msg.textContent="Couldn't reach the clipboard. Here it is: "+txt.replace(/\n+/g," ")};
+    try{navigator.clipboard.writeText(txt).then(()=>{msg.textContent="COPIED. PASTE IT IN THE GROUP CHAT."},fall)}catch(e){fall()}};
+  drawDist(rec);
+  if(fresh&&s>=350)setTimeout(()=>burst(innerWidth/2,innerHeight*.25,["#ffd166","#6fd3ff","#ff4a3d","#fff"],90,{spread:Math.PI*1.2,speed:11}),600)}
+
+function runChart(rec){const n=rec.res.length,w=560,h=210,x0=74,dx=(w-x0-20)/Math.max(1,n-1);
+  let g=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Feet gained per round">`;
+  ["first pitch", "14 ft", "29 ft", "43 ft", "57 ft"].forEach((l,i)=>{const y=18+i*40;g+=`<line x1="${x0-10}" x2="${w}" y1="${y}" y2="${y}" stroke="#2c4a3a" stroke-dasharray="2 4"/><text x="0" y="${y+5}" fill="#9fb5a6" font-family="VT323,monospace" font-size="16">${l}</text>`});
+  rec.res.forEach((r,i)=>{const x=x0+i*dx,y=18+160*(r.p/100);
+    g+=`<line x1="${x}" x2="${x}" y1="18" y2="${y}" style="stroke:var(--t${r.t})" stroke-width="2"/><g transform="translate(${x-8},${y-6}) scale(2)" style="fill:var(--t${r.t})">${ICONS[r.t].split("|").map((row,yy)=>[...row].map((c,xx)=>c==="#"?`<rect x="${xx}" y="${yy}" width="1" height="1"/>`:"").join("")).join("")}</g>
+    <text x="${x}" y="${h-2}" text-anchor="middle" fill="#9fb5a6" font-family="VT323,monospace" font-size="16">${i+1}</text>`});
+  return g+"</svg>"}
+
+async function drawDist(rec){const svg=$("#dist"),txt=$("#dtxt");if(!svg)return;
+  let vals=null,label="";
+  if(rec.day&&!rec.late){vals=await dayScores(rec.day);label=`GAME #${rec.day}'S`}
+  let mine=rec.score;
+  if(!vals||vals.length<2){const h=LS.get("wk1-hist",[]);if(h.length>=2){vals=h;label="YOUR"}else vals=null}
+  const X=v=>20+520*(v/700);
+  let g=`<line x1="20" x2="540" y1="104" y2="104" stroke="#2c4a3a"/>`;
+  for(let v=0;v<=700;v+=100)g+=`<text x="${X(v)}" y="124" text-anchor="middle" fill="#9fb5a6" font-family="VT323,monospace" font-size="15">${v}</text>`;
+  if(vals){const bins=Array(29).fill(0);vals.forEach(v=>bins[Math.min(28,Math.round(v/25))]++);
+    const sm=bins.map((_,i)=>[-2,-1,0,1,2].reduce((s,o)=>s+(bins[i+o]||0)*[1,4,6,4,1][o+2],0)),mx=Math.max(...sm,1);
+    const pts=sm.map((c,i)=>`${X(i*25)},${104-80*c/mx}`).join(" ");
+    g+=`<polygon points="20,104 ${pts} 540,104" fill="rgba(111,211,255,.22)" stroke="#6fd3ff" stroke-width="2"/>`;
+    const below=vals.filter(v=>v<mine).length,others=vals.length-1;
+    txt.textContent=label==="YOUR"?`BETTER THAN ${Math.round(100*below/Math.max(1,others))}% OF YOUR ${vals.length} RUNS`:`BETTER THAN ${Math.round(100*below/Math.max(1,others))}% OF ${label} ${vals.length} FIRST RUNS`}
+  else txt.textContent=rec.day&&DB?`FIRST RUN LOGGED FOR GAME #${rec.day}`:"YOUR FIRST RUN. PLAY MORE TO SEE THE CURVE.";
+  g+=`<line x1="${X(mine)}" x2="${X(mine)}" y1="14" y2="104" stroke="#ff4a3d" stroke-width="2"/><rect x="${X(mine)-4}" y="10" width="8" height="8" fill="#ff4a3d"/><text x="${X(mine)}" y="124" text-anchor="middle" fill="#ff4a3d" font-family="VT323,monospace" font-size="15" style="paint-order:stroke" stroke="#07100b" stroke-width="4">YOU</text>`;
+  svg.innerHTML=g}
+</script>
+<script>
+// ---------- screens and routing ----------
+const SCREENS=["home","game","results","page"];
+function show(id){SCREENS.forEach(s=>$("#"+s).classList.toggle("on",s===id))}
+function go(h){h=h||"";if(location.hash.slice(1)===h)route();else location.hash=h}
+function route(){closeModals();stopClock();clearTimeout(KU.fuse);clearInterval(KU.speed);const h=location.hash.slice(1);
+  if(h==="play"){if(G){show("game");enterGame()}else go("");return}
+  if(h==="results"){RES=RES||LS.get("wk1-last",null);if(!RES)return go("");show("results");showResults(RES);return}
+  if(h==="unlimited"){startGame("unl");return}
+  if(["archive","packs","stats","faq","party"].includes(h)){show("page");$("#page").scrollTop=0;PAGES[h]();return}
+  show("home");renderHome()}
+function renderHome(){const d=dayNum(),rec=RUNS["d"+d];
+  $("#mdinfo").textContent=`GAME #${d} · STREAK ${streak()}`;
+  $("#kick").textContent=G&&G.day===d&&G.mode==="daily"?"► RESUME GAME ◄":rec?.done?"► TODAY'S RESULT ◄":"► PLAY BALL ◄";
+  SC.place(0);SC.setCam(SC.camFor(0)+(innerWidth>700?innerWidth*.17/SC.S:0));SC.clock(24)}
+$("#kick").onclick=()=>{SFX.ok();const d=dayNum();
+  if(G&&G.mode==="daily"&&G.day===d)return go("play");
+  if(RUNS["d"+d]?.done){RES=RUNS["d"+d];return go("results")}
+  startGame("daily")};
+
+// modals
+function openModal(id){closeModals();const m=$("#"+id);m.hidden=false;
+  if(id==="menu"){const h=location.hash.slice(1)||"home";$$("#menu .tile").forEach(t=>t.classList.toggle("cur",(t.dataset.go||"")===(h==="home"?"home":h)||(h==="play"&&t.dataset.go==="home")))}
+  m.querySelector("button")?.focus()}
+function closeModals(){$$(".modal").forEach(m=>m.hidden=true)}
+$("#mb").onclick=()=>openModal("menu");$("#gear").onclick=()=>openModal("set");
+$("#snd").onclick=()=>{SET.snd=!SET.snd;LS.set("wk1-set",SET);applySet();if(SET.snd)SFX.blip()};
+$$(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModals()}));
+addEventListener("keydown",e=>{if(e.key==="Escape")closeModals()});
+$$(".sw").forEach(b=>b.onclick=()=>{SET[b.dataset.k]=!SET[b.dataset.k];LS.set("wk1-set",SET);applySet()});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-go],[data-pack],[data-arch],[data-act],[data-close]");if(!b)return;
+  if(b.hasAttribute("data-close"))return closeModals();
+  if(b.dataset.act==="settings")return openModal("set");
+  SFX.ok();
+  if(b.dataset.pack)return startGame("pack",{pk:b.dataset.pack});
+  if(b.dataset.arch){const k=+b.dataset.arch,rec=RUNS["d"+k];if(rec?.done){RES=rec;return go("results")}return startGame(k===dayNum()?"daily":"archive",{day:k})}
+  const g=b.dataset.go;if(g==="unlimited")return startGame("unl");go(g==="home"?"":g)});
+
+// ---------- pages ----------
+const head=(title,sub)=>`<div class="ph"><div class="logo">${title}</div><p>${sub}</p></div>`;
+function banner(kind){const sky={mlb:["#06120c","#14382a"],october:["#1a0a06","#5a2410"],nfl:["#070a12","#16233a"],sb:["#0c0a1a","#2a1a3e"],college:["#0a0f22","#24301a"],nhl:["#050a14","#14243a"],cup:["#0a0e1a","#1c2a44"],legends:["#120a26","#2a1340"],journey:["#08121f","#1c2a40"],world:["#06102a","#0d2a52"],soon:["#0e0a18","#1c1428"]}[kind]||["#0e0a18","#1c1428"];
+  let s=`<svg viewBox="0 0 560 118" preserveAspectRatio="xMidYMid slice" class="px" aria-hidden="true"><defs><linearGradient id="bg-${kind}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient></defs><rect width="560" height="118" fill="url(#bg-${kind})"/>`;
+  for(let i=0;i<26;i++)s+=`<rect x="${(i*97)%560}" y="${(i*37)%54}" width="2" height="2" fill="#d8e2f0" opacity=".5"/>`;
+  const at=(x,y,svg)=>svg.replace(/<rect /g,`<rect transform="translate(${x},${y})" `);
+  const crowd=(y,cols)=>{let r=`<rect y="${y}" width="560" height="24" fill="#10141f"/>`;for(let x=4;x<560;x+=9)r+=`<rect x="${x}" y="${y+4+(x%3)*5}" width="4" height="4" fill="${cols[x%3]}"/>`;return r};
+  const grass=y=>{let r=`<rect y="${y}" width="560" height="${118-y}" fill="#1d6a38"/>`;for(let x=0;x<560;x+=70)r+=`<rect x="${x}" y="${y}" width="35" height="${118-y}" fill="#237a42"/>`;return r};
+  const arc=(x0,x1,top,c)=>{let r="";for(let i=0;i<9;i++){const t=i/8;r+=`<rect x="${Math.round(x0+(x1-x0)*t)}" y="${Math.round(top+60-Math.sin(t*Math.PI)*52)}" width="3" height="3" fill="${c}" opacity="${(.3+i*.07).toFixed(2)}"/>`}return r};
+  const conf=()=>{let r="";for(let i=0;i<70;i++)r+=`<rect x="${(i*53)%560}" y="${(i*29)%100+4}" width="${3+i%3}" height="3" fill="${["#ffd166","#ff5a3c","#4fb3ff","#5fd38d","#f4f1e8"][i%5]}" opacity=".85"/>`;return r};
+  if(kind==="mlb"){s+=crowd(52,["#3a5a4e","#8a2a2a","#d8d2c0"])+`<rect y="76" width="560" height="12" fill="#1d5a36"/><rect y="76" width="560" height="2" fill="#f5c542"/>`+grass(88)+arc(120,400,14,"#f4f1e8")+at(404,22,pixels(BALLMAP,BPAL,4))}
+  if(kind==="october"){for(let x=0;x<560;x+=56)s+=`<path d="M${x} 0a28 18 0 0 0 56 0z" fill="#c8102e"/><path d="M${x+6} 0a22 12 0 0 0 44 0z" fill="#f4f1e8"/><path d="M${x+12} 0a16 7 0 0 0 32 0z" fill="#1d3b8a"/>`;
+    s+=crowd(56,["#ff8a3a","#f4f1e8","#c8102e"])+grass(80)+`<path d="M280 98l40-14 40 14-40 14z" fill="#b9784a"/><rect x="316" y="95" width="8" height="6" fill="#f4f1e8"/>`}
+  if(kind==="nfl"){s+=crowd(54,["#3d4a66","#7a2a2e","#d4b04c"])+grass(78);for(let x=20;x<560;x+=46)s+=`<rect x="${x}" y="78" width="2" height="40" fill="#f4f6f0" opacity=".8"/>`;
+    s+=`<path d="M500 78v-22M486 56h28M486 56v-40M514 56v-40" stroke="#ffcc33" stroke-width="4" fill="none"/>`+arc(140,470,8,"#ffcc33")+at(250,28,pixels(BALLMAP,BPAL,5))}
+  if(kind==="sb"){s+=conf()+`<rect x="226" y="28" width="108" height="50" fill="#141a24" stroke="#ffd166" stroke-width="2"/><text x="280" y="62" text-anchor="middle" fill="#ffd166" font-family="VT323,monospace" font-size="30">FINAL</text>`}
+  if(kind==="college"){s+=crowd(52,["#c8102e","#f4f1e8","#1d3b8a"])+grass(78);[[70,"#c8102e"],[120,"#1d3b8a"],[440,"#d4b04c"],[490,"#1f6a3a"]].forEach(([x,c])=>s+=`<path d="M${x} 20h40l-40 16z" fill="${c}"/><rect x="${x-2}" y="20" width="2" height="54" fill="#d8e2f0"/>`);
+    s+=`<path d="M280 78v-22M262 56h36M262 56v-44M298 56v-44" stroke="#ffcc33" stroke-width="4" fill="none"/>`}
+  if(kind==="nhl"){s+=crowd(44,["#3a4a6e","#8a2a36","#d8dde6"])+`<rect y="68" width="560" height="22" fill="rgba(200,230,255,.12)"/><rect y="90" width="560" height="12" fill="#eef2f6"/><rect y="99" width="560" height="3" fill="#f2c230"/><rect y="102" width="560" height="16" fill="#e9f3fb"/><rect x="180" y="102" width="6" height="16" fill="#1f5fbf"/><rect x="380" y="102" width="6" height="16" fill="#1f5fbf"/><rect x="278" y="102" width="5" height="16" fill="#c8102e"/>`+at(300,105,pixels(BALLMAP,BPAL,2))}
+  if(kind==="cup"){s+=conf()+pixels("..##########..|.############.|.############.|..##########..|...########...|.....####.....|......##......|......##......|.....####.....|....######....|...########...|..##########..",{"#":"#c6cfda"},6).replace(/<rect /g,`<rect transform="translate(238,14)" `)}
+  if(kind==="legends"){s+=`<rect y="10" width="560" height="4" fill="#2a2140"/>`;
+    [["'93","#7a1f3d"],["99","#1f3a7a"],["'61","#4a2a7a"],["4","#6e4a14"],["'27","#7a1f3d"],["12","#1f3a7a"],["'26","#4a2a7a"]].forEach(([t,c],i)=>{const x=34+i*74;
+      s+=`<rect x="${x+19}" y="14" width="2" height="8" fill="#2a2140"/><path d="M${x} 22h40v52l-20 14l-20-14z" fill="${c}" stroke="#ffd166" stroke-width="2"/><text x="${x+20}" y="58" text-anchor="middle" fill="#ffd166" font-family="VT323,monospace" font-size="24">${t}</text>`})}
+  if(kind==="journey"){s+=`<rect x="20" y="18" width="520" height="4" fill="#7d8aa8"/>`;
+    const tee="###..###|########|########|.######.|.##NN##.|.##NN##.|.######.|.######.";
+    ["#c8102e","#1d3b8a","#ffcc33","#1f6a3a","#7a3aa8","#ff8f2e","#e8e2f0"].forEach((c,i)=>{const x=36+i*72;s+=`<path d="M${x+19} 22v-6h4" stroke="#7d8aa8" stroke-width="2" fill="none"/>`+at(x,26,pixels(tee,{"#":c,N:i===6?"#141a24":"#f4f6f8"},5))});
+    s+=`<rect y="104" width="560" height="14" fill="#141c2e"/><rect x="0" y="110" width="560" height="2" fill="#ffd166" opacity=".5"/>`}
+  if(kind==="world"){s+=`<circle cx="280" cy="64" r="44" fill="#0b3a6e" stroke="#5ad1ff" stroke-width="2"/><ellipse cx="280" cy="64" rx="18" ry="44" fill="none" stroke="#5ad1ff" opacity=".6"/><line x1="236" y1="64" x2="324" y2="64" stroke="#5ad1ff" opacity=".6"/><line x1="242" y1="42" x2="318" y2="42" stroke="#5ad1ff" opacity=".4"/><line x1="242" y1="86" x2="318" y2="86" stroke="#5ad1ff" opacity=".4"/>`;
+    [[60,"#ff4a3d"],[110,"#ffd166"],[430,"#5fd38d"],[480,"#4fb3ff"]].forEach(([x,c])=>s+=`<rect x="${x}" y="34" width="2" height="60" fill="#a2adbb"/><rect x="${x+2}" y="34" width="28" height="18" fill="${c}"/>`)}
+  if(kind==="soon"){s+=at(244,26,pixels(BALLMAP,BPAL,8))+`<text x="372" y="80" font-family="VT323,monospace" font-size="56" fill="#a2adbb">?</text>`}
+  return s+"</svg>"}
+const PAGES={
+  archive(){const d=dayNum();let h=head("ARCHIVE","every game, replayable");
+    for(let k=d;k>=1;k--){const r=RUNS["d"+k];h+=`<div class="arow"><span>GAME #${k}<small>${dayDate(k)}${k===d?" · TODAY":""}${r?.late?" · REPLAYED LATE":""}</small></span><b>${r?r.score:"—"}</b><button class="btn2" data-arch="${k}">${r?"VIEW":"PLAY"} ▸</button></div>`}
+    $("#pg").innerHTML=h+`<p class="dim" style="font-size:16px;margin-top:16px">Games you play late show in your archive but don't count towards your streak.</p>`},
+  packs(){let h=head("THEMED PACKS","beyond the daily game");
+    for(const k in PACKS){const pk=PACKS[k],n=P.filter(p=>p.pk===k).length;h+=`<button class="pack" data-pack="${k}">${banner(k)}<div><span class="eyebrow">${pk.tag}</span><h4>${pk.n}</h4><p>${n} prompts · 7 rounds a game · ${pk.d}</p><span class="go">${pk.go}</span></div></button>`}
+    $("#pg").innerHTML=h+`<div class="pack soon">${banner("soon")}<div><span class="eyebrow" style="color:var(--dim)">COMING SOON</span><h4>OMAHA</h4><p>The College World Series is being scouted…</p></div></div>`},
+  stats(){const runs=Object.values(RUNS).filter(r=>r.done),picks=runs.flatMap(r=>r.res),best=runs.reduce((m,r)=>Math.max(m,r.score),0),avg=runs.length?Math.round(runs.reduce((s,r)=>s+r.score,0)/runs.length):0;
+    let bs=0,c=0;for(let k=1;k<=dayNum();k++){if(RUNS["d"+k]?.done&&!RUNS["d"+k].late){c++;bs=Math.max(bs,c)}else c=0}
+    const cnt=[0,1,2,3,4,5,6].map(t=>picks.filter(p=>p.t===t).length),mx=Math.max(1,...cnt);
+    $("#pg").innerHTML=head("MY WALKOFF","your record on this device")+`<div class="stats">
+      <div class="stat"><b>${runs.length}</b><small>PLAYED</small></div><div class="stat"><b>${streak()}</b><small>STREAK</small></div><div class="stat"><b>${bs}</b><small>BEST STREAK</small></div>
+      <div class="stat"><b>${best}</b><small>BEST SCORE</small></div><div class="stat"><b>${avg}</b><small>AVERAGE</small></div><div class="stat"><b>${cnt[6]}</b><small>WALK-OFFS</small></div></div>
+      <h3 class="sec">YOUR FINISHES</h3><div class="tdist">${[6,5,4,3,2,1,0].map(t=>`<div data-t="${t}">${icon(t)}<span>${T[t].n.toUpperCase()}</span><i style="width:${100*cnt[t]/mx}%"></i><span>${cnt[t]}</span></div>`).join("")}</div>
+      ${runs.length?"":`<p class="dim" style="margin-top:18px">No games yet. Your first finish shows up here.</p>`}
+      <div class="btnrow"><button class="btn2" data-go="archive">ARCHIVE ⟲</button><button class="btn2" data-go="">TODAY'S GAME →</button></div>`},
+  faq(){const qa=[["HOW ARE THE ANSWER SETS MADE?","From public baseball records: champions lists, award histories, milestone clubs and official stats, cleaned into one list per prompt. Each prompt says which years it covers."],
+    ["HOW IS RARITY DECIDED?","By hand. Each answer is rated on how often fans are likely to name it. It's an estimate, not live data from other players."],
+    ["WHAT\'S A BUNT?","The go-to \"clever\" pick that isn\'t actually that obscure. It feels sneaky, but the whole infield saw it coming, so it only scores 15."],
+    ["WHAT\'S A WALK-OFF?","Every prompt hides one. It isn\'t always the rarest answer; it\'s the one that\'s most satisfying to hit, and it comes with a bit of trivia."],
+    ["WHY WAS MY ANSWER A FOUL BALL?","It isn\'t on the list for that prompt, or it falls outside the years the prompt covers. You can keep swinging until the clock runs out."],
+    ["WHY DID AUTOCORRECT PICK SOMETHING ELSE?","Answers have nicknames and aliases, so a near-miss can land on one you didn't expect. You always confirm before it counts, or switch corrections off in settings."],
+    ["DOES ANYTHING COST MONEY?","No. Unlimited, the archive and every pack are free."],
+    ["WHERE IS MY PROGRESS SAVED?","On this device, in your browser. Where shared stats are switched on, your first run each game day also joins that day's curve."],
+    ["IS THIS KRILLION?","No. Walkoff is an unofficial game inspired by Krillion's daily format. It isn't affiliated with Krillion, Major League Baseball or any team."]];
+    $("#pg").innerHTML=head("FAQ","the small print")+`<div class="faq">${qa.map(([q,a])=>`<h4>${q}</h4><p>${a}</p>`).join("")}</div><div class="btnrow"><button class="btn2" data-go="">BACK TO THE DIAMOND</button></div>`},
+  party(){KU.setup()}};
+
+// ---------- party mode: pass-and-play ----------
+const KU={players:LS.get("wk1-ku",["PLAYER 1","PLAYER 2"]),
+  setup(){clearTimeout(this.fuse);clearInterval(this.speed);
+    $("#pg").innerHTML=head(PARTY.name,PARTY.sub)+`<p style="font-size:19px;text-align:center;margin:0 0 18px">${PARTY.intro}</p>
+    <div class="sect">WHO'S PLAYING</div><div id="kul">${this.players.map((n,i)=>`<div class="field"><input id="kp${i}" value="${esc(n)}" maxlength="14" aria-label="Player ${i+1} name" data-i="${i}">${this.players.length>2?`<button data-rm="${i}" aria-label="Remove player">×</button>`:""}</div>`).join("")}</div>
+    ${this.players.length<8?`<button class="btn2" id="kuadd" style="width:100%">+ ADD PLAYER</button>`:""}
+    <button class="cta" id="kugo" style="margin-top:14px">${PARTY.go}</button>`;
+    $$("#kul input").forEach(inp=>inp.oninput=()=>{this.players[+inp.dataset.i]=inp.value.toUpperCase();LS.set("wk1-ku",this.players)});
+    $$("#kul [data-rm]").forEach(b=>b.onclick=()=>{this.players.splice(+b.dataset.rm,1);LS.set("wk1-ku",this.players);this.setup()});
+    $("#kuadd")&&($("#kuadd").onclick=()=>{this.players.push("PLAYER "+(this.players.length+1));LS.set("wk1-ku",this.players);this.setup()});
+    $("#kugo").onclick=()=>{SFX.ok();this.names=this.players.map((n,i)=>n.trim()||"PLAYER "+(i+1));this.lt=this.names.map(()=>0);this.cur=0;this.round=0;this.next()}},
+  alive(i){return this.lt[i]<PARTY.lives},
+  next(){this.round++;const pool=P.filter(p=>p.a.length>=12&&p.k!==this.k);this.k=pool[Math.floor(Math.random()*pool.length)].k;this.used=[];this.t0=performance.now();
+    this.len=12000+Math.random()*16000;clearTimeout(this.fuse);this.fuse=setTimeout(()=>this.drop(),this.len);
+    clearInterval(this.speed);this.speed=setInterval(()=>{const k=Math.min(1,(performance.now()-this.t0)/28000);$(".kball")?.style.setProperty("--kt",(.62-.36*k).toFixed(2)+"s")},500);
+    SFX.start();this.draw()},
+  draw(msg=""){const p=P[byK[this.k]],left=this.names.filter((_,i)=>this.alive(i)).length;
+    $("#pg").innerHTML=head(PARTY.name,`round ${this.round} · ${left} still in`)+`<div class="eyebrow">THE PROMPT</div><div class="pq">${esc(p.q)}</div><div class="dim" style="font-size:16px">${esc(p.h)}</div>
+    <div class="ku"><svg class="kball px" viewBox="0 0 6 6">${pixels(BALLMAP,BPAL)}</svg><div class="who">${esc(this.names[this.cur])}</div></div>
+    <div class="fb">${msg}</div><form class="af" id="kf" autocomplete="off"><input id="ki" placeholder="name one, then pass" aria-label="Your answer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"><button class="shoot">PASS</button></form>
+    <div class="sect" style="margin-top:18px">ON THE BOARD</div><div class="chips">${this.used.map(a=>`<span class="chip" data-t="${a.t}" style="border-color:var(--tc)">${esc(a.name)}</span>`).join("")||`<span class="dim" style="font-size:16px">nothing yet</span>`}</div>
+    <div class="sect" style="margin-top:14px">PLAYERS</div><div class="chips">${this.names.map((n,i)=>`<span class="chip ${!this.alive(i)?"out":i===this.cur?"on":""}">${esc(n)}${this.lt[i]&&this.alive(i)?`<b class="hl">${PARTY.mark.repeat(this.lt[i])}</b>`:""}</span>`).join("")}</div>`;
+    $("#ki").focus({preventScroll:true});
+    $("#kf").onsubmit=e=>{e.preventDefault();const v=$("#ki").value.trim();if(!v)return;const m=match(p,v);let a=m.exact||(m.near&&m.near.length===1&&m.conf<=.3?m.near[0]:null);
+      if(!a){SFX.buzz();return this.draw(`<div class="nope">“${esc(v)}”: ${m.near?"which one? add more":m.vague?"too vague":PARTY.miss}. keep it moving!</div>`)}
+      if(this.used.includes(a)){SFX.buzz();return this.draw(`<div class="nope">${esc(a.name)} is already on the board. try another!</div>`)}
+      this.used.push(a);SFX.shot();do{this.cur=(this.cur+1)%this.names.length}while(!this.alive(this.cur));
+      this.draw(a.name!==v&&!m.exact?`<div class="warm">corrected to ${esc(a.name)}</div>`:"")}},
+  drop(){clearInterval(this.speed);const b=$(".kball");if(!b)return;b.classList.add("drop");SFX.horn(.7);SFX.buzz();
+    const out=this.cur;this.lt[out]++;const gone=!this.alive(out),left=this.names.map((_,i)=>this.alive(i)?i:-1).filter(i=>i>=0);
+    $("#ki").disabled=true;
+    setTimeout(()=>{if(left.length===1){burst(innerWidth/2,innerHeight*.35,["#ffd166",getComputedStyle(document.documentElement).getPropertyValue("--blue").trim()||"#fff","#fff"],90,{spread:Math.PI*1.2,speed:11});SFX.cheer(6);
+        $("#pg").innerHTML=head(PARTY.name,"final")+`<div class="rv" data-t="6" style="position:static;transform:none;margin:0 auto">${icon(6,"ico")}<h2>${esc(this.names[left[0]])}</h2><div class="ans">${PARTY.win}</div><p>${esc(this.names[out])} ${PARTY.last}</p></div><div class="btnrow"><button class="cta" id="kuagain" style="max-width:320px">► RUN IT BACK ◄</button></div>`;
+        $("#kuagain").onclick=()=>this.setup()}
+      else{const f=$("#pg .fb");f.innerHTML=`<div class="nope">${gone?PARTY.out(esc(this.names[out])):PARTY.lose(esc(this.names[out]),this.lt[out])}</div>`;
+        const btn=document.createElement("button");btn.className="cta";btn.style.marginTop="12px";btn.textContent="► NEXT ROUND ◄";btn.onclick=()=>{do{this.cur=(this.cur+1)%this.names.length}while(!this.alive(this.cur));this.next()};$("#kf").replaceWith(btn);btn.focus()}},900)}
+};
+
+// ---------- boot ----------
+$("#partyball").innerHTML=`<g transform="translate(1,1)">${pixels(BALLMAP,BPAL)}</g>`;
+applySet();SC.build();
+let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{SC.build();if(!location.hash.slice(1))renderHome();else SC.setCam(SC.camFor(SC.px))},150)});
+addEventListener("pointerdown",()=>SFX.ok(),{once:true});
+addEventListener("hashchange",route);
+route();
+</script>
+</body>
+</html>
