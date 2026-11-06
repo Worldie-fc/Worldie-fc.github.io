@@ -228,6 +228,7 @@ h3.sec small{font-size:15px;color:var(--dim);margin-left:8px}
 html.low .star,html.low .crowd,html.low .logo,html.low .lamp,html.low .beam,html.low #ball{animation:none}
 @media (max-width:440px){.hud{padding-inline:50px;gap:6px}.hb{min-width:62px;padding-inline:6px}.hb b{font-size:24px}.hc small{letter-spacing:.08em}.scout div{grid-template-columns:22px 70px 1fr}
   .dockrow{flex-direction:column;align-items:stretch;text-align:center}.links{justify-content:space-between}.mini{padding:4px 6px;font-size:14px;letter-spacing:.06em}}
+@media (max-width:700px){.rhead{padding-right:38px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -305,6 +306,8 @@ html.low .star,html.low .crowd,html.low .logo,html.low .lamp,html.low .beam,html
       <button class="tile" data-act="settings"><b>⚙&#xFE0E;</b>SETTINGS</button>
       <button class="tile" data-go="faq"><b>?</b>FAQ</button>
     </div>
+    <div class="sect" style="margin-top:16px">MORE GAMES</div>
+    <div class="tiles"><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/"><b>WORLDIE</b>SOCCER</a><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/walkoff/"><b>WALKOFF</b>BASEBALL</a><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/hailmary/"><b>HAIL MARY</b>FOOTBALL</a><a class="tile" style="text-decoration:none" href="https://worldie-fc.github.io/hattrick/"><b>HAT TRICK</b>HOCKEY</a></div>
     <div class="mfoot">find the buzzer-beater.</div>
   </div>
 </div>
@@ -595,7 +598,7 @@ const KNOWN=new Set([...P.flatMap(p=>p.a.flatMap(a=>a.keys)),...("trae young|ang
   "vancouver|seattle|buffalo braves|kansas city kings|new jersey|bobcats|supersonics|toronto tempo|portland fire|seattle storm|atlanta dream").split("|").map(norm)]);
 const STOP=new Set("the new los angeles san saint city state university college of at and de la le el van der von north south east west team club".split(" "));
 // "Texas" is a school of its own, not shorthand for "Texas Western"
-const QUAL=/\b(state|tech|western|eastern|northern|southern|central|commonwealth|dominion|a and m)\b/;
+const QUAL=/\b(state|tech|western|eastern|northern|southern|central|commonwealth|dominion|christian|west|a and m)\b/;
 // exact: counts. near: correction preview. vague: too generic. {}: not an answer.
 function match(p,guess){
   const g=norm(guess);if(!g)return{};
