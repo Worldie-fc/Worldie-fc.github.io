@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Worldie: a daily football rarity game. Seven prompts, 25 seconds each. The rarer your answer, the farther you run.">
+<meta name="theme-color" content="#050a14">
+<meta property="og:title" content="Worldie">
+<meta property="og:description" content="The daily football deep cut. Seven prompts, 25 seconds each. Find the worldie.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6' shape-rendering='crispEdges'%3E%3Crect width='6' height='6' fill='%23050a14'/%3E%3Cpath d='M1 0h4v1H1zM0 1h6v4H0zM1 5h4v1H1z' fill='%23f4f8ff'/%3E%3Cpath d='M2 1h1v1H2zM1 2h3v1H1zM2 3h1v1H2zM4 4h1v1H4z' fill='%230a0f1c'/%3E%3C/svg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Worldie · Deep Cuts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap">
+<style>
+/* Layout: a full-bleed floodlit pixel stadium (SVG) sits behind every screen; a centred CRT-style UI column swaps over the same pitch. Single dark look by design. */
+:root{
+  --bg:#050a14; --panel:#0d1830; --panel2:#101d33; --edge:#22345a; --text:#e8f1ff; --dim:#7d93b8;
+  --cyan:#4de3ff; --pink:#ff4f8b; --amber:#ffb347; --gold:#ffd166; --red:#ff5d6c;
+  --t0:#4a5a78; --t1:#8fa3b8; --t2:#f29a4a; --t3:#5fd38d; --t4:#4de3ff; --t5:#b58cf0; --t6:#ffd166;
+  --pix:"Silkscreen","VT323",ui-monospace,monospace; --mono:"VT323",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html.cb{--dim:#b4c7e6; --t1:#ffffff; --t2:#e69f00; --t3:#2fd39f; --t4:#56b4e9; --t5:#e48ad0; --t6:#f0e442}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:20px/1.25 var(--mono);overflow:hidden}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.5))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+[data-t="0"]{--tc:var(--t0)}[data-t="1"]{--tc:var(--t1)}[data-t="2"]{--tc:var(--t2)}[data-t="3"]{--tc:var(--t3)}[data-t="4"]{--tc:var(--t4)}[data-t="5"]{--tc:var(--t5)}[data-t="6"]{--tc:var(--t6)}
+.px{shape-rendering:crispEdges;image-rendering:pixelated}
+
+/* scene */
+#scn{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+.star{animation:tw 3s steps(2,end) infinite}
+.crowd{animation:crowd 1.6s steps(2,end) infinite}
+.lamp{animation:lampOn 1.4s steps(1,end) .2s backwards}
+@keyframes tw{50%{opacity:.2}}
+@keyframes crowd{50%{transform:translateY(1px)}}
+@keyframes lampOn{0%{opacity:.1}12%{opacity:1}18%{opacity:.2}30%{opacity:1}36%{opacity:.4}50%{opacity:1}}
+#pl .fA{animation:fA .26s steps(1,end) infinite}#pl .fB{animation:fB .26s steps(1,end) infinite}
+#pl:not(.run) .fB{display:none}#pl:not(.run) .fA{animation:bob 1.2s steps(2,end) infinite}
+@keyframes fA{50%{opacity:0}}@keyframes fB{0%{opacity:0}50%{opacity:1}}@keyframes bob{50%{transform:translateY(-1px)}}
+#pl.run #ball{animation:dribble .26s ease-in-out infinite alternate}
+@keyframes dribble{to{transform:translate(4px,-3px)}}
+.mk{animation:mkIn .35s ease-out backwards}
+@keyframes mkIn{from{opacity:0;transform:translateY(8px)}}
+
+/* chrome */
+.scr{position:fixed;inset:0;z-index:5;display:none}
+.scr.on{display:block}
+.page{overflow-y:auto;background:rgba(5,10,20,.95);-webkit-overflow-scrolling:touch}
+.col{max-width:620px;margin:0 auto;padding:calc(62px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(48px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.ic{width:36px;height:36px;background:var(--panel2);border:2px solid var(--edge);color:var(--dim);display:grid;place-items:center;font-size:22px;padding:0}
+.ic:hover{color:var(--text);border-color:var(--dim)}
+#mb{position:fixed;z-index:40;top:calc(10px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px))}
+.tr{position:fixed;z-index:40;top:calc(10px + env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));display:grid;gap:6px}
+.logo{font-family:var(--pix);font-weight:700;color:#fff;letter-spacing:.05em;line-height:1;margin:0;text-shadow:3px 0 0 var(--pink),-3px 0 0 var(--cyan),0 0 24px rgba(255,79,139,.35);animation:glitch 6s steps(1,end) infinite}
+@keyframes glitch{0%,92%,100%{text-shadow:3px 0 0 var(--pink),-3px 0 0 var(--cyan),0 0 24px rgba(255,79,139,.35)}93%{text-shadow:-4px 1px 0 var(--pink),5px -1px 0 var(--cyan),0 0 24px rgba(255,79,139,.35)}95%{text-shadow:6px 0 0 var(--pink),-2px 0 0 var(--cyan),0 0 24px rgba(255,79,139,.35)}}
+.logo.sm{font-size:22px;text-shadow:2px 0 0 var(--pink),-2px 0 0 var(--cyan);animation:none}
+.eyebrow{font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--amber)}
+.dim{color:var(--dim)}
+
+/* home */
+.hero{position:absolute;left:0;right:0;top:calc(13vh + env(safe-area-inset-top,0px));text-align:center;padding-inline:16px;pointer-events:none}
+.hero .logo{font-size:clamp(44px,12vw,96px)}
+.tagline{margin-top:18px;color:var(--cyan);font-size:clamp(20px,4.4vw,30px);letter-spacing:.32em;text-shadow:0 2px 0 rgba(5,10,20,.5),0 0 12px rgba(77,227,255,.5)}
+.sub{margin-top:10px;color:var(--text);opacity:.8;font-size:clamp(17px,3.6vw,21px);letter-spacing:.06em;text-shadow:0 1px 0 #000}
+.dock{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(480px,calc(100% - 32px));display:grid;gap:10px}
+.howto{background:rgba(5,10,20,.78);border:1px solid var(--edge);padding:4px 12px}
+.howto summary{cursor:pointer;font-size:15px;letter-spacing:.2em;color:var(--dim);list-style:none;padding:4px 0}
+.howto summary::-webkit-details-marker{display:none}
+.howto ol{margin:4px 0 8px;padding:0;list-style:none;display:grid;gap:4px;font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.party{position:relative;display:flex;align-items:center;gap:12px;width:100%;background:var(--panel);border:2px solid var(--cyan);padding:14px 14px 10px;text-align:left;font-size:24px;letter-spacing:.16em}
+.party .tag{position:absolute;top:-10px;left:12px;background:var(--cyan);color:var(--bg);font-size:13px;letter-spacing:.12em;padding:0 6px}
+.party small{margin-left:auto;font-size:14px;color:var(--dim);letter-spacing:.08em}
+.cta{display:block;width:100%;background:var(--panel2);border:2px solid var(--cyan);box-shadow:inset 0 0 0 2px var(--bg),0 0 20px rgba(77,227,255,.22);font-size:clamp(24px,5vw,30px);letter-spacing:.16em;padding:14px 10px;transition:box-shadow .2s,transform .12s}
+.cta:hover{box-shadow:inset 0 0 0 2px var(--bg),0 0 30px rgba(77,227,255,.45)}
+.cta:active{transform:translateY(1px)}
+.cta.pink{border-color:var(--pink);background:var(--pink);color:var(--bg);box-shadow:0 0 22px rgba(255,79,139,.3)}
+.dockrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px;letter-spacing:.14em;color:var(--dim)}
+.mini{background:var(--panel);border:1px solid var(--edge);color:var(--dim);font-size:15px;letter-spacing:.12em;padding:4px 10px}
+.mini:hover{color:var(--text);border-color:var(--dim)}
+.links{display:flex;gap:6px;flex-wrap:wrap}
+
+/* modals */
+.modal{position:fixed;inset:0;z-index:70;background:rgba(2,5,10,.8);display:grid;place-items:center;padding:16px;animation:fadeIn .18s ease-out}
+.mbox{position:relative;width:min(380px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--panel);border:2px solid var(--edge);box-shadow:0 0 34px rgba(77,227,255,.14);padding:18px}
+.mbox .x{position:absolute;top:12px;right:12px}
+.mtitle{font-family:var(--pix);font-weight:700;font-size:26px;color:#fff;margin:2px 0 14px;text-shadow:2px 0 0 var(--pink),-2px 0 0 var(--cyan)}
+.sect{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:.2em;color:var(--dim);margin:6px 0 10px}
+.sect::after{content:"";flex:1;border-top:1px solid var(--edge)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--panel2);border:2px solid var(--edge);padding:12px 6px 10px;display:grid;justify-items:center;gap:6px;font-size:16px;letter-spacing:.14em;color:var(--dim)}
+.tile b{font-weight:400;font-size:22px;color:var(--text);line-height:1}
+.tile:hover,.tile.cur{border-color:var(--pink);color:var(--pink)}
+.mfoot{margin-top:14px;padding-top:10px;border-top:1px solid var(--edge);font-size:14px;color:var(--dim);letter-spacing:.08em}
+.opt{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--edge)}
+.opt b{font-weight:400;font-size:18px;letter-spacing:.12em}
+.opt span{grid-column:1;font-size:15px;color:var(--dim)}
+.sw{grid-row:1 / span 2;grid-column:2;width:62px;height:28px;background:var(--bg);border:2px solid var(--edge);padding:2px;display:flex}
+.sw i{width:50%;display:grid;place-items:center;font-style:normal;font-size:13px;background:var(--edge);color:var(--dim);transition:transform .15s}
+.sw[aria-checked="true"]{border-color:var(--cyan)}
+.sw[aria-checked="true"] i{transform:translateX(100%);background:var(--cyan);color:var(--bg)}
+@keyframes fadeIn{from{opacity:0}}
+</style>
+<style>
+/* game */
+.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;align-items:flex-start;gap:clamp(8px,7vw,110px);padding:calc(6px + env(safe-area-inset-top,0px)) 56px 0;pointer-events:none}
+.hb{min-width:78px;background:rgba(5,10,20,.72);border:1px solid var(--edge);padding:1px 10px 3px}
+.hb small,.hc small{display:block;font-size:13px;letter-spacing:.2em;color:var(--dim);white-space:nowrap}
+.hb b{font-weight:400;font-size:28px;line-height:1;color:var(--amber);font-variant-numeric:tabular-nums}
+.hb.r{text-align:right}.hb.r b{color:var(--pink)}
+.hc{text-align:center;padding-top:6px}
+.sqs{display:flex;gap:3px;justify-content:center;margin-bottom:3px}
+.sqs i{width:11px;height:11px;background:var(--edge);display:block}
+.sqs i.cur{background:var(--pink);animation:tw 1s steps(2,end) infinite}
+.sqs i[data-t]{background:var(--tc)}
+.pp{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));background:rgba(8,14,28,.84);border:1px solid var(--edge);padding:10px 16px 12px;animation:ppIn .35s ease-out}
+.pq{font-size:clamp(26px,5.6vw,38px);line-height:1.05;margin:6px 0 6px;text-wrap:balance}
+.pph{font-size:15px;color:var(--dim);letter-spacing:.1em}
+@keyframes ppIn{from{opacity:0;transform:translate(-50%,-8px)}}
+.bar{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(540px,calc(100% - 24px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.fb{min-height:30px;display:grid;align-items:end;justify-items:center;margin-bottom:8px}
+.fb>*{animation:ppIn2 .25s ease-out}
+@keyframes ppIn2{from{opacity:0;transform:translateY(6px)}}
+.warm{font-size:18px;letter-spacing:.14em;color:var(--dim);background:rgba(5,10,20,.75);padding:2px 10px}
+.nope{font-size:19px;color:var(--pink);background:rgba(5,10,20,.8);padding:2px 10px;text-align:center}
+.fix{background:rgba(13,24,48,.95);border:1px solid var(--amber);padding:6px 12px;text-align:center;font-size:19px}
+.fix .to{color:var(--amber)}
+.fix small{display:block;font-size:15px;color:var(--dim);letter-spacing:.08em}
+.fix .opts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.fix .opts button{background:var(--amber);color:var(--bg);border:0;padding:3px 10px;font-size:18px}
+form.af{display:flex;gap:8px;align-items:center}
+.dial{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--amber) calc(var(--f,1)*360deg),rgba(255,179,71,.12) 0);position:relative}
+.dial::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 1px rgba(255,179,71,.35)}
+.dial span{position:relative;font-size:24px;color:var(--amber);font-variant-numeric:tabular-nums}
+.dial.low span{color:var(--pink);animation:tw .5s steps(2,end) infinite}
+.af input{flex:1;min-width:0;height:52px;background:rgba(5,10,20,.92);border:2px solid var(--amber);color:var(--text);font:26px var(--mono);padding:0 12px}
+.af input:disabled{opacity:.55}
+.af input::placeholder{color:var(--dim)}
+.shoot{height:52px;background:var(--amber);color:var(--bg);border:0;font-size:22px;letter-spacing:.12em;padding:0 16px}
+.shoot:disabled{opacity:.5}
+.tbar{height:3px;background:rgba(255,179,71,.18);margin:6px 0 0 60px}
+.tbar i{display:block;height:100%;background:var(--amber);transform-origin:left;transform:scaleX(var(--f,1))}
+.rv{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(420px,calc(100% - 32px));background:rgba(5,10,20,.9);border:1px solid var(--tc);box-shadow:0 0 34px -6px var(--tc);padding:16px 16px 14px;text-align:center;animation:rvIn .4s cubic-bezier(.34,1.56,.64,1)}
+.rv .ico{width:52px;height:52px;margin:0 auto 6px;filter:drop-shadow(0 0 10px var(--tc))}
+.rv h2{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(22px,6vw,32px);letter-spacing:.12em;color:var(--tc);text-transform:uppercase}
+.rv .ans{font-size:24px;margin:8px 0 4px}
+.rv .pts{font-size:22px}.rv .pts b{font-weight:400;color:var(--tc)}
+.rv p{margin:8px 0 0;font-size:16px;color:var(--dim);letter-spacing:.04em}
+@keyframes rvIn{from{opacity:0;transform:translate(-50%,10px) scale(.94)}}
+.next{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);min-width:220px;background:var(--panel2);border:2px solid var(--pink);font-size:24px;letter-spacing:.16em;padding:10px 22px;animation:ppIn2 .3s ease-out .2s backwards}
+.next:hover{box-shadow:0 0 20px rgba(255,79,139,.35)}
+.lbl{font:16px var(--mono);letter-spacing:.12em}
+
+/* results and pages */
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:15px;letter-spacing:.18em;color:var(--dim)}
+.big{display:flex;align-items:baseline;gap:10px;margin:16px 0 4px;flex-wrap:wrap}
+.big b{font-family:var(--pix);font-size:clamp(60px,16vw,86px);line-height:.9;font-weight:400;font-variant-numeric:tabular-nums}
+.big span{color:var(--dim);font-size:22px}.big em{font-style:normal;color:var(--cyan);font-size:22px}
+.chart{display:block;width:100%;height:auto;overflow:visible}
+.cy{color:var(--cyan);font-size:18px;letter-spacing:.12em;margin:6px 0 4px}
+h3.sec{font-weight:400;font-size:17px;letter-spacing:.2em;margin:30px 0 10px;color:var(--text)}
+h3.sec small{font-size:15px;color:var(--dim);margin-left:8px}
+.scout{display:grid;gap:0}
+.scout div{display:grid;grid-template-columns:26px 82px 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--edge);font-size:17px;color:var(--dim)}
+.scout div.me{color:var(--text)}.scout div.me b{color:var(--tc)}
+.scout b{font-weight:400;font-variant-numeric:tabular-nums}
+.copyrow{display:flex;gap:8px;margin-top:22px}
+.box{border-top:1px solid var(--edge)}
+.brow{width:100%;display:grid;grid-template-columns:20px 24px 1fr auto 16px;gap:8px;align-items:center;background:none;border:0;border-bottom:1px solid var(--edge);padding:9px 0;text-align:left}
+.brow small{display:block;font-size:14px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.brow span.a{font-size:21px}
+.brow .p{color:var(--tc);font-size:20px;font-variant-numeric:tabular-nums}
+.all{margin:0;padding:4px 0 8px 52px;list-style:none;display:grid;gap:2px;border-bottom:1px solid var(--edge)}
+.all li{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;font-size:18px}
+.all li.me{background:rgba(77,227,255,.08)}
+.all li em{font-style:normal;color:var(--cyan);font-size:14px;margin-left:6px}
+.all li b{font-weight:400;color:var(--tc);font-size:16px}
+.ph{text-align:center;margin-bottom:22px}
+.ph .logo{font-size:clamp(34px,9vw,52px)}
+.ph p{margin:10px 0 0;color:var(--dim);letter-spacing:.14em;font-size:17px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+.btn2{background:var(--panel);border:1px solid var(--edge);font-size:17px;letter-spacing:.14em;padding:8px 14px;color:var(--text)}
+.btn2:hover{border-color:var(--cyan)}
+.pack{display:block;width:100%;text-align:left;background:var(--panel);border:2px solid var(--edge);padding:0;margin-bottom:14px}
+.pack:hover{border-color:var(--cyan)}
+.pack svg{display:block;width:100%;height:118px}
+.pack div{padding:10px 14px 12px}
+.pack h4{margin:0;font-family:var(--pix);font-weight:400;font-size:20px;letter-spacing:.06em}
+.pack p{margin:4px 0 8px;font-size:16px;color:var(--dim)}
+.pack .go{display:block;text-align:right;font-size:16px;letter-spacing:.16em;color:var(--amber)}
+.pack.soon{opacity:.6;cursor:default}
+.arow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--edge);font-size:19px}
+.arow small{display:block;font-size:14px;color:var(--dim);letter-spacing:.1em}
+.arow b{font-weight:400;color:var(--pink);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border:1px solid var(--edge);padding:10px;text-align:center}
+.stat b{display:block;font-family:var(--pix);font-weight:400;font-size:26px;color:var(--cyan)}
+.stat small{font-size:14px;letter-spacing:.14em;color:var(--dim)}
+.tdist{display:grid;gap:6px}
+.tdist div{display:grid;grid-template-columns:24px 110px 1fr 34px;gap:8px;align-items:center;font-size:16px}
+.tdist i{display:block;height:10px;background:var(--tc);min-width:2px}
+.faq h4{margin:22px 0 6px;font-weight:400;font-size:19px;letter-spacing:.14em;color:var(--cyan)}
+.faq p{margin:0;font-size:19px;line-height:1.35;color:var(--text);opacity:.9}
+.field{display:flex;gap:6px;margin-bottom:6px}
+.field input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--edge);color:var(--text);font:22px var(--mono);padding:6px 10px}
+.field button{background:var(--panel2);border:1px solid var(--edge);color:var(--dim);padding:0 12px}
+.ku{position:relative;height:150px;margin:6px 0 10px}
+.ku .kball{position:absolute;left:50%;top:0;width:34px;height:34px;margin-left:-17px;animation:keepy var(--kt,.7s) cubic-bezier(.5,0,.5,1) infinite alternate}
+@keyframes keepy{to{transform:translateY(78px)}}
+.ku .kball.drop{animation:drop .7s cubic-bezier(.5,0,1,1) forwards}
+@keyframes drop{to{transform:translateY(118px) rotate(90deg);opacity:.4}}
+.ku .who{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:30px;letter-spacing:.12em;color:var(--amber)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--edge);background:var(--panel);padding:2px 8px;font-size:17px}
+.chip.out{opacity:.45;text-decoration:line-through}
+.chip.on{border-color:var(--amber);color:var(--amber)}
+.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+html.low .star,html.low .crowd,html.low .logo,html.low .lamp{animation:none}
+@media (max-width:440px){.hud{padding-inline:50px;gap:6px}.hb{min-width:62px;padding-inline:6px}.hb b{font-size:24px}.hc small{letter-spacing:.08em}.scout div{grid-template-columns:22px 70px 1fr}
+  .dockrow{flex-direction:column;align-items:stretch;text-align:center}.links{justify-content:space-between}.mini{padding:4px 6px;font-size:14px;letter-spacing:.06em}}
+@media (max-width:700px){.rhead{padding-right:38px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Deep Cuts">
+<style>
+/* Deep Cuts switcher: jump between the five games or back to the hub */
+.dcbar{position:absolute;z-index:41;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:2px;background:rgba(0,0,0,.62);border:1px solid var(--edge)}
+.dcbar a{width:34px;height:34px;display:grid;place-items:center;border:1px solid transparent;opacity:.7;transition:opacity .15s}
+.dcbar a:hover,.dcbar a:focus-visible{opacity:1;background:var(--panel2)}
+.dcbar a:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.dcbar a.on{opacity:1;border-color:var(--blue,var(--cyan));background:var(--panel2)}
+.dcbar .dch{opacity:1}
+.dcbar i{width:1px;height:22px;background:var(--edge);margin:0 3px}
+.dcbar svg{width:20px;height:20px;display:block}
+.dcbar .dch svg{width:24px;height:18px}
+@media (max-width:359px){.dcbar a{width:30px;height:30px}.dcbar svg{width:17px;height:17px}.dcbar .dch svg{width:20px;height:15px}}
+</style>
+</head>
+<body>
+<svg id="scn" class="px" aria-hidden="true"></svg>
+<canvas id="fx" class="fx" aria-hidden="true" hidden></canvas>
+
+<button class="ic" id="mb" aria-label="Open menu">☰</button>
+<div class="tr">
+  <button class="ic" id="snd" aria-label="Mute sound">♪</button>
+  <button class="ic" id="gear" aria-label="Open settings">⚙&#xFE0E;</button>
+</div>
+
+<section class="scr" id="home">
+  <nav class="dcbar" aria-label="Deep Cuts games"><a href="/" class="dch" title="Deep Cuts: all games" aria-label="Deep Cuts: all games"><svg class="px" viewBox="0 0 16 12" aria-hidden="true"><path fill="#3a2405" d="M4 0h8v1h-8zM3 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM0 4h16v1h-16zM1 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM13 6h1v1h-1zM3 7h1v1h-1zM12 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM5 9h1v1h-1zM10 9h1v1h-1zM6 10h1v1h-1zM9 10h1v1h-1zM7 11h2v1h-2z"/><path fill="#ffe39a" d="M4 1h2v1h-2zM3 2h3v1h-3zM2 3h4v1h-4z"/><path fill="#fff6da" d="M7 1h3v1h-3zM6 2h4v1h-4zM6 3h4v1h-4z"/><path fill="#f5c04a" d="M10 1h2v1h-2zM10 2h3v1h-3zM10 3h4v1h-4z"/><path fill="#ffffff" d="M6 1h1v1h-1z"/><path fill="#f0a92e" d="M2 5h6v1h-6zM3 6h5v1h-5zM4 7h4v1h-4zM5 8h3v1h-3zM6 9h2v1h-2zM7 10h1v1h-1z"/><path fill="#c27a12" d="M8 5h6v1h-6zM8 6h5v1h-5zM8 7h4v1h-4zM8 8h3v1h-3zM8 9h2v1h-2zM8 10h1v1h-1z"/></svg></a><i></i><a href="/worldie/" class="on" aria-current="page" title="Worldie · soccer" aria-label="Worldie, soccer"><svg class="px" viewBox="0 0 6 6" aria-hidden="true"><path fill="#f4f8ff" d="M1 0h4v1h-4zM0 1h2v1h-2zM3 1h3v1h-3zM0 2h1v1h-1zM4 2h2v1h-2zM0 3h2v1h-2zM3 3h3v1h-3zM0 4h4v1h-4zM5 4h1v1h-1zM1 5h4v1h-4z"/><path fill="#0a0f1c" d="M2 1h1v1h-1zM1 2h3v1h-3zM2 3h1v1h-1zM4 4h1v1h-1z"/></svg></a><a href="/buzzer/" title="Buzzer · basketball" aria-label="Buzzer, basketball"><svg class="px" viewBox="0 0 6 6" aria-hidden="true"><path fill="#ff8a2a" d="M1 0h4v1h-4zM0 1h1v1h-1zM2 1h1v1h-1zM4 1h2v1h-2zM0 2h3v1h-3zM4 2h2v1h-2zM0 4h3v1h-3zM4 4h2v1h-2zM1 5h2v1h-2zM4 5h1v1h-1z"/><path fill="#ffc285" d="M1 1h1v1h-1z"/><path fill="#3a1d0e" d="M3 1h1v1h-1zM3 2h1v1h-1zM0 3h6v1h-6zM3 4h1v1h-1zM3 5h1v1h-1z"/></svg></a><a href="/walkoff/" title="Walkoff · baseball" aria-label="Walkoff, baseball"><svg class="px" viewBox="0 0 6 6" aria-hidden="true"><path fill="#f4f1e8" d="M1 0h4v1h-4zM1 1h4v1h-4zM0 2h1v1h-1zM2 2h2v1h-2zM5 2h1v1h-1zM0 3h1v1h-1zM2 3h2v1h-2zM5 3h1v1h-1zM1 4h4v1h-4zM1 5h4v1h-4z"/><path fill="#d8342c" d="M0 1h1v1h-1zM5 1h1v1h-1zM1 2h1v1h-1zM4 2h1v1h-1zM1 3h1v1h-1zM4 3h1v1h-1zM0 4h1v1h-1zM5 4h1v1h-1z"/></svg></a><a href="/hailmary/" title="Hail Mary · football" aria-label="Hail Mary, football"><svg class="px" viewBox="0 0 6 6" aria-hidden="true"><path fill="#8a4a22" d="M1 1h4v1h-4zM0 2h1v1h-1zM2 2h1v1h-1zM4 2h2v1h-2zM0 3h6v1h-6zM1 4h4v1h-4z"/><path fill="#f4f1e8" d="M1 2h1v1h-1zM3 2h1v1h-1z"/></svg></a><a href="/hattrick/" title="Hat Trick · hockey" aria-label="Hat Trick, hockey"><svg class="px" viewBox="0 0 6 6" aria-hidden="true"><path fill="#2b313c" d="M1 2h4v1h-4zM1 3h4v1h-4z"/><path fill="#c3ccd8" d="M1 1h4v1h-4zM0 2h1v1h-1zM5 2h1v1h-1z"/><path fill="#14181f" d="M0 3h1v1h-1zM5 3h1v1h-1zM1 4h4v1h-4z"/></svg></a></nav>
+  <div class="hero">
+    <h1 class="logo">WORLDIE</h1>
+    <div class="tagline">THE DAILY RUN</div>
+    <div class="sub">7 prompts · 25 seconds each · rarer answers run farther</div>
+  </div>
+  <div class="dock">
+    <details class="howto">
+      <summary>► HOW TO PLAY</summary>
+      <ol>
+        <li>7 prompts a day. Same for everyone.</li>
+        <li>25 seconds to name one thing.</li>
+        <li>Rare answers score big. Obvious ones are tap-ins.</li>
+        <li>The pick that feels clever? Half the stadium had it too.</li>
+        <li>Every point carries the ball 15 cm. 700 is the back of the net.</li>
+        <li>One match per day. No replays.</li>
+      </ol>
+    </details>
+    <button class="party" data-go="party"><span class="tag">BETA · PASS &amp; PLAY</span><svg width="30" height="30" viewBox="0 0 8 8" class="px" id="partyball"></svg>KEEPY-UPPY<small>2–8 players</small></button>
+    <button class="cta" id="kick">► KICK OFF ◄</button>
+    <div class="dockrow"><span id="mdinfo">MATCHDAY #1 · STREAK 0</span>
+      <span class="links"><button class="mini" data-go="archive">ARCHIVE ⟲</button><button class="mini" data-go="packs">THEMED PACKS</button><button class="mini" data-go="unlimited">UNLIMITED ∞</button></span></div>
+  </div>
+</section>
+
+<section class="scr" id="game">
+  <div class="hud">
+    <div class="hb"><small>METRES</small><b id="hm">0.0</b></div>
+    <div class="hc"><div class="sqs" id="sq"></div><small id="hr">ROUND 1 OF 7</small></div>
+    <div class="hb r"><small>SCORE</small><b id="hs">0</b></div>
+  </div>
+  <div class="pp" id="pp"><div class="eyebrow" id="ppr">ROUND 1 OF 7</div><div class="pq" id="ppq"></div><div class="pph">► rarer answers run farther ►</div></div>
+  <div class="rv" id="rv" hidden></div>
+  <div class="bar" id="bar">
+    <div class="fb" id="fb" aria-live="polite"></div>
+    <form class="af" id="af" autocomplete="off">
+      <div class="dial" id="dial"><span id="dn">25</span></div>
+      <input id="ai" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="type one answer…" aria-label="Your answer">
+      <button class="shoot" id="shoot">SHOOT</button>
+    </form>
+    <div class="tbar"><i id="tb"></i></div>
+  </div>
+  <button class="next" id="next" hidden>PLAY ON →</button>
+</section>
+
+<section class="scr page" id="results"><div class="col" id="rcol"></div></section>
+<section class="scr page" id="page"><div class="col" id="pg"></div></section>
+
+<div class="modal" id="menu" hidden>
+  <div class="mbox" role="dialog" aria-label="Menu">
+    <button class="ic x" data-close aria-label="Close menu">X</button>
+    <div class="eyebrow" style="color:var(--cyan)">WORLDIE</div>
+    <div class="mtitle">MENU</div>
+    <div class="sect">KICK OFF</div>
+    <div class="tiles">
+      <button class="tile" data-go="home"><b>▼</b>DAILY RUN</button>
+      <button class="tile" data-go="unlimited"><b>∞</b>UNLIMITED</button>
+      <button class="tile" data-go="party"><b>◉</b>KEEPY-UPPY</button>
+      <button class="tile" data-go="archive"><b>⟲</b>ARCHIVE</button>
+      <button class="tile" data-go="packs"><b>▦</b>THEMED PACKS</button>
+      <button class="tile" data-go="stats"><b>☻</b>MY WORLDIE</button>
+      <button class="tile" data-act="settings"><b>⚙&#xFE0E;</b>SETTINGS</button>
+      <button class="tile" data-go="faq"><b>?</b>FAQ</button>
+    </div>
+    <div class="sect" style="margin-top:16px">DEEP CUTS</div>
+    <div class="tiles"><a class="tile" style="text-decoration:none;grid-column:1/-1" href="/"><b>◆ ALL GAMES</b>DEEP CUTS HOME</a><a class="tile" style="text-decoration:none" href="/buzzer/"><b>BUZZER</b>BASKETBALL</a><a class="tile" style="text-decoration:none" href="/walkoff/"><b>WALKOFF</b>BASEBALL</a><a class="tile" style="text-decoration:none" href="/hailmary/"><b>HAIL MARY</b>FOOTBALL</a><a class="tile" style="text-decoration:none" href="/hattrick/"><b>HAT TRICK</b>HOCKEY</a></div>
+    <div class="mfoot">find the worldie.</div>
+  </div>
+</div>
+
+<div class="modal" id="set" hidden>
+  <div class="mbox" role="dialog" aria-label="Settings">
+    <button class="ic x" data-close aria-label="Close settings">X</button>
+    <div class="mtitle">SETTINGS</div>
+    <div class="opt"><b>SOUND</b><span>Whistles, kicks and the crowd.</span><button class="sw" role="switch" data-k="snd" aria-label="Sound"><i>OFF</i></button></div>
+    <div class="opt"><b>LOW-POWER MODE</b><span>Lighter graphics and fewer background animations.</span><button class="sw" role="switch" data-k="low" aria-label="Low-power mode"><i>OFF</i></button></div>
+    <div class="opt"><b>COLORBLIND MODE</b><span>Brighter text and more separated tier colors.</span><button class="sw" role="switch" data-k="cb" aria-label="Colorblind mode"><i>OFF</i></button></div>
+    <div class="opt"><b>ANSWER CORRECTIONS</b><span>Preview corrected answers before scoring. Off accepts them immediately.</span><button class="sw" role="switch" data-k="corr" aria-label="Answer corrections"><i>OFF</i></button></div>
+    <div class="opt"><b>CLEAR REJECTED ENTRIES</b><span>Empty the answer box after an offside.</span><button class="sw" role="switch" data-k="clr" aria-label="Clear rejected entries"><i>OFF</i></button></div>
+    <div class="btnrow"><button class="btn2" data-go="stats">MY WORLDIE →</button><button class="btn2" data-go="faq">FAQ</button></div>
+  </div>
+</div>
+<script>
+// Answer sets. "Name|rarity 1-5|aliases". "*" marks the worldie (one per prompt), "~" marks a Panenka: the "clever" pick that isn't.
+const RAW=[
+ {k:"cl",pk:"club",q:"Name a club that has won the European Cup or Champions League",h:"Winners through 2026",f:"Red Star beat Marseille on penalties in the 1991 final in Bari.",a:
+ "Real Madrid|1;AC Milan|1|milan;Bayern Munich|1|bayern,bayern munchen,fc bayern;Liverpool|1;Barcelona|1|barca;Manchester United|1|man utd,man united,man u,manchester utd,united,mufc;Chelsea|2;Manchester City|2|man city,city;Juventus|2|juve;Inter Milan|2|inter,internazionale;Ajax|2;Paris Saint-Germain|2|psg,paris sg,paris;Benfica|3;Porto|3;~Nottingham Forest|3|forest;Borussia Dortmund|3|dortmund,bvb;Celtic|4;Hamburg|4|hamburger sv,hsv;Feyenoord|4;Aston Villa|4|villa;PSV Eindhoven|4|psv;Marseille|4|olympique de marseille,om;Steaua Bucharest|5|steaua,fcsb;*Red Star Belgrade|5|crvena zvezda,red star"},
+ {k:"wc",pk:"world",q:"Name a country that has won the men's World Cup",h:"Winners through 2026",f:"Uruguay won the first World Cup in 1930, then stunned Brazil at the Maracanã in 1950.",a:
+ "Brazil|1;Germany|1|west germany;Italy|1;Argentina|1;France|2;Spain|2;England|3;*Uruguay|4"},
+ {k:"bdo",pk:"legends",q:"Name a Ballon d'Or winner",h:"Men's award, 1956–2026",f:"The Spanish playmaker won it in 1960 while at Barcelona.",a:
+ "Lionel Messi|1|messi;Cristiano Ronaldo|1|cr7,cristiano;Luka Modric|2|modric;Karim Benzema|2|benzema;Zinedine Zidane|2|zidane,zizou;Ronaldinho|2;Kaka|2;Rodri|2|rodrigo hernandez;Ousmane Dembele|2|dembele;Harry Kane|2|kane;Johan Cruyff|2|cruyff,cruijff;Michel Platini|2|platini;Ronaldo Nazario|2|r9,brazilian ronaldo;Marco van Basten|3|van basten;Franz Beckenbauer|3|beckenbauer;Luis Figo|3|figo;Andriy Shevchenko|3|shevchenko;~Michael Owen|3|owen;Pavel Nedved|3|nedved;George Weah|3|weah;Rivaldo|3;Eusebio|3;Alfredo Di Stefano|3|di stefano;George Best|3|best;Bobby Charlton|3|charlton;Gerd Muller|3|muller,gerd mueller;Lothar Matthaus|3|matthaus,matthaeus;Roberto Baggio|3|baggio;Ruud Gullit|3|gullit;Fabio Cannavaro|4|cannavaro;Paolo Rossi|4|rossi;Kevin Keegan|4|keegan;Karl-Heinz Rummenigge|4|rummenigge;Hristo Stoichkov|4|stoichkov;Lev Yashin|4|yashin;Denis Law|4|law;Stanley Matthews|4|matthews;Jean-Pierre Papin|5|papin;Matthias Sammer|5|sammer;Igor Belanov|5|belanov;Oleg Blokhin|5|blokhin;Allan Simonsen|5|simonsen;Raymond Kopa|5|kopa;Omar Sivori|5|sivori;Josef Masopust|5|masopust;Florian Albert|5|albert;Gianni Rivera|5|rivera;*Luis Suarez Miramontes|5|suarez miramontes"},
+ {k:"plc",pk:"club",q:"Name a club that has played in the Premier League",h:"Any season since 1992–93",f:"Swindon's only top-flight season, 1993–94, ended with 100 league goals conceded.",a:
+ "Arsenal|1;Chelsea|1;Liverpool|1;Manchester United|1|man utd,man united,man u,manchester utd;Manchester City|1|man city;Tottenham Hotspur|1|tottenham,spurs;Everton|1;Newcastle United|1|newcastle;Aston Villa|1|villa;West Ham United|1|west ham;Leicester City|2|leicester;Southampton|2;Leeds United|2|leeds;Wolverhampton Wanderers|2|wolves,wolverhampton;Crystal Palace|2|palace;Brighton|2|brighton and hove albion;Fulham|2;Brentford|2;Bournemouth|2|afc bournemouth;Nottingham Forest|2|forest;Burnley|3;Sunderland|3;West Bromwich Albion|3|west brom,wba;Stoke City|3|stoke;Norwich City|3|norwich;Watford|3;Middlesbrough|3|boro;Blackburn Rovers|3|blackburn;Bolton Wanderers|3|bolton;Wigan Athletic|3|wigan;Sheffield United|3|sheffield utd;Hull City|3|hull;Queens Park Rangers|3|qpr;Birmingham City|3|birmingham;Swansea City|3|swansea;Cardiff City|3|cardiff;Portsmouth|3|pompey;Charlton Athletic|3|charlton;Derby County|3|derby;Ipswich Town|3|ipswich;Coventry City|3|coventry;Huddersfield Town|3|huddersfield;Sheffield Wednesday|4|sheffield wed;Wimbledon|4;Reading|4;Luton Town|4|luton;Bradford City|4|bradford;Barnsley|4;~Blackpool|4;Oldham Athletic|5|oldham;*Swindon Town|5|swindon"},
+ {k:"wcv",pk:"world",q:"Name a stadium that has hosted a men's World Cup final",h:"1930 to 2026",f:"Italy beat Czechoslovakia there after extra time in the 1934 final.",a:
+ "Maracana|1|estadio do maracana;Wembley|1|wembley stadium;Estadio Azteca|1|azteca;Santiago Bernabeu|2|bernabeu;Stade de France|2;Lusail Stadium|2|lusail,lusail iconic stadium;MetLife Stadium|2|metlife;Olympiastadion Berlin|3|olympiastadion,olympic stadium berlin;Soccer City|3|fnb stadium;Luzhniki Stadium|3|luzhniki;~Rose Bowl|3;Stadio Olimpico|3|olimpico;Estadio Monumental|3|monumental,el monumental;Olympiastadion Munich|3|munich olympic stadium;International Stadium Yokohama|4|yokohama,nissan stadium;Estadio Centenario|4|centenario;Estadio Nacional|4|estadio nacional de chile;Wankdorf Stadium|4|wankdorf,wankdorfstadion,wankdorf bern;Rasunda Stadium|5|rasunda;Stade Olympique de Colombes|5|colombes,stade de colombes;*Stadio Nazionale PNF|5|stadio nazionale,stadio nazionale del pnf,stadio flaminio"},
+ {k:"zl",pk:"legends",q:"Name a club Zlatan Ibrahimovic played for",h:"Senior career",f:"Zlatan's first senior club, in his home city.",a:
+ "AC Milan|1|milan;Paris Saint-Germain|1|psg;Barcelona|1|barca;Manchester United|1|man utd,man united,man u,manchester utd;Juventus|2|juve;Inter Milan|2|inter;Ajax|2;~LA Galaxy|2|galaxy,los angeles galaxy;*Malmo FF|4|malmo"},
+ {k:"eu",pk:"world",q:"Name a country that has won the men's Euros",h:"1960 to 2024",f:"The USSR won the first Euros in 1960, beating Yugoslavia in Paris.",a:
+ "Spain|1;Germany|1|west germany;Italy|1;France|2;Portugal|2;Netherlands|2|holland;~Greece|3;Denmark|3;Czechoslovakia|4;*Soviet Union|5|ussr"},
+ {k:"h100",pk:"club",q:"Name a player with 100+ Premier League goals",h:"All 35 members, as of the 2026–27 season",f:"Le Tissier scored 47 of the 48 penalties he took in his career.",a:
+ "Cristiano Ronaldo|3|ronaldo,cristiano,cr7;Ryan Giggs|3|giggs;Sadio Mane|3|mane;Alan Shearer|1|shearer;Harry Kane|1|kane;Wayne Rooney|1|rooney;Thierry Henry|1|henry;Mohamed Salah|1|salah,mo salah;Sergio Aguero|1|aguero;Frank Lampard|2|lampard;Erling Haaland|2|haaland;Didier Drogba|2|drogba;Steven Gerrard|2|gerrard;Son Heung-min|2|son,sonny;Jamie Vardy|2|vardy;Robin van Persie|2|van persie,rvp;Andy Cole|3|cole,andrew cole;Robbie Fowler|3|fowler;Michael Owen|3|owen;Jermain Defoe|3|defoe;Raheem Sterling|3|sterling;Romelu Lukaku|3|lukaku;Paul Scholes|3|scholes;~Peter Crouch|3|crouch;Teddy Sheringham|3|sheringham;Ian Wright|3|wright;Robbie Keane|3|keane;Nicolas Anelka|3|anelka;Les Ferdinand|4|ferdinand;Jimmy Floyd Hasselbaink|4|hasselbaink;Dwight Yorke|4|yorke;Emile Heskey|4|heskey;Darren Bent|4|bent;Dion Dublin|5|dublin;*Matt Le Tissier|4|le tissier,tissier"},
+ {k:"mgr",pk:"club",q:"Name a manager who has won the Premier League",h:"1992–93 to 2025–26",f:"Dalglish won the 1994–95 title with Blackburn Rovers.",a:
+ "Mikel Arteta|2|arteta;Alex Ferguson|1|ferguson,fergie,sir alex;Arsene Wenger|1|wenger;Jose Mourinho|1|mourinho;Pep Guardiola|1|guardiola,pep;Jurgen Klopp|1|klopp;Carlo Ancelotti|2|ancelotti;Antonio Conte|2|conte;~Claudio Ranieri|2|ranieri;Roberto Mancini|2|mancini;Arne Slot|2|slot;Manuel Pellegrini|3|pellegrini;*Kenny Dalglish|4|dalglish,king kenny"},
+ {k:"ita",pk:"club",q:"Name a club that has been Italian champions",h:"Scudetto winners, any era",f:"Novese won the 1921–22 FIGC title, a season with two rival Italian championships.",a:
+ "Juventus|1|juve;Inter Milan|1|inter;AC Milan|1|milan;Napoli|1;Roma|2|as roma;Lazio|2;Fiorentina|3;Torino|3;Bologna|3;Sampdoria|3;Genoa|4;Cagliari|4;~Hellas Verona|4|verona;Pro Vercelli|5;Casale|5;Spezia|5;*Novese|5"},
+ {k:"cr7",pk:"legends",q:"Name a club Cristiano Ronaldo has played for",h:"Senior career",f:"Ronaldo came through Sporting's academy before joining Manchester United in 2003.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Real Madrid|1;Juventus|1|juve;Al Nassr|2|al-nassr;*Sporting CP|3|sporting,sporting lisbon"},
+ {k:"esp",pk:"club",q:"Name a club that has won La Liga",h:"Spanish champions since 1929",f:"Betis won their only league title in 1934–35.",a:
+ "Real Madrid|1;Barcelona|1|barca;Atletico Madrid|1|atletico,atleti;Valencia|2;Athletic Bilbao|2|athletic club,bilbao;Real Sociedad|3|la real;Sevilla|3;~Deportivo La Coruna|3|deportivo,depor;*Real Betis|4|betis"},
+ {k:"ger",pk:"club",q:"Name a club that has won the Bundesliga",h:"Since 1963–64",f:"Braunschweig won the Bundesliga in 1966–67.",a:
+ "Bayern Munich|1|bayern;Borussia Dortmund|1|dortmund,bvb;Bayer Leverkusen|1|leverkusen;Borussia Monchengladbach|2|gladbach,monchengladbach;Werder Bremen|2|bremen,werder;Hamburg|2|hamburger sv,hsv;VfB Stuttgart|2|stuttgart;FC Koln|3|koln,cologne,1 fc koln;~Kaiserslautern|3|1 fc kaiserslautern;VfL Wolfsburg|3|wolfsburg;1860 Munich|4|tsv 1860,1860 munchen;Nurnberg|4|nuremberg,1 fc nurnberg;*Eintracht Braunschweig|5|braunschweig"},
+ {k:"wcs",pk:"world",q:"Name a player who scored in a men's World Cup final",h:"Open play or penalty, 1930–2026",f:"Brown headed Argentina in front in the 1986 final against West Germany.",a:
+ "Ferran Torres|2|ferran,torres;Ferenc Puskas|3|puskas;Vava|4;Mario Zagallo|4|zagallo;Helmut Rahn|4|rahn;Alcides Ghiggia|4|ghiggia;Juan Alberto Schiaffino|4|schiaffino;Silvio Piola|4|piola;Amarildo|4;Zito|4;Josef Masopust|5|masopust;Max Morlock|5|morlock;Zoltan Czibor|5|czibor;Nils Liedholm|5|liedholm;Agne Simonsson|5|simonsson;Friaca|5;Gino Colaussi|5|colaussi;Gyorgy Sarosi|5|sarosi;Pal Titkos|5|titkos;Raimundo Orsi|5|orsi;Angelo Schiavio|5|schiavio;Antonin Puc|5|puc;Pablo Dorado|5|dorado;Pedro Cea|5|cea;Santos Iriarte|5|iriarte;Hector Castro|5|castro;Carlos Peucelle|5|peucelle;Guillermo Stabile|5|stabile;Lionel Messi|1|messi;Kylian Mbappe|1|mbappe;Zinedine Zidane|1|zidane;Mario Gotze|2|gotze,goetze;Andres Iniesta|2|iniesta;Ronaldo Nazario|2|ronaldo,r9;Pele|2;Geoff Hurst|2|hurst;Angel Di Maria|2|di maria;Antoine Griezmann|2|griezmann;Paul Pogba|2|pogba;~Marco Materazzi|3|materazzi;Ivan Perisic|3|perisic;Mario Mandzukic|3|mandzukic;Emmanuel Petit|3|petit;Andreas Brehme|3|brehme;Jorge Burruchaga|3|burruchaga;Jorge Valdano|3|valdano;Mario Kempes|3|kempes;Paolo Rossi|3|rossi;Gerd Muller|3|muller;Paul Breitner|3|breitner;Johan Neeskens|3|neeskens;Jairzinho|3;Carlos Alberto|3;Rudi Voller|3|voller;Karl-Heinz Rummenigge|3|rummenigge;Marco Tardelli|4|tardelli;Gerson|4;Martin Peters|4|peters;Alessandro Altobelli|4|altobelli;Roberto Boninsegna|4|boninsegna;Daniel Bertoni|4|bertoni;Dick Nanninga|5|nanninga;Helmut Haller|5|haller;Wolfgang Weber|5|weber;*Jose Luis Brown|5|tata brown"},
+ {k:"plw",pk:"club",q:"Name a club that has won the Premier League",h:"1992–93 to 2025–26",f:"Jack Walker's Blackburn took the 1994–95 title on the final day.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Chelsea|1;Manchester City|1|man city;Arsenal|1;Liverpool|1;~Leicester City|2|leicester;*Blackburn Rovers|3|blackburn"},
+ {k:"gb",pk:"club",q:"Name a Premier League Golden Boot winner",h:"1992–93 to 2025–26, shared awards count",f:"Phillips' 30 goals for Sunderland in 1999–2000 also won Europe's Golden Shoe.",a:
+ "Thierry Henry|1|henry;Harry Kane|1|kane;Mohamed Salah|1|salah,mo salah;Alan Shearer|1|shearer;Erling Haaland|1|haaland;Sergio Aguero|2|aguero;Didier Drogba|2|drogba;Cristiano Ronaldo|2|ronaldo,cr7;Robin van Persie|2|van persie,rvp;Luis Suarez|2|suarez;~Jamie Vardy|2|vardy;Michael Owen|2|owen;Ruud van Nistelrooy|2|van nistelrooy,ruud;Son Heung-min|2|son,sonny;Andy Cole|3|cole,andrew cole;Sadio Mane|3|mane;Pierre-Emerick Aubameyang|3|aubameyang,auba;Nicolas Anelka|3|anelka;Dimitar Berbatov|3|berbatov;Carlos Tevez|3|tevez;Teddy Sheringham|3|sheringham;Jimmy Floyd Hasselbaink|3|hasselbaink;Dwight Yorke|4|yorke;Dion Dublin|4|dublin;Chris Sutton|4|sutton;*Kevin Phillips|4|phillips"},
+ {k:"mls",pk:"club",q:"Name a current MLS club",h:"The 30 clubs of the 2026 season",f:"The Rapids won MLS Cup in 2010, beating FC Dallas in the final.",a:
+ "Inter Miami|1|miami;LA Galaxy|1|galaxy;Seattle Sounders|1|sounders;LAFC|1|los angeles fc;New York City FC|2|nycfc,new york city;New York Red Bulls|2|red bulls;Atlanta United|2|atlanta;Toronto FC|2|toronto;Portland Timbers|2|timbers,portland;Orlando City|3|orlando;Chicago Fire|3|chicago;DC United|3|d c united;Columbus Crew|3|columbus,crew;Philadelphia Union|3|philadelphia,union;Austin FC|3|austin;FC Cincinnati|3|cincinnati;Nashville SC|3|nashville;Charlotte FC|3|charlotte;New England Revolution|3|revolution,revs;Sporting Kansas City|3|skc,sporting kc;Vancouver Whitecaps|3|whitecaps,vancouver;CF Montreal|4|montreal;Houston Dynamo|4|houston,dynamo;FC Dallas|4|dallas;Real Salt Lake|4|rsl,salt lake;Minnesota United|4|minnesota,loons;San Jose Earthquakes|4|san jose,earthquakes;St. Louis City SC|4|st louis city,st louis;San Diego FC|5|san diego;*Colorado Rapids|4|rapids,colorado"},
+ {k:"ca",pk:"world",q:"Name a country that has won the Copa América",h:"Through 2024",f:"Bolivia won their only Copa América as hosts in 1963.",a:
+ "Argentina|1;Brazil|1;Uruguay|2;~Chile|2;Paraguay|3;Peru|3;Colombia|3;*Bolivia|4"},
+ {k:"afc",pk:"world",q:"Name a country that has won the Africa Cup of Nations",h:"Through the 2025 edition",f:"Sudan won the 1970 Cup of Nations on home soil in Khartoum.",a:
+ "Egypt|1;Cameroon|1;Nigeria|1;Senegal|1;Ghana|2;Ivory Coast|2|cote d'ivoire,cote divoire;Algeria|2;~Zambia|2;Tunisia|3;Morocco|3;South Africa|3;DR Congo|4|zaire,congo dr,democratic republic of the congo,congo kinshasa;Ethiopia|4;Congo|5|republic of the congo,congo brazzaville;*Sudan|4"},
+ {k:"wch",pk:"world",q:"Name a country that has hosted the men's World Cup",h:"1930 to 2026",f:"Switzerland hosted in 1954; the final in Bern became the Miracle of Bern.",a:
+ "Brazil|1;Germany|1|west germany;France|1;Italy|1;England|1;United States|1|usa,us,america;Mexico|1;Spain|2;Argentina|2;Qatar|2;Russia|2;South Africa|2;Japan|2;South Korea|2|korea;Canada|2;Uruguay|3;Chile|4;Sweden|4;*Switzerland|4"},
+ {k:"dbk",pk:"legends",q:"Name a club David Beckham played for",h:"Senior career, loans count",f:"Beckham spent a month on loan at Preston in 1995.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Real Madrid|1;LA Galaxy|1|galaxy;~AC Milan|2|milan;Paris Saint-Germain|2|psg;*Preston North End|4|preston"},
+ {k:"r10",pk:"legends",q:"Name a club Ronaldinho played for",h:"Senior career",f:"Ronaldinho spent the 2014–15 season with Querétaro in Mexico.",a:
+ "Barcelona|1|barca;Paris Saint-Germain|1|psg;AC Milan|1|milan;Gremio|2;Flamengo|3;Atletico Mineiro|3|galo;Fluminense|4;*Queretaro|5"},
+ {k:"th14",pk:"legends",q:"Name a club Thierry Henry played for",h:"Senior career",f:"Henry spent half a season at Juventus before Arsenal signed him in 1999.",a:
+ "Arsenal|1;Barcelona|1|barca;Monaco|2|as monaco;~New York Red Bulls|2|red bulls;*Juventus|3|juve"},
+ {k:"jm",pk:"legends",q:"Name a club José Mourinho has managed",h:"Through 2026",f:"Mourinho managed Leiria for half a season before Porto hired him in January 2002.",a:
+ "Chelsea|1;Real Madrid|1;Manchester United|1|man utd,man united,man u,manchester utd;Inter Milan|1|inter;Porto|1;Tottenham Hotspur|2|tottenham,spurs;Roma|2|as roma;Benfica|3;Fenerbahce|3;*Uniao de Leiria|5|leiria"}
+];
+RAW.push(
+ {k:"wcf",pk:"world",q:"Name a country that has reached a men's World Cup final",h:"Finalists 1930–2026",f:"Czechoslovakia reached two finals, losing to Italy in 1934 and Brazil in 1962.",a:
+ "Brazil|1;Germany|1|west germany;Argentina|1;Italy|1;France|1;Netherlands|2|holland;Spain|2;England|2;Croatia|2;Uruguay|3;~Hungary|3;Sweden|4;*Czechoslovakia|5"},
+ {k:"euf",pk:"world",q:"Name a country that has reached a men's Euros final",h:"Finalists 1960–2024",f:"Belgium lost the 1980 final 2–1 to West Germany in Rome.",a:
+ "Spain|1;Germany|1|west germany;Italy|1;France|1;England|1;Portugal|1;Netherlands|2|holland;Greece|2;Denmark|2;Soviet Union|3|ussr;Czechoslovakia|3;~Czech Republic|3|czechia;Yugoslavia|4;*Belgium|4"},
+ {k:"asn",pk:"world",q:"Name a country that has won the AFC Asian Cup",h:"1956–2023",f:"Kuwait won the 1980 Asian Cup on home soil.",a:
+ "Japan|1;Saudi Arabia|1;Iran|1;South Korea|1|korea,korea republic;Qatar|2;Australia|2;~Iraq|3;Israel|4;*Kuwait|4"},
+ {k:"cfc",pk:"world",q:"Name a country that has won the Confederations Cup",h:"1992–2017, including the King Fahd Cup",f:"Denmark won the 1995 edition, beating Argentina 2–0 in the final.",a:
+ "Brazil|1;France|2;Germany|2;Mexico|3;Argentina|3;*Denmark|4"},
+ {k:"oly",pk:"world",q:"Name a country that has won men's Olympic football gold",h:"1900–2024",f:"Galt FC represented Canada and won gold at St. Louis in 1904.",a:
+ "Brazil|1;Argentina|1;Spain|2;Mexico|2;Hungary|3;Nigeria|3;Cameroon|3;Uruguay|3;France|3;Soviet Union|3|ussr;Italy|4;Sweden|4;Yugoslavia|4;Poland|4;East Germany|4|gdr;Czechoslovakia|4;Belgium|4;~Great Britain|3|gb,team gb,united kingdom,england;*Canada|5"},
+ {k:"wgb",pk:"world",q:"Name a men's World Cup top scorer",h:"Golden Boot winners and joint top scorers, 1930–2026",f:"Salenko scored five against Cameroon in a single 1994 game.",a:
+ "Kylian Mbappe|1|mbappe;Harry Kane|1|kane;Miroslav Klose|1|klose;Ronaldo Nazario|1|ronaldo,r9;Thomas Muller|2|thomas mueller;James Rodriguez|2|james;Gary Lineker|2|lineker;Eusebio|2;Gerd Muller|2|gerd mueller;Just Fontaine|3|fontaine;Davor Suker|3|suker;Salvatore Schillaci|3|schillaci,toto schillaci;Paolo Rossi|3|rossi;Mario Kempes|3|kempes;Hristo Stoichkov|3|stoichkov;David Villa|3|villa;Wesley Sneijder|3|sneijder;Diego Forlan|3|forlan;Garrincha|3;Vava|4;Grzegorz Lato|4|lato;Sandor Kocsis|4|kocsis;Ademir|4;Leonidas|4;Guillermo Stabile|4|stabile;Oldrich Nejedly|5|nejedly;Leonel Sanchez|5;Florian Albert|5|albert;Valentin Ivanov|5|ivanov;Drazan Jerkovic|5|jerkovic;*Oleg Salenko|5|salenko"},
+ {k:"gball",pk:"world",q:"Name a men's World Cup Golden Ball winner",h:"Best player award, 1982–2026",f:"Kahn is the only goalkeeper to win the Golden Ball, in 2002.",a:
+ "Lionel Messi|1|messi;Luka Modric|1|modric;Zinedine Zidane|1|zidane;Diego Maradona|1|maradona;Ronaldo Nazario|2|ronaldo,r9;Rodri|2|rodrigo hernandez;Diego Forlan|3|forlan;Romario|3;~Salvatore Schillaci|3|schillaci;Paolo Rossi|3|rossi;*Oliver Kahn|4|kahn"},
+ {k:"glove",pk:"world",q:"Name a men's World Cup best goalkeeper award winner",h:"Yashin Award / Golden Glove, 1994–2026",f:"Preud'homme won the first award, in 1994, playing for Belgium.",a:
+ "Emiliano Martinez|1|martinez,dibu,dibu martinez,emi martinez;Manuel Neuer|1|neuer;Gianluigi Buffon|1|buffon;Iker Casillas|1|casillas;Thibaut Courtois|2|courtois;Oliver Kahn|2|kahn;Unai Simon|2|simon;Fabien Barthez|3|barthez;*Michel Preud'homme|4|preudhomme,preud homme"},
+ {k:"eman",pk:"world",q:"Name a Euros-winning manager",h:"1960–2024",f:"Ježek's Czechoslovakia won the 1976 final on Antonín Panenka's chipped penalty.",a:
+ "Luis de la Fuente|1|de la fuente;Roberto Mancini|1|mancini;Fernando Santos|1|santos;Vicente del Bosque|1|del bosque;Luis Aragones|2|aragones;Otto Rehhagel|2|rehhagel;Rinus Michels|2|michels;Roger Lemerre|3|lemerre;Berti Vogts|3|vogts;Richard Moller Nielsen|3|moller nielsen;Michel Hidalgo|3|hidalgo;Helmut Schon|3|schon,schoen;Jupp Derwall|4|derwall;Ferruccio Valcareggi|4|valcareggi;Jose Villalonga|5|villalonga;Gavriil Kachalin|5|kachalin;*Vaclav Jezek|5|jezek"},
+ {k:"cmb",pk:"world",q:"Name a CONMEBOL member nation",h:"South America's ten football nations",f:"Venezuela is the only CONMEBOL side never to reach a men's World Cup.",a:
+ "Brazil|1;Argentina|1;Uruguay|1;Colombia|1;Chile|2;Peru|2;Ecuador|2;Paraguay|2;Bolivia|3;*Venezuela|3"},
+ {k:"h26",pk:"world",q:"Name a 2026 World Cup host city",h:"The 16 cities in the US, Canada and Mexico",f:"Guadalajara also hosted World Cup matches in 1970 and 1986.",a:
+ "New York New Jersey|1|new york,new jersey,east rutherford,nyc,ny nj;Los Angeles|1|la,inglewood;Miami|1;Mexico City|1|ciudad de mexico,cdmx;Toronto|1;Dallas|2|arlington;Atlanta|2;Houston|2;Seattle|2;Boston|2|foxborough,foxboro;Philadelphia|2|philly;San Francisco Bay Area|2|san francisco,bay area,santa clara,sf;Vancouver|2;Kansas City|3;Monterrey|3|guadalupe;*Guadalajara|3|zapopan"},
+ {k:"e24",pk:"world",q:"Name a Euro 2024 host city",h:"The ten German host cities",f:"Gelsenkirchen hosted England's opening game, against Serbia.",a:
+ "Berlin|1;Munich|1|munchen,muenchen;Dortmund|1;Hamburg|2;Frankfurt|2;Cologne|2|koln,koeln;Stuttgart|2;Dusseldorf|3|duesseldorf;Leipzig|3;*Gelsenkirchen|4"},
+ {k:"h18",pk:"world",q:"Name a 2018 World Cup host city",h:"The eleven Russian host cities",f:"Saransk, the smallest host city, staged four group games.",a:
+ "Moscow|1;Saint Petersburg|1|st petersburg,petersburg;Sochi|2;Kazan|2;Kaliningrad|3;Nizhny Novgorod|3;Samara|3;Volgograd|3;Rostov-on-Don|3|rostov,rostov on don;Yekaterinburg|3|ekaterinburg;*Saransk|5"},
+ {k:"h14",pk:"world",q:"Name a 2014 World Cup host city",h:"The twelve Brazilian host cities",f:"Manaus' Arena da Amazônia was built in the middle of the rainforest.",a:
+ "Rio de Janeiro|1|rio;Sao Paulo|1;Brasilia|2;Belo Horizonte|2;Salvador|2;Fortaleza|3;Recife|3;Porto Alegre|3;Curitiba|3;Natal|4;Cuiaba|4;*Manaus|3"},
+ {k:"eng",pk:"world",q:"Name an England men's manager",h:"Permanent or caretaker, 1946 to today",f:"Peter Taylor's one game in charge, in 2000, was the first time Beckham captained England.",a:
+ "Gareth Southgate|1|southgate;Thomas Tuchel|1|tuchel;Fabio Capello|1|capello;Sven-Goran Eriksson|1|eriksson,sven;Roy Hodgson|1|hodgson;Sam Allardyce|1|allardyce,big sam;Steve McClaren|2|mcclaren;Kevin Keegan|2|keegan;Glenn Hoddle|2|hoddle;Terry Venables|2|venables;Graham Taylor|2;Bobby Robson|2|robson;Alf Ramsey|2|ramsey,sir alf;Ron Greenwood|3|greenwood;Don Revie|3|revie;Lee Carsley|3|carsley;Stuart Pearce|3|pearce;Walter Winterbottom|4|winterbottom;Howard Wilkinson|4|wilkinson;Joe Mercer|4|mercer;*Peter Taylor|5"},
+ {k:"b17",pk:"world",q:"Name a goalscorer in Brazil 1–7 Germany",h:"2014 World Cup semi-final, Belo Horizonte",f:"Oscar's 90th-minute goal was Brazil's only reply.",a:
+ "Toni Kroos|1|kroos;Thomas Muller|1|muller,thomas mueller;Miroslav Klose|1|klose;Andre Schurrle|2|schurrle,schuerrle;Sami Khedira|2|khedira;*Oscar|3"},
+ {k:"wcap",pk:"world",q:"Name a World Cup-winning captain",h:"1930–2026",f:"Combi, a goalkeeper, captained hosts Italy to the 1934 title.",a:
+ "Lionel Messi|1|messi;Hugo Lloris|1|lloris;Iker Casillas|1|casillas;Philipp Lahm|1|lahm;Fabio Cannavaro|1|cannavaro;Cafu|1;Didier Deschamps|1|deschamps;Diego Maradona|1|maradona;Rodri|1|rodrigo hernandez;Bobby Moore|1|moore;Lothar Matthaus|2|matthaus,matthaeus;Franz Beckenbauer|2|beckenbauer;Carlos Alberto|2;Dunga|2;Dino Zoff|2|zoff;Daniel Passarella|3|passarella;Fritz Walter|3|walter;Obdulio Varela|3|varela;Bellini|3|hilderaldo bellini;Giuseppe Meazza|3|meazza;Mauro Ramos|4|mauro;Jose Nasazzi|4|nasazzi;*Gianpiero Combi|5|combi"},
+ {k:"wman",pk:"world",q:"Name a World Cup-winning manager",h:"1930–2026",f:"Suppici led hosts Uruguay to the first World Cup in 1930.",a:
+ "Lionel Scaloni|1|scaloni;Didier Deschamps|1|deschamps;Joachim Low|1|low,jogi low;Vicente del Bosque|1|del bosque;Luis de la Fuente|1|de la fuente;Marcello Lippi|2|lippi;Luiz Felipe Scolari|2|scolari,felipao;Franz Beckenbauer|2|beckenbauer;Alf Ramsey|2|ramsey,sir alf;Aime Jacquet|3|jacquet;Carlos Alberto Parreira|3|parreira;Carlos Bilardo|3|bilardo;Enzo Bearzot|3|bearzot;Cesar Luis Menotti|3|menotti;Helmut Schon|3|schon,schoen;Mario Zagallo|3|zagallo;Vicente Feola|4|feola;Sepp Herberger|4|herberger;Vittorio Pozzo|4|pozzo;Aymore Moreira|5|moreira;Juan Lopez|5|juan lopez fontana;*Alberto Suppici|5|suppici"},
+ {k:"ench",pk:"club",q:"Name an English top-flight champion",h:"First Division and Premier League, 1888–89 to 2025–26",f:"Preston won the first league title in 1888–89 without losing a game.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Liverpool|1;Arsenal|1;Manchester City|1|man city;Chelsea|1;Everton|2;Aston Villa|2|villa;Leeds United|2|leeds;Blackburn Rovers|2|blackburn;~Leicester City|2|leicester;Nottingham Forest|2|forest;Tottenham Hotspur|2|tottenham,spurs;Newcastle United|3|newcastle;Sunderland|3;Derby County|3|derby;Wolverhampton Wanderers|3|wolves,wolverhampton;Ipswich Town|3|ipswich;Sheffield Wednesday|3|sheffield wed;Burnley|3;Huddersfield Town|4|huddersfield;Portsmouth|4|pompey;West Bromwich Albion|4|west brom,wba;Sheffield United|4|sheffield utd;*Preston North End|4|preston"},
+ {k:"fac",pk:"club",q:"Name an FA Cup winner",h:"Every winner, 1872–2026",f:"Wanderers beat Royal Engineers 1–0 in the first FA Cup final, in 1872.",a:
+ "Arsenal|1;Manchester United|1|man utd,man united,man u,manchester utd;Chelsea|1;Liverpool|1;Manchester City|1|man city;Tottenham Hotspur|1|tottenham,spurs;Crystal Palace|2|palace;Aston Villa|2|villa;Newcastle United|2|newcastle;Everton|2;Leicester City|2|leicester;Wigan Athletic|2|wigan;West Ham United|2|west ham;~Wimbledon|3;Portsmouth|3|pompey;Southampton|3;Coventry City|3|coventry;Ipswich Town|3|ipswich;Leeds United|3|leeds;Sunderland|3;Nottingham Forest|3|forest;Blackburn Rovers|3|blackburn;West Bromwich Albion|3|west brom,wba;Wolverhampton Wanderers|3|wolves,wolverhampton;Bolton Wanderers|3|bolton;Sheffield United|3|sheffield utd;Sheffield Wednesday|3|sheffield wed;Derby County|3|derby;Charlton Athletic|3|charlton;Cardiff City|3|cardiff;Blackpool|3;Burnley|4;Preston North End|4|preston;Huddersfield Town|4|huddersfield;Barnsley|4;Bradford City|4|bradford;Bury|4;Notts County|4;Blackburn Olympic|5;Old Etonians|5;Old Carthusians|5;Clapham Rovers|5;Oxford University|5;Royal Engineers|5;*Wanderers|5|wanderers fc"},
+ {k:"lgc",pk:"club",q:"Name a League Cup winner",h:"Every winner, 1961–2026",f:"Third-tier Swindon beat Arsenal 3–1 after extra time in the 1969 final.",a:
+ "Liverpool|1;Manchester City|1|man city;Manchester United|1|man utd,man united,man u,manchester utd;Chelsea|1;Aston Villa|1|villa;Tottenham Hotspur|1|tottenham,spurs;Newcastle United|2|newcastle;Arsenal|2;Nottingham Forest|2|forest;Leicester City|2|leicester;~Birmingham City|3|birmingham;Middlesbrough|3|boro;Blackburn Rovers|3|blackburn;Swansea City|3|swansea;Wolverhampton Wanderers|3|wolves,wolverhampton;Norwich City|3|norwich;Sheffield Wednesday|3|sheffield wed;Luton Town|3|luton;Stoke City|3|stoke;West Bromwich Albion|4|west brom,wba;Leeds United|4|leeds;Queens Park Rangers|4|qpr;Oxford United|4|oxford;*Swindon Town|5|swindon"},
+ {k:"sco",pk:"club",q:"Name a Scottish champion",h:"Top-flight champions, 1890–91 to 2025–26",f:"Dumbarton shared the first Scottish title with Rangers in 1891.",a:
+ "Celtic|1;Rangers|1;Aberdeen|2;Heart of Midlothian|3|hearts;Hibernian|3|hibs;Dundee United|3;Dundee|3;Kilmarnock|4;Motherwell|4;Third Lanark|5;*Dumbarton|5"},
+ {k:"fra",pk:"club",q:"Name a French champion",h:"Division 1 and Ligue 1, 1932–33 to 2025–26",f:"Sète won France's first league and cup double, in 1934.",a:
+ "Paris Saint-Germain|1|psg,paris sg,paris;Marseille|1|om,olympique de marseille;Lyon|1|olympique lyonnais,ol;Saint-Etienne|1|st etienne,asse;Monaco|1|as monaco;Nantes|2;Bordeaux|2|girondins;Lille|2|losc;Nice|2|ogc nice;Reims|2|stade de reims;~Montpellier|3;Lens|3|rc lens;Auxerre|3;Strasbourg|3|racing strasbourg;Sochaux|4;Roubaix-Tourcoing|5|co roubaix tourcoing;Racing Paris|5|racing club de paris,rc paris;Olympique Lillois|5;*Sete|5|fc sete"},
+ {k:"por",pk:"club",q:"Name a Portuguese champion",h:"Primeira Liga, 1934–35 to 2025–26",f:"Belenenses won their only league title in 1945–46.",a:
+ "Benfica|1;Porto|1;Sporting CP|1|sporting,sporting lisbon;~Boavista|3;*Belenenses|4"},
+ {k:"ned",pk:"club",q:"Name an Eredivisie champion",h:"1956–57 to 2025–26",f:"DOS from Utrecht won the 1957–58 title, the second Eredivisie season.",a:
+ "Ajax|1;PSV Eindhoven|1|psv;Feyenoord|1;AZ|2|az alkmaar;~Twente|3|fc twente;Sparta Rotterdam|4|sparta;DWS|5;*DOS|5|dos utrecht"},
+ {k:"tur",pk:"club",q:"Name a Turkish Süper Lig champion",h:"1959 to 2025–26",f:"Bursaspor won the 2009–10 title, only the second champion from outside Istanbul.",a:
+ "Galatasaray|1;Fenerbahce|1;Besiktas|1;Trabzonspor|2;~Istanbul Basaksehir|3|basaksehir;*Bursaspor|4"},
+ {k:"uel",pk:"club",q:"Name a UEFA Cup or Europa League winner",h:"1972–2026",f:"IFK Göteborg won it twice, in 1982 and 1987.",a:
+ "Sevilla|1;Liverpool|1;Chelsea|1;Manchester United|1|man utd,man united,man u,manchester utd;Atletico Madrid|1|atletico,atleti;Tottenham Hotspur|1|tottenham,spurs;Aston Villa|1|villa;Inter Milan|2|inter,internazionale;Juventus|2|juve;Porto|2;Villarreal|2;Eintracht Frankfurt|2|frankfurt;Atalanta|2;Real Madrid|2;Ajax|2;Bayern Munich|2|bayern;Napoli|2;Valencia|2;Feyenoord|3;PSV Eindhoven|3|psv;Galatasaray|3;Zenit Saint Petersburg|3|zenit;Shakhtar Donetsk|3|shakhtar;CSKA Moscow|3|cska;Schalke|3|schalke 04;Parma|3;~Ipswich Town|3|ipswich;Bayer Leverkusen|3|leverkusen;Borussia Monchengladbach|3|gladbach,monchengladbach;Anderlecht|3;*IFK Goteborg|4|goteborg,gothenburg,ifk gothenburg"},
+ {k:"cwc",pk:"club",q:"Name a Cup Winners' Cup winner",h:"1961–1999",f:"Dinamo Tbilisi beat Carl Zeiss Jena in the 1981 final in Düsseldorf.",a:
+ "Barcelona|1|barca;Chelsea|1;Manchester United|1|man utd,man united,man u,manchester utd;Arsenal|1;AC Milan|1|milan;Juventus|1|juve;Bayern Munich|1|bayern;Tottenham Hotspur|1|tottenham,spurs;Everton|2;~Aberdeen|2;West Ham United|2|west ham;Manchester City|2|man city;Rangers|2;Paris Saint-Germain|2|psg;Lazio|2;Parma|2;Ajax|2;Atletico Madrid|2|atletico,atleti;Borussia Dortmund|2|dortmund,bvb;Valencia|2;Sampdoria|3;Werder Bremen|3|bremen,werder;Real Zaragoza|3|zaragoza;Dynamo Kyiv|3|dynamo kiev;Anderlecht|3;Hamburg|3|hamburger sv,hsv;Fiorentina|3;Sporting CP|3|sporting,sporting lisbon;Mechelen|4|kv mechelen;Slovan Bratislava|4|slovan;Magdeburg|4|1 fc magdeburg;*Dinamo Tbilisi|5|tbilisi"},
+ {k:"fcwc",pk:"club",q:"Name a FIFA Club World Cup winner",h:"2000–2025",f:"Internacional beat Barcelona 1–0 in the 2006 final.",a:
+ "Real Madrid|1;Barcelona|1|barca;Chelsea|1;Bayern Munich|1|bayern;Manchester City|1|man city;Liverpool|1;Manchester United|2|man utd,man united,man u,manchester utd;AC Milan|2|milan;Inter Milan|2|inter;Corinthians|2;Sao Paulo|3;*Internacional|4|sc internacional,inter porto alegre"},
+ {k:"mlsc",pk:"club",q:"Name an MLS Cup winner",h:"1996–2025",f:"Chicago Fire won MLS Cup in 1998, their expansion season.",a:
+ "LA Galaxy|1|galaxy;Seattle Sounders|1|sounders;Inter Miami|1|miami;Columbus Crew|2|columbus,crew;DC United|2|d c united;LAFC|2|los angeles fc;Atlanta United|2|atlanta;Toronto FC|2|toronto;Portland Timbers|2|timbers,portland;New York City FC|2|nycfc,new york city;Sporting Kansas City|3|skc,sporting kc,kansas city wizards,kansas city;Houston Dynamo|3|houston,dynamo;Real Salt Lake|3|rsl,salt lake;~Colorado Rapids|3|rapids,colorado;San Jose Earthquakes|3|san jose,earthquakes;*Chicago Fire|4|chicago"},
+ {k:"ecl",pk:"club",q:"Name a Conference League winner",h:"2022–2026",f:"Olympiacos became the first Greek club to win a European trophy, in 2024.",a:
+ "Chelsea|1;Roma|1|as roma;West Ham United|1|west ham;Crystal Palace|1|palace;*Olympiacos|2|olympiakos"},
+ {k:"clm",pk:"club",q:"Name a Champions League-winning manager",h:"Champions League era, 1993–2026",f:"Goethals won the first Champions League final with Marseille in 1993.",a:
+ "Carlo Ancelotti|1|ancelotti;Pep Guardiola|1|guardiola,pep;Zinedine Zidane|1|zidane,zizou;Jurgen Klopp|1|klopp;Jose Mourinho|1|mourinho;Alex Ferguson|1|ferguson,fergie,sir alex;Luis Enrique|1|enrique;Rafael Benitez|2|benitez,rafa benitez;Vicente del Bosque|2|del bosque;Thomas Tuchel|2|tuchel;Hansi Flick|2|flick;Jupp Heynckes|2|heynckes;~Roberto Di Matteo|2|di matteo;Frank Rijkaard|2|rijkaard;Louis van Gaal|2|van gaal;Ottmar Hitzfeld|3|hitzfeld;Marcello Lippi|3|lippi;Fabio Capello|3|capello;*Raymond Goethals|4|goethals"},
+ {k:"pl26",pk:"club",q:"Name a club in the 2026–27 Premier League",h:"This season's 20 clubs",f:"Coventry are back in the top flight for the first time since 2001.",a:
+ "Arsenal|1;Chelsea|1;Liverpool|1;Manchester City|1|man city;Manchester United|1|man utd,man united,man u,manchester utd;Tottenham Hotspur|1|tottenham,spurs;Newcastle United|1|newcastle;Aston Villa|1|villa;Everton|2;Brighton|2|brighton and hove albion;Brentford|2;Fulham|2;Crystal Palace|2|palace;Bournemouth|2|afc bournemouth;Nottingham Forest|2|forest;Leeds United|2|leeds;Sunderland|3;Ipswich Town|3|ipswich;Hull City|3|hull;*Coventry City|3|coventry"},
+ {k:"pls",pk:"club",q:"Name a 2026–27 Premier League stadium",h:"Home grounds of this season's 20 clubs",f:"Hull's MKM Stadium opened in 2002 as the KC Stadium.",a:
+ "Old Trafford|1;Anfield|1;Emirates Stadium|1|emirates;Stamford Bridge|1|the bridge;Etihad Stadium|1|etihad,city of manchester stadium;Tottenham Hotspur Stadium|1|spurs stadium;St James' Park|1|st jamess park;Villa Park|1;Elland Road|2;Selhurst Park|2;Craven Cottage|2;City Ground|2;Stadium of Light|2;Portman Road|2;American Express Stadium|2|amex,amex stadium,falmer stadium;Vitality Stadium|2|dean court;Gtech Community Stadium|3|gtech,brentford community stadium;Hill Dickinson Stadium|3|everton stadium,bramley-moore dock,bramley moore dock;Coventry Building Society Arena|3|cbs arena,ricoh arena;*MKM Stadium|4|kc stadium,kcom stadium,mkm"},
+ {k:"ldn",pk:"club",q:"Name a London club that has played in the Premier League",h:"Any season since 1992–93",f:"Wimbledon's 'Crazy Gang' spent 14 straight top-flight seasons, ending in 2000.",a:
+ "Arsenal|1;Chelsea|1;Tottenham Hotspur|1|tottenham,spurs;West Ham United|1|west ham;Crystal Palace|1|palace;Fulham|1;Brentford|2;Queens Park Rangers|2|qpr;~Charlton Athletic|3|charlton;*Wimbledon|3"},
+ {k:"gks",pk:"club",q:"Name a goalkeeper who has scored in the Premier League",h:"All six, through 2025–26",f:"Robinson scored with an 83-yard free kick against Watford in 2007.",a:
+ "Alisson Becker|1|alisson;Peter Schmeichel|2|schmeichel;Tim Howard|2|howard;Asmir Begovic|2|begovic;Brad Friedel|3|friedel;*Paul Robinson|3|robinson"},
+ {k:"pl5",pk:"club",q:"Name a player who scored five in one Premier League game",h:"Through 2025–26",f:"Berbatov scored five in Manchester United's 7–1 win over Blackburn in 2010.",a:
+ "Alan Shearer|1|shearer;Sergio Aguero|1|aguero;Andy Cole|2|cole,andrew cole;Jermain Defoe|2|defoe;*Dimitar Berbatov|3|berbatov"},
+ {k:"u99",pk:"club",q:"Name a goalscorer in the 1999 Champions League final",h:"Manchester United 2–1 Bayern Munich",f:"Basler's free kick put Bayern ahead after six minutes.",a:
+ "Ole Gunnar Solskjaer|1|solskjaer,ole;Teddy Sheringham|1|sheringham;*Mario Basler|3|basler"},
+ {k:"u05",pk:"club",q:"Name a goalscorer in the 2005 Champions League final",h:"AC Milan 3–3 Liverpool, Istanbul",f:"Šmicer's long-range strike made it 3–2 in Liverpool's six-minute comeback.",a:
+ "Steven Gerrard|1|gerrard;Paolo Maldini|2|maldini;Hernan Crespo|2|crespo;Xabi Alonso|2|alonso;*Vladimir Smicer|3|smicer"},
+ {k:"wen",pk:"club",q:"Name a club Arsène Wenger managed",h:"Club career, 1984–2018",f:"Wenger managed Nagoya Grampus in Japan just before joining Arsenal in 1996.",a:
+ "Arsenal|1;Monaco|2|as monaco;~Nancy|4|as nancy,nancy lorraine;*Nagoya Grampus|3|nagoya,nagoya grampus eight,grampus"},
+ {k:"fer",pk:"club",q:"Name a club Alex Ferguson managed",h:"Club career, 1974–2013",f:"Ferguson's first managerial job was part-time at East Stirlingshire in 1974.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Aberdeen|2;~St Mirren|3|saint mirren;*East Stirlingshire|5|east stirling"},
+ {k:"dm",pk:"legends",q:"Name a club Diego Maradona played for",h:"Senior career",f:"Maradona joined Newell's in 1993 after a season at Sevilla.",a:
+ "Napoli|1;Barcelona|1|barca;Boca Juniors|1|boca;Argentinos Juniors|3|argentinos;Sevilla|3;*Newell's Old Boys|4|newells,newell s,newells old boys"},
+ {k:"jc",pk:"legends",q:"Name a club Johan Cruyff played for",h:"Senior career",f:"Cruyff had a short spell at second-tier Levante in 1981.",a:
+ "Ajax|1;Barcelona|1|barca;Feyenoord|2;~Los Angeles Aztecs|4|la aztecs,aztecs;Washington Diplomats|4|diplomats;*Levante|4"},
+ {k:"ec",pk:"legends",q:"Name a club Eric Cantona played for",h:"Senior career, loans count",f:"Cantona was loaned to second-tier Martigues in 1985.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Leeds United|1|leeds;Marseille|2|om,olympique de marseille;Auxerre|2;~Montpellier|3;Nimes|3;Bordeaux|3|girondins;*Martigues|5|fc martigues"},
+ {k:"gz",pk:"legends",q:"Name a club Gianfranco Zola played for",h:"Senior career",f:"Zola started out at Sardinian clubs Nuorese and Torres before Napoli.",a:
+ "Chelsea|1;Napoli|1;Parma|2;Cagliari|2;Torres|4|sef torres;*Nuorese|5"},
+ {k:"pv",pk:"legends",q:"Name a club Patrick Vieira played for",h:"Senior career",f:"Vieira was made Cannes captain at 19.",a:
+ "Arsenal|1;Juventus|2|juve;Inter Milan|2|inter;Manchester City|2|man city;~AC Milan|3|milan;*Cannes|4|as cannes"},
+ {k:"rb",pk:"legends",q:"Name a club Roberto Baggio played for",h:"Senior career",f:"Baggio began at Vicenza in Serie C1 before Fiorentina signed him in 1985.",a:
+ "Juventus|1|juve;AC Milan|1|milan;Fiorentina|1;Inter Milan|2|inter;Bologna|2;Brescia|2;*Vicenza|3|lanerossi vicenza"},
+ {k:"adp",pk:"legends",q:"Name a club Alessandro Del Piero played for",h:"Senior career",f:"Del Piero ended his career with Delhi Dynamos in India in 2014.",a:
+ "Juventus|1|juve;Sydney FC|2|sydney;Padova|4;*Delhi Dynamos|4|delhi,odisha"},
+ {k:"rvn",pk:"legends",q:"Name a club Ruud van Nistelrooy played for",h:"Senior career",f:"Van Nistelrooy started at Den Bosch, then in the Dutch second tier.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Real Madrid|1;PSV Eindhoven|1|psv;Hamburg|3|hamburger sv,hsv;Malaga|3;Heerenveen|3;*Den Bosch|4|fc den bosch"},
+ {k:"rvp",pk:"legends",q:"Name a club Robin van Persie played for",h:"Senior career",f:"Van Persie spent two seasons at Fenerbahçe before returning to Feyenoord.",a:
+ "Arsenal|1;Manchester United|1|man utd,man united,man u,manchester utd;Feyenoord|2;*Fenerbahce|3"},
+ {k:"ar",pk:"legends",q:"Name a club Arjen Robben played for",h:"Senior career",f:"Robben came out of retirement to play for Groningen in 2020–21.",a:
+ "Bayern Munich|1|bayern;Chelsea|1;Real Madrid|2;PSV Eindhoven|2|psv;*Groningen|3|fc groningen"},
+ {k:"ka",pk:"legends",q:"Name a club Sergio Agüero played for",h:"Senior career",f:"Agüero debuted for Independiente at 15, the youngest ever in Argentina's top flight.",a:
+ "Manchester City|1|man city;Atletico Madrid|1|atletico,atleti;Barcelona|2|barca;*Independiente|3"},
+ {k:"zz",pk:"legends",q:"Name a club Zinedine Zidane played for",h:"Senior career",f:"Zidane made his professional debut for Cannes at 17.",a:
+ "Real Madrid|1;Juventus|1|juve;Bordeaux|2|girondins;*Cannes|3|as cannes"},
+ {k:"r9",pk:"legends",q:"Name a club Ronaldo Nazário played for",h:"Senior career",f:"Ronaldo turned professional at Cruzeiro before moving to PSV in 1994.",a:
+ "Barcelona|1|barca;Real Madrid|1;Inter Milan|1|inter;AC Milan|2|milan;PSV Eindhoven|2|psv;Corinthians|3;*Cruzeiro|3"},
+ {k:"kk",pk:"legends",q:"Name a club Kaká played for",h:"Senior career",f:"Kaká was Orlando City's first designated player when they joined MLS in 2015.",a:
+ "AC Milan|1|milan;Real Madrid|1;Sao Paulo|2;*Orlando City|3|orlando"},
+ {k:"dd",pk:"legends",q:"Name a club Didier Drogba played for",h:"Senior career",f:"Drogba played for and co-owned Phoenix Rising in the USL.",a:
+ "Chelsea|1;Marseille|2|om,olympique de marseille;Galatasaray|2;Shanghai Shenhua|3|shenhua;Montreal Impact|3|montreal,impact;Guingamp|3|en avant guingamp;Le Mans|4;*Phoenix Rising|5|phoenix"},
+ {k:"ap",pk:"legends",q:"Name a club Andrea Pirlo played for",h:"Senior career, loans count",f:"Pirlo spent 1999–2000 on loan at Reggina.",a:
+ "Juventus|1|juve;AC Milan|1|milan;Inter Milan|2|inter;New York City FC|2|nycfc,new york city;Brescia|3;*Reggina|4"},
+ {k:"gbl",pk:"legends",q:"Name a club Gareth Bale played for",h:"Senior career",f:"Bale's 128th-minute header forced penalties in the 2022 MLS Cup final.",a:
+ "Real Madrid|1;Tottenham Hotspur|1|tottenham,spurs;Southampton|2;*LAFC|3|los angeles fc"},
+ {k:"se",pk:"legends",q:"Name a club Samuel Eto'o played for",h:"Senior career, loans count",f:"Eto'o's final club was Qatar SC, in 2019.",a:
+ "Barcelona|1|barca;Inter Milan|1|inter;Chelsea|1;Real Madrid|2;Mallorca|2;Everton|2;Anzhi Makhachkala|3|anzhi;Sampdoria|3;Espanyol|3;Antalyaspor|4;Leganes|4;Konyaspor|5;*Qatar SC|5|qatar sports club"},
+ {k:"ws",pk:"legends",q:"Name a club Wesley Sneijder played for",h:"Senior career",f:"Sneijder ended his career at Qatar's Al-Gharafa in 2019.",a:
+ "Inter Milan|1|inter;Ajax|1;Real Madrid|1;Galatasaray|2;Nice|3|ogc nice;*Al-Gharafa|4|al gharafa,gharafa"},
+ {k:"ft",pk:"legends",q:"Name a club Fernando Torres played for",h:"Senior career",f:"Torres finished his career in Japan with Sagan Tosu in 2019.",a:
+ "Liverpool|1;Chelsea|1;Atletico Madrid|1|atletico,atleti;AC Milan|2|milan;*Sagan Tosu|4|tosu"},
+ {k:"dv",pk:"legends",q:"Name a club David Villa played for",h:"Senior career, loans count",f:"Villa had a short loan at Melbourne City before New York City FC's first season.",a:
+ "Barcelona|1|barca;Valencia|1;Atletico Madrid|2|atletico,atleti;New York City FC|2|nycfc,new york city;Real Zaragoza|3|zaragoza;Sporting Gijon|3|sporting de gijon,gijon;Vissel Kobe|3|kobe;*Melbourne City|4|melbourne"},
+ {k:"yt",pk:"legends",q:"Name a club Yaya Touré played for",h:"Senior career",f:"Touré played in Ukraine for Metalurh Donetsk early in his career.",a:
+ "Manchester City|1|man city;Barcelona|1|barca;Monaco|2|as monaco;Olympiacos|3|olympiakos;Beveren|4|ksk beveren;Qingdao Huanghai|4|qingdao;*Metalurh Donetsk|5|metalurg donetsk"},
+ {k:"mo",pk:"legends",q:"Name a club Michael Owen played for",h:"Senior career",f:"Owen retired after one season at Stoke in 2013.",a:
+ "Liverpool|1;Real Madrid|1;Newcastle United|1|newcastle;Manchester United|2|man utd,man united,man u,manchester utd;*Stoke City|3|stoke"},
+ {k:"rk",pk:"legends",q:"Name a club Robbie Keane played for",h:"Senior career, loans count",f:"Keane finished his playing days with ATK in the Indian Super League.",a:
+ "Tottenham Hotspur|1|tottenham,spurs;LA Galaxy|1|galaxy;Liverpool|2;Leeds United|2|leeds;Inter Milan|3|inter;Coventry City|3|coventry;Wolverhampton Wanderers|3|wolves,wolverhampton;West Ham United|3|west ham;Celtic|3;Aston Villa|3|villa;*ATK|4|atletico de kolkata"},
+ {k:"jd",pk:"legends",q:"Name a club Jermain Defoe played for",h:"Senior career, loans count",f:"Defoe scored twice on his Toronto FC debut in 2014.",a:
+ "Tottenham Hotspur|1|tottenham,spurs;West Ham United|1|west ham;Sunderland|2;Portsmouth|2|pompey;Bournemouth|2|afc bournemouth;Rangers|2;*Toronto FC|3|toronto"},
+ {k:"na",pk:"legends",q:"Name a club Nicolas Anelka played for",h:"Senior career, loans count",f:"Anelka's final club was Mumbai City in the Indian Super League.",a:
+ "Arsenal|1;Chelsea|1;Real Madrid|1;Paris Saint-Germain|1|psg;Liverpool|2;Manchester City|2|man city;Bolton Wanderers|2|bolton;Fenerbahce|3;Juventus|3|juve;West Bromwich Albion|3|west brom,wba;Shanghai Shenhua|3|shenhua;*Mumbai City|5|mumbai"},
+ {k:"gbt",pk:"legends",q:"Name a club Gabriel Batistuta played for",h:"Senior career, loans count",f:"Batistuta finished his career at Qatar's Al-Arabi in 2005.",a:
+ "Fiorentina|1;Roma|1|as roma;Boca Juniors|2|boca;River Plate|2|river;Inter Milan|3|inter;Newell's Old Boys|3|newells,newell s,newells old boys;*Al-Arabi|4|al arabi"},
+ {k:"hs",pk:"legends",q:"Name a club Hristo Stoichkov played for",h:"Senior career, loans count",f:"Stoichkov began at Hebros Harmanli before joining CSKA Sofia.",a:
+ "Barcelona|1|barca;CSKA Sofia|1|cska;Parma|2;Chicago Fire|3|chicago;DC United|3|d c united;Al-Nassr|4|al nassr;Kashiwa Reysol|4|kashiwa;*Hebros Harmanli|5|hebros,harmanli"},
+ {k:"cf",pk:"legends",q:"Name a club Cesc Fàbregas played for",h:"Senior career",f:"Fàbregas finished his playing career at Como, then became their manager.",a:
+ "Arsenal|1;Barcelona|1|barca;Chelsea|1;Monaco|2|as monaco;*Como|3"},
+ {k:"iw",pk:"legends",q:"Name a club Ian Wright played for",h:"Senior career, loans count",f:"Wright helped Burnley to promotion in 2000, his final season.",a:
+ "Arsenal|1;Crystal Palace|1|palace;West Ham United|2|west ham;Celtic|3;Nottingham Forest|4|forest;*Burnley|4"},
+ {k:"wr",pk:"legends",q:"Name a club Wayne Rooney played for",h:"Senior career",f:"Rooney was Derby's player-coach before taking over as manager.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Everton|1;DC United|2|d c united;*Derby County|3|derby"},
+ {k:"fl",pk:"legends",q:"Name a club Frank Lampard played for",h:"Senior career, loans count",f:"Lampard's first loan move, in 1995, was to Swansea.",a:
+ "Chelsea|1;West Ham United|1|west ham;Manchester City|2|man city;New York City FC|2|nycfc,new york city;*Swansea City|4|swansea"},
+ {k:"pg",pk:"legends",q:"Name a club Paul Gascoigne played for",h:"Senior career",f:"Gascoigne played in China for Gansu Tianma in 2003.",a:
+ "Tottenham Hotspur|1|tottenham,spurs;Newcastle United|1|newcastle;Lazio|1;Rangers|2;Middlesbrough|2|boro;Everton|2;Burnley|3;Boston United|4|boston;*Gansu Tianma|5|gansu"},
+ {k:"ed",pk:"legends",q:"Name a club Edgar Davids played for",h:"Senior career, loans count",f:"Davids was Barnet's player-manager from 2012 to 2014.",a:
+ "Juventus|1|juve;Ajax|1;AC Milan|2|milan;Barcelona|2|barca;Inter Milan|2|inter;Tottenham Hotspur|2|tottenham,spurs;Crystal Palace|3|palace;*Barnet|4"},
+ {k:"cs",pk:"legends",q:"Name a club Clarence Seedorf played for",h:"Senior career",f:"Seedorf finished his playing career at Botafogo in Brazil.",a:
+ "AC Milan|1|milan;Real Madrid|1;Ajax|1;Inter Milan|2|inter;Sampdoria|3;*Botafogo|3"},
+ {k:"hl",pk:"legends",q:"Name a club Henrik Larsson played for",h:"Senior career, loans count",f:"Larsson started at Högaborgs BK and turned out for them again in 2013.",a:
+ "Celtic|1;Barcelona|1|barca;Manchester United|2|man utd,man united,man u,manchester utd;Feyenoord|2;Helsingborg|2|helsingborgs if,helsingborgs;Raa IF|5|raa;*Hogaborgs BK|5|hogaborg,hogaborgs"},
+ {k:"jmas",pk:"legends",q:"Name a club Javier Mascherano played for",h:"Senior career",f:"Mascherano played in China for Hebei China Fortune after leaving Barcelona.",a:
+ "Barcelona|1|barca;Liverpool|1;West Ham United|2|west ham;River Plate|2|river;Corinthians|3;Estudiantes|4;*Hebei China Fortune|4|hebei"},
+ {k:"ct",pk:"legends",q:"Name a club Carlos Tevez played for",h:"Senior career",f:"Tevez spent 2017 in China with Shanghai Shenhua.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Manchester City|1|man city;Juventus|1|juve;Boca Juniors|1|boca;West Ham United|2|west ham;Corinthians|3;*Shanghai Shenhua|4|shenhua"},
+ {k:"jrr",pk:"legends",q:"Name a club Juan Román Riquelme played for",h:"Senior career",f:"Riquelme's last season, 2014, was at Argentinos Juniors, where he helped win promotion.",a:
+ "Boca Juniors|1|boca;Villarreal|1;Barcelona|2|barca;*Argentinos Juniors|4|argentinos"},
+ {k:"lf",pk:"legends",q:"Name a club Luís Figo played for",h:"Senior career",f:"Figo turned professional at Sporting before joining Barcelona in 1995.",a:
+ "Barcelona|1|barca;Real Madrid|1;Inter Milan|2|inter;*Sporting CP|3|sporting,sporting lisbon"},
+ {k:"mb",pk:"legends",q:"Name a club Michael Ballack played for",h:"Senior career",f:"Ballack began at his hometown club, Chemnitzer FC.",a:
+ "Bayern Munich|1|bayern;Chelsea|1;Bayer Leverkusen|1|leverkusen;Kaiserslautern|3|1 fc kaiserslautern;*Chemnitzer FC|5|chemnitz,chemnitzer"},
+ {k:"b3",pk:"legends",q:"Name a player with three or more Ballon d'Ors",h:"Men's award, through 2026",f:"Van Basten won it three times, the last in 1992.",a:
+ "Lionel Messi|1|messi;Cristiano Ronaldo|1|ronaldo,cr7,cristiano;Michel Platini|2|platini;~Johan Cruyff|2|cruyff,cruijff;*Marco van Basten|3|van basten"},
+ {k:"ls",pk:"legends",q:"Name a club Luis Suárez has played for",h:"Senior career, through 2026",f:"Suárez left Nacional for Dutch side Groningen in 2006.",a:
+ "Barcelona|1|barca;Liverpool|1;Ajax|1;Atletico Madrid|2|atletico,atleti;Inter Miami|2|miami;Nacional|3|club nacional;Gremio|3;*Groningen|4|fc groningen"},
+ {k:"eh",pk:"legends",q:"Name a club Erling Haaland has played for",h:"Senior career, through 2026",f:"Haaland made his senior debut at 15 for Bryne, his father's old club.",a:
+ "Manchester City|1|man city;Borussia Dortmund|1|dortmund,bvb;Red Bull Salzburg|2|salzburg,rb salzburg;Molde|3;*Bryne|4"},
+ {k:"db",pk:"legends",q:"Name a club Dimitar Berbatov played for",h:"Senior career",f:"Berbatov ended his career with Kerala Blasters in India in 2018.",a:
+ "Manchester United|1|man utd,man united,man u,manchester utd;Tottenham Hotspur|1|tottenham,spurs;Bayer Leverkusen|2|leverkusen;Fulham|2;CSKA Sofia|3|cska;Monaco|3|as monaco;PAOK|4;*Kerala Blasters|5|kerala"},
+ {k:"kl",pk:"legends",q:"Name a club Patrick Kluivert played for",h:"Senior career",f:"Kluivert ended his career at Lille in 2008.",a:
+ "Barcelona|1|barca;Ajax|1;AC Milan|2|milan;Newcastle United|2|newcastle;Valencia|3;PSV Eindhoven|3|psv;*Lille|4|losc"},
+ {k:"cd",pk:"legends",q:"Name a club Clint Dempsey played for",h:"Senior career, loans count",f:"Dempsey started his pro career with the New England Revolution in 2004.",a:
+ "Fulham|1;Seattle Sounders|1|sounders;Tottenham Hotspur|2|tottenham,spurs;*New England Revolution|3|revolution,revs,new england"},
+ {k:"ld",pk:"legends",q:"Name a club Landon Donovan played for",h:"Senior career, loans count",f:"Donovan joined Mexico's Club León for one last season in 2018.",a:
+ "LA Galaxy|1|galaxy;Everton|2;San Jose Earthquakes|2|san jose,earthquakes;Bayer Leverkusen|3|leverkusen;Bayern Munich|3|bayern;San Diego Sockers|5|sockers;*Club Leon|4|leon"},
+ {k:"rg",pk:"legends",q:"Name a club Ruud Gullit played for",h:"Senior career",f:"Gullit made his debut for Haarlem at 16.",a:
+ "AC Milan|1|milan;Chelsea|1;Feyenoord|2;PSV Eindhoven|2|psv;Sampdoria|3;*Haarlem|4|hfc haarlem"},
+ {k:"wwc",pk:"women",q:"Name a country that has won the Women's World Cup",h:"1991–2023",f:"Norway won the 1995 tournament in Sweden.",a:
+ "United States|1|usa,us,america,uswnt;Germany|1;Spain|1;Japan|2;*Norway|3"},
+ {k:"wwcf",pk:"women",q:"Name a country that has reached a Women's World Cup final",h:"Finalists 1991–2023",f:"China lost the 1999 final to the United States on penalties at the Rose Bowl.",a:
+ "United States|1|usa,us,america,uswnt;Germany|1;Spain|1;England|1;Japan|2;Netherlands|2|holland;Norway|2;Sweden|2;Brazil|2;*China|3|china pr"},
+ {k:"wwch",pk:"women",q:"Name a country that has hosted the Women's World Cup",h:"1991–2023",f:"China hosted the first Women's World Cup, in 1991.",a:
+ "United States|1|usa,us,america;France|1;Canada|1;Australia|1;New Zealand|2;Germany|2;Sweden|3;*China|3|china pr"},
+ {k:"weu",pk:"women",q:"Name a country that has won the Women's Euros",h:"1984–2025",f:"Sweden won the first Women's Euro, in 1984.",a:
+ "Germany|1|west germany;England|1;Netherlands|2|holland;Norway|3;*Sweden|3"},
+ {k:"wbdo",pk:"women",q:"Name a women's Ballon d'Or winner",h:"2018–2026",f:"Hegerberg won the first women's Ballon d'Or, in 2018.",a:
+ "Aitana Bonmati|1|aitana,bonmati;Alexia Putellas|1|alexia,putellas;Megan Rapinoe|2|rapinoe;*Ada Hegerberg|3|hegerberg"},
+ {k:"uwcl",pk:"women",q:"Name a Women's Champions League winner",h:"Including the UEFA Women's Cup, 2002–2026",f:"Umeå won back-to-back titles in 2003 and 2004.",a:
+ "Lyon|1|olympique lyonnais,ol lyonnes,olympique lyon;Barcelona|1|barca;Arsenal|1;Wolfsburg|2|vfl wolfsburg;Frankfurt|3|1 ffc frankfurt,ffc frankfurt,eintracht frankfurt;Turbine Potsdam|3|potsdam;FCR Duisburg|4|duisburg;*Umea IK|4|umea"},
+ {k:"wolg",pk:"women",q:"Name a country that has won women's Olympic football gold",h:"1996–2024",f:"Canada won gold at the Tokyo Games, beating Sweden on penalties.",a:
+ "United States|1|usa,us,america,uswnt;Germany|2;Norway|3;*Canada|2"},
+ {k:"wsl",pk:"women",q:"Name a Women's Super League champion",h:"2011 to 2025–26",f:"Liverpool won back-to-back WSL titles in 2013 and 2014.",a:
+ "Chelsea|1;Arsenal|1;Manchester City|2|man city;*Liverpool|3"},
+ {k:"nwsl",pk:"women",q:"Name an NWSL champion",h:"2013–2025",f:"Western New York Flash won the 2016 title on penalties.",a:
+ "Portland Thorns|1|thorns,portland;Gotham FC|1|gotham,nj ny gotham;Orlando Pride|2|orlando,pride;Washington Spirit|2|spirit,washington;North Carolina Courage|2|courage,nc courage;FC Kansas City|3|kansas city;*Western New York Flash|4|wny flash,flash"},
+ {k:"amg",pk:"women",q:"Name a club Alex Morgan played for",h:"Senior career, loans count",f:"Morgan won the 2011 WPS title with Western New York Flash.",a:
+ "San Diego Wave|1|wave,san diego;Orlando Pride|1|orlando,pride;Portland Thorns|1|thorns,portland;Lyon|2|olympique lyonnais;Tottenham Hotspur|2|tottenham,spurs;Seattle Sounders Women|4|sounders women,seattle sounders;California Storm|5|cal storm;*Western New York Flash|3|wny flash,flash"}
+);
+const PACKS={
+  club:{n:"CLUB FOOTBALL",tag:"UNDER THE LIGHTS",d:"the Premier League, Europe's big leagues and MLS",go:"WALK OUT →"},
+  world:{n:"THE WORLD STAGE",tag:"PASSPORT READY",d:"World Cups, Euros, Copa América and AFCON",go:"BOARD THE COACH →"},
+  legends:{n:"LEGENDS",tag:"HALL OF FAME",d:"Ballon d'Or winners, icons and their clubs",go:"OPEN THE CABINET →"},
+  women:{n:"THE WOMEN'S GAME",tag:"NOW SHOWING",d:"World Cups, Euros, the WSL and the NWSL",go:"KICK OFF →"}
+};
+</script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ROUND=25,WARM=3,M_PER_PT=.15;
+
+// tiers: 0 no shot, 1 tap-in … 6 worldie (mirrors the six-step rarity ladder)
+const T=[
+ {n:"No shot",p:0,e:"⬛",fl:"the clock beat you to it."},
+ {n:"Tap-in",p:10,e:"⚪",fl:"The answer the whole ground shouts."},
+ {n:"Panenka",p:15,e:"🟠",fl:"Felt cheeky. The keeper saw it coming."},
+ {n:"Header",p:30,e:"🟢",fl:"Solid. Makes the highlights."},
+ {n:"Volley",p:60,e:"🔵",fl:"Struck clean. Not many saw that."},
+ {n:"Bicycle kick",p:85,e:"🟣",fl:"Deep cut. The pundits are rewinding it."},
+ {n:"Worldie",p:100,e:"🌟",fl:""}];
+const SCOUT=[[0,150,1,"Sunday League","Hungover, but you turned up. Run it back."],[151,250,3,"League Two","Honest pro. The tape holds up."],[251,350,4,"League One","Pushing for promotion. Nearly at halfway."],[351,449,5,"Championship","Past halfway and pulling away. Scouts are watching."],[450,700,6,"Premier League","Top flight. The whole ground knows your name."]];
+
+// 8×8 pixel icons per tier
+const ICONS=[
+ "........|.######.|.#....#.|.#....#.|.#....#.|.#....#.|.######.|........",
+ "........|..##....|..##....|..###...|..#####.|.######.|.######.|.#.#.#..",
+ ".....##.|....####|...#.##.|..#.....|.#......|#.......|#.......|........",
+ "...##...|..####..|...##...|........|..####..|.######.|.##.##..|..####..",
+ "........|##...##.|....####|###.####|....####|##...##.|........|........",
+ "#.....#.|.#...#..|..#.#...|...#....|..###...|...#....|..###.##|.....###",
+ "...##...|...##...|########|.######.|..####..|.##..##.|.#....#.|........"];
+function icon(t,cls){const rows=ICONS[t].split("|");let r="";rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==="#")r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}));
+  return `<svg class="px ${cls||""}" viewBox="0 0 8 8" data-t="${t}" style="fill:var(--tc)" aria-hidden="true">${r}</svg>`}
+const BALLMAP=".WWWW.|WWKWWW|WKKKWW|WWKWWW|WWWWKW|.WWWW.";
+function pixels(map,pal,s=1){let r="";map.split("|").forEach((row,y)=>[...row].forEach((c,x)=>{if(pal[c])r+=`<rect x="${x*s}" y="${y*s}" width="${s}" height="${s}" fill="${pal[c]}"/>`}));return r}
+
+// data
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/ø/g,"o").replace(/ß/g,"ss").replace(/&/g,"and").replace(/[^a-z0-9 ]/g," ").replace(/\b(fc|cf|the)\b/g," ").replace(/\s+/g," ").trim();
+const tierOf=(r,gem,clever)=>gem?6:clever?2:r<=1?1:r===2?3:r===3?4:5;
+const P=RAW.map(p=>({...p,a:p.a.split(";").map(s=>{let[n,r,al]=s.split("|");const gem=n[0]==="*",clever=n[0]==="~";if(gem||clever)n=n.slice(1);const t=tierOf(+r,gem,clever);
+  return{name:n,t,p:T[t].p,keys:[n,...(al?al.split(","):[])].map(norm).filter(Boolean)}})}));
+const byK=Object.fromEntries(P.map((p,i)=>[p.k,i]));
+
+// spelling help: edit distance where a swapped pair of letters counts once; gives up past `max`
+function lev(a,b,max=4){const n=a.length,m=b.length;if(Math.abs(n-m)>max)return max+1;
+  let p2=new Array(m+1).fill(0),p1=[...Array(m+1).keys()],c=new Array(m+1);
+  for(let i=1;i<=n;i++){c[0]=i;let lo=i;
+    for(let j=1;j<=m;j++){let v=Math.min(p1[j]+1,c[j-1]+1,p1[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])v=Math.min(v,p2[j-2]+1);c[j]=v;if(v<lo)lo=v}
+    if(lo>max)return max+1;const t=p2;p2=p1;p1=c;c=t}
+  return p1[m]}
+// sound-alike skeleton, so "Beckinbower" and "Beckenbauer" land next to each other
+function sk(s){s=s.replace(/[^a-z]/g,"").replace(/ph/g,"f").replace(/sch|sh/g,"s").replace(/ch|ck|c|q/g,"k").replace(/x/g,"ks").replace(/z/g,"s").replace(/y/g,"i").replace(/w/g,"v").replace(/h/g,"");
+  return s?(s[0]+s.slice(1).replace(/[aeiou]/g,"")).replace(/(.)\1+/g,"$1"):""}
+const tolFor=L=>L<=3?0:L<=5?1:L<=8?2:L<=12?3:4;
+P.forEach(p=>p.a.forEach(a=>a.kx=a.keys.map(k=>({k,ns:k.replace(/ /g,""),sk:sk(k),tk:k.split(" ")}))));
+// real names that aren't answers here should never be "corrected" into one that is
+const KNOWN=new Set([...P.flatMap(p=>p.a.flatMap(a=>a.keys)),...("austria|wales|scotland|ireland|northern ireland|republic of ireland|turkey|ukraine|romania|serbia|iceland|finland|slovakia|slovenia|bosnia|albania|georgia|costa rica|honduras|jamaica|panama|haiti|el salvador|mali|burkina faso|ghana|india|indonesia|uzbekistan|jordan|united arab emirates|"+
+  "beckham|david beckham|ibrahimovic|zlatan|lewandowski|neymar|hazard|eden hazard|vinicius|vinicius junior|bellingham|yamal|lamine yamal|pedri|gavi|de bruyne|van dijk|saka|foden|rashford|xavi|puyol|busquets|pique|ramos|sergio ramos|casemiro|ozil|schweinsteiger|totti|nesta|baresi|gattuso|inzaghi|vieri|bebeto|roberto carlos|adriano|robinho|griezmann|kante|benzema|lukaku|hazard|dybala|lautaro|julian alvarez|enzo fernandez|mac allister|cavani|forlan|pogba|giroud|varane|ter stegen|oblak|ederson|courtois").split("|").map(norm)]);
+const STOP=new Set("united city town athletic rovers wanderers county albion real sporting stadium estadio stadio national nacional olympic olympique international borussia eintracht club de la del van von di da al el le saint st park new york".split(" "));
+// exact: counts. near: correction preview. vague: too generic. {}: not an answer.
+function match(p,guess){
+  const g=norm(guess);if(!g)return{};
+  const bag=s=>s.split(" ").sort().join(" "),gb=bag(g),gn=g.replace(/ /g,"");
+  for(const a of p.a)if(a.kx.some(x=>x.k===g||x.ns===gn||bag(x.k)===gb))return{exact:a};
+  const gt=g.split(" "),gs=sk(g);
+  if(gt.every(w=>w.length<3||STOP.has(w)))return p.a.some(a=>a.kx.some(x=>x.tk.some(t=>gt.includes(t))))?{vague:true}:{};
+  const cand=[];
+  for(const a of p.a){let best=9,tokHit=false;
+    for(const x of a.kx){
+      const L=Math.max(gn.length,x.ns.length),tl=tolFor(L);
+      if(tl){const d=lev(gn,x.ns,tl);if(d<=tl)best=Math.min(best,d/L)}
+      if(gs.length>=2&&x.sk.length>=2&&gs[0]===x.sk[0]){const tol=x.sk.length<=3?0:x.sk.length<=6?1:2,ds=lev(gs,x.sk,tol);if(ds<=tol)best=Math.min(best,.12+ds/x.sk.length)}
+      if(gt.length===1&&x.tk.length>1)for(const t of x.tk){if(t.length<4||STOP.has(t))continue;
+        if(t===g){best=Math.min(best,.1);tokHit=true;continue}
+        const tt=tolFor(t.length),dt=lev(g,t,tt);if(tt&&dt<=tt)best=Math.min(best,.18+dt/t.length);
+        else if(g.length>=5&&g.length>=t.length*.5&&t.startsWith(g))best=Math.min(best,.3)}
+      if(g.length>=5&&gn.length>=x.ns.length*.5&&x.ns.startsWith(gn))best=Math.min(best,.25)}
+    if(best<.6)cand.push({a,s:best,tokHit})}
+  if(!cand.length||(KNOWN.has(g)&&!cand.some(c=>c.tokHit)))return{};
+  cand.sort((x,y)=>x.s-y.s||x.a.name.localeCompare(y.a.name));
+  const top=cand.filter(c=>c.s<=cand[0].s+.12);
+  return top.length>3?{vague:true}:{near:top.map(c=>c.a),conf:cand[0].s};
+}
+
+// days
+const EPOCH=Date.UTC(2026,10,1);
+const dayNum=()=>Math.max(1,Math.floor((Date.now()-EPOCH)/864e5)+1);
+const dayDate=n=>new Date(EPOCH+(n-1)*864e5).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"});
+function rng(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
+function shuffle(arr,r=Math.random){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const dailyOrder=n=>shuffle(P.map((_,i)=>i),rng(n*7919+13)).slice(0,7);
+
+// settings and saved runs (per-viewer conveniences)
+const SET=Object.assign({snd:true,low:false,cb:false,corr:true,clr:false},LS.get("wd2-set",{}));
+function applySet(){document.documentElement.classList.toggle("low",SET.low);document.documentElement.classList.toggle("cb",SET.cb);
+  $$(".sw").forEach(b=>{const on=!!SET[b.dataset.k];b.setAttribute("aria-checked",on);b.querySelector("i").textContent=on?"ON":"OFF"});
+  $("#snd").textContent=SET.snd?"♪":"×";$("#snd").setAttribute("aria-label",SET.snd?"Mute sound":"Turn sound on")}
+const RUNS=LS.get("wd2-runs",{});
+const saveRuns=()=>LS.set("wd2-runs",RUNS);
+function streak(){let s=0;for(let d=dayNum();d>=1;d--){if(RUNS["d"+d]?.done)s++;else if(d===dayNum())continue;else break}return s}
+
+// sound: tiny synth, starts only after a tap
+const SFX={ctx:null,
+  ok(){if(!SET.snd)return null;try{this.ctx=this.ctx||new (window.AudioContext||window.webkitAudioContext)();if(this.ctx.state==="suspended")this.ctx.resume();return this.ctx}catch(e){return null}},
+  tone(f,d,type="sine",v=.12,f2,at=0){const c=this.ok();if(!c)return;const t=c.currentTime+at,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(c.destination);o.start(t);o.stop(t+d+.02)},
+  noise(d,v=.15,freq=900,at=0){const c=this.ok();if(!c)return;const t=c.currentTime+at,n=c.sampleRate*d,b=c.createBuffer(1,n,c.sampleRate),ch=b.getChannelData(0);for(let i=0;i<n;i++)ch[i]=(Math.random()*2-1)*(1-i/n);
+    const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=b;f.type="bandpass";f.frequency.value=freq;f.Q.value=.7;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+d*.3);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f).connect(g).connect(c.destination);s.start(t)},
+  kick(){this.tone(150,.14,"sine",.35,45);this.noise(.05,.08,2500)},
+  whistle(n=1){for(let i=0;i<n;i++){this.tone(2900,.22,"square",.035,2700,i*.3);this.tone(2950,.22,"sine",.05,2800,i*.3)}},
+  tick(){this.tone(1300,.05,"square",.03)},
+  buzz(){this.tone(150,.2,"sawtooth",.07,110)},
+  blip(){this.tone(880,.08,"triangle",.07,1320)},
+  cheer(t){if(t<3)return;this.noise(.6+t*.25,.05+t*.03,700);if(t>=5)this.noise(1.6,.12,1100,.1);if(t===6)[523,659,784,1047].forEach((f,i)=>this.tone(f,.3,"triangle",.08,0,.15+i*.09))}
+};
+</script>
+<script>
+// ---------- the stadium scene ----------
+const NS="http://www.w3.org/2000/svg";
+const LANDMARKS=[[0,"your goal line"],[16.5,"clear of your box"],[35,"out of the defensive third"],[52.5,"THE HALFWAY LINE"],[70,"THE FINAL THIRD"],[88.5,"EDGE OF THE BOX"],[94,"the penalty spot"],[105,"BACK OF THE NET · a perfect run ends here"]];
+const PLAYER={A:"....HHHH....|...HHHHHH...|...HSSSSH...|....SSSS....|.....SS.....|...PPPPPP...|..PPPPPPPP..|.SPPPPPPPPS.|.S.PPPPPP.S.|...PPPPPP...|...WWWWWW...|...WW..WW...|...KK..KK...|...KK..KK...|..BBB..BBB..",
+  B:"....HHHH....|...HHHHHH...|...HSSSSH...|....SSSS....|.....SS.....|...PPPPPP...|..PPPPPPPP..|.SPPPPPPPPS.|.S.PPPPPP.S.|...PPPPPP...|...WWWWWW...|...WW..WW...|..KK....KK..|.KK......KK.|BB........BB"};
+const PAL={H:"#2b1d14",S:"#e0a47a",P:"#ff4f8b",W:"#e8f1ff",K:"#ff4f8b",B:"#0a0f1c"},BPAL={W:"#f4f8ff",K:"#0a0f1c"};
+const SC={cam:0,px:0,K:.42,
+  layout(){const W=innerWidth,H=innerHeight;Object.assign(this,{W,H,S:Math.max(11,Math.min(30,W/34)),D:H*.32/68,PB:H*.9,OX:W*.16,ps:Math.max(3,Math.min(5,Math.round(H/180)))})},
+  proj(x,y){return[x*this.S+y*this.D*this.K+this.OX,this.PB-y*this.D]},
+  el(tag,attrs,parent,html){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(html)e.innerHTML=html;if(parent)parent.appendChild(e);return e},
+  build(){
+    this.layout();const{W,H,S,D,PB,ps}=this,svg=$("#scn"),el=this.el.bind(this);
+    svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.innerHTML="";
+    const defs=el("defs",{},svg,`<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050a14"/><stop offset=".6" stop-color="#0b1a33"/><stop offset="1" stop-color="#132a4c"/></linearGradient>
+      <radialGradient id="glow"><stop offset="0" stop-color="#ffd38c" stop-opacity=".55"/><stop offset="1" stop-color="#ffd38c" stop-opacity="0"/></radialGradient>
+      <pattern id="crowdA" width="12" height="11" patternUnits="userSpaceOnUse">${pixels("....|.ab.|.cc.",{a:"#3b4f75",b:"#5a6f99",c:"#26385a"},2)}<g transform="translate(6,5)">${pixels(".dd|.ee",{d:"#7a4a5e",e:"#3a2a40"},2)}</g></pattern>
+      <pattern id="crowdB" width="17" height="14" patternUnits="userSpaceOnUse"><g transform="translate(3,2)">${pixels("ff|gg",{f:"#8a6a3a",g:"#41361f"},2)}</g><g transform="translate(11,8)">${pixels("hh|ii",{h:"#2f7a6a",i:"#1a3d36"},2)}</g></pattern>`);
+    el("rect",{width:W,height:H,fill:"url(#sky)"},svg);
+    const stars=el("g",{},svg);for(let i=0;i<40;i++)el("rect",{x:Math.random()*W|0,y:Math.random()*H*.12|0,width:2,height:2,fill:"#9fb6dd",class:"star",style:`animation-delay:${(Math.random()*3).toFixed(2)}s`},stars);
+    // stands
+    const sTop=H*.3,sBot=PB-68*D-H*.03;
+    el("rect",{x:0,y:sTop-12,width:W,height:12,fill:"#0a1222"},svg);
+    el("rect",{x:0,y:sTop,width:W,height:sBot-sTop,fill:"#0c1628"},svg);
+    this.crowdA=el("rect",{x:-40,y:sTop+10,width:W+80,height:sBot-sTop-16,fill:"url(#crowdA)",class:"crowd",opacity:.5},svg);
+    this.crowdB=el("rect",{x:-40,y:sTop+10,width:W+80,height:sBot-sTop-16,fill:"url(#crowdB)",opacity:.45},svg);
+    for(let y=sTop+18;y<sBot;y+=22)el("rect",{x:0,y,width:W,height:2,fill:"#08101e",opacity:.7},svg);
+    this.flashG=el("g",{},svg);
+    // floodlight towers (parallax)
+    this.towers=el("g",{},svg);
+    for(let x=W*.08;x<W+1400;x+=Math.max(320,W*.42)){const tw=el("g",{},this.towers);
+      el("rect",{x:x-3,y:sTop-H*.07,width:6,height:H*.09,fill:"#1a2740"},tw);
+      el("circle",{cx:x,cy:sTop-H*.085,r:H*.09,fill:"url(#glow)",class:"lamp"},tw);
+      const lg=el("g",{class:"lamp"},tw);for(let r=0;r<3;r++)for(let c=0;c<6;c++)el("rect",{x:x-27+c*9,y:sTop-H*.11+r*8,width:7,height:6,fill:r===1?"#ffe2a6":"#ffc56b"},lg)}
+    // pitch, in metres
+    this.world=el("g",{},svg);const w=this.world;
+    el("rect",{x:-16,y:-8,width:137,height:84,fill:"#14502a"},w);
+    for(let i=0;i<20;i++)el("rect",{x:i*5.25,y:0,width:5.25,height:68,fill:i%2?"#1d6a38":"#237a42"},w);
+    const ln={fill:"none",stroke:"#dfe9f5","stroke-opacity":".85","stroke-width":2,"vector-effect":"non-scaling-stroke"};
+    const L=el("g",ln,w);
+    el("rect",{x:0,y:0,width:105,height:68},L);el("line",{x1:52.5,y1:0,x2:52.5,y2:68},L);el("circle",{cx:52.5,cy:34,r:9.15},L);
+    el("rect",{x:0,y:13.84,width:16.5,height:40.32},L);el("rect",{x:88.5,y:13.84,width:16.5,height:40.32},L);
+    el("rect",{x:0,y:24.84,width:5.5,height:18.32},L);el("rect",{x:99.5,y:24.84,width:5.5,height:18.32},L);
+    el("path",{d:"M16.5 26.69A9.15 9.15 0 0 1 16.5 41.31M88.5 26.69A9.15 9.15 0 0 0 88.5 41.31"},L);
+    [[11,34],[94,34],[52.5,34]].forEach(([cx,cy])=>el("circle",{cx,cy,r:.35,fill:"#dfe9f5"},w));
+    // upright layer: boards, goals, captions, markers, player
+    this.up=el("g",{},svg);const up=this.up,bh=Math.max(10,H*.024),[bx0,by]=this.proj(-14,70),[bx1]=this.proj(119,70);
+    el("rect",{x:bx0,y:by-bh,width:bx1-bx0,height:bh,fill:"#101d33"},up);
+    for(let x=bx0+10,i=0;x<bx1;x+=150,i++)el("text",{x,y:by-bh*.22,fill:i%2?"#4de3ff":"#ffb347","font-family":"VT323,monospace","font-size":bh*.9},up).textContent=i%2?"FIND THE WORLDIE":"◆ WORLDIE ◆";
+    const goal=(x,dir)=>{const g=el("g",{fill:"none",stroke:"#f4f8ff","stroke-width":Math.max(2,ps*.7)},up),V=S*.9;
+      const[a,ay]=this.proj(x,30.34),[b,byy]=this.proj(x,37.66),[ba,bay]=this.proj(x-2*dir,30.34),[bb,bby]=this.proj(x-2*dir,37.66);
+      const net=el("g",{stroke:"#c9d6ea","stroke-width":1,opacity:.45},g);
+      for(let k=1;k<6;k++){const t=k/6;el("line",{x1:a+(b-a)*t,y1:ay-2.44*V+(byy-ay)*t,x2:ba+(bb-ba)*t,y2:bay-1.6*V+(bby-bay)*t},net)}
+      el("path",{d:`M${ba} ${bay}L${ba} ${bay-1.6*V}L${bb} ${bby-1.6*V}L${bb} ${bby}`},net);
+      el("path",{d:`M${a} ${ay}L${a} ${ay-2.44*V}L${b} ${byy-2.44*V}L${b} ${byy}`},g);
+      el("path",{d:`M${a} ${ay-2.44*V}L${ba} ${bay-1.6*V}M${b} ${byy-2.44*V}L${bb} ${bby-1.6*V}`,"stroke-width":1.5},g)};
+    goal(0,1);goal(105,-1);
+    const cap=el("g",{"font-family":"VT323,monospace","font-size":Math.max(15,Math.min(19,H*.022))},up);
+    LANDMARKS.forEach(([x,t],i)=>{const[X,Y]=this.proj(x,70),yy=Y-bh-10-(i%2)*20,big=t===t.toUpperCase();
+      el("line",{x1:X,y1:yy+4,x2:X,y2:Y-bh,stroke:big?"#4de3ff":"#7d93b8","stroke-dasharray":"2 3",opacity:.8},cap);
+      const tx=el("text",{x:X+4,y:yy,fill:big?"#4de3ff":"#a9bfe0",stroke:"#050a14","stroke-width":3,style:"paint-order:stroke"},cap);tx.textContent="── "+t})
+    this.mk=el("g",{},up);this.lab=el("g",{},up);
+    this.pl=el("g",{id:"pl"},up);
+    el("ellipse",{cx:6*ps,cy:15*ps,rx:5*ps,ry:ps*1.2,fill:"#000",opacity:.35},this.pl);
+    el("g",{class:"fA"},this.pl,pixels(PLAYER.A,PAL,ps));el("g",{class:"fB"},this.pl,pixels(PLAYER.B,PAL,ps));
+    el("g",{id:"ball",transform:`translate(${10*ps},${13*ps})`},this.pl,pixels(BALLMAP,BPAL,Math.max(2,ps*.7)));
+    this.place(this.px);this.setCam(this.cam);
+  },
+  camFor(px){return px+(34*this.D*this.K+this.OX-this.W*.42)/this.S},
+  setCam(x){this.cam=x;const{S,D,K,OX,PB}=this;this.world.setAttribute("transform",`matrix(${S},0,${K*D},${-D},${OX-x*S},${PB})`);
+    this.up.setAttribute("transform",`translate(${-x*S},0)`);this.towers.setAttribute("transform",`translate(${-x*S*.35},0)`);
+    const o=(-x*S*.5)%24;this.crowdA.setAttribute("x",-40+o);this.crowdB.setAttribute("x",-40+(-x*S*.42)%34)},
+  place(px){this.px=px;const[X,Y]=this.proj(px,34);this.pl.setAttribute("transform",`translate(${X-6*this.ps},${Y-15*this.ps})`)},
+  screen(x){const[X,Y]=this.proj(x,34);return[X-this.cam*this.S,Y]},
+  async runTo(x1,ms){const x0=this.px;this.pl.classList.add("run");
+    await tween(ms,k=>{const x=x0+(x1-x0)*k;this.place(x);this.setCam(this.camFor(x))},e=>e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2);this.pl.classList.remove("run")},
+  markers(m0){this.mk.innerHTML="";[1,2,3,4,5,6].forEach((t,i)=>{const x=m0+T[t].p*M_PER_PT,[X,Y]=this.proj(x,34),top=Y-18*this.ps-18-(i%3)*22;
+    const g=this.el("g",{class:"mk","data-t":t,style:`animation-delay:${i*.05}s`},this.mk);
+    this.el("line",{x1:X,y1:Y,x2:X,y2:top,style:"stroke:var(--tc)","stroke-dasharray":"3 3","stroke-width":1.5},g);
+    this.el("text",{x:X+4,y:top+4,style:"fill:var(--tc);paint-order:stroke",stroke:"#050a14","stroke-width":3,"font-family":"VT323,monospace","font-size":16},g).textContent=`${T[t].n.toUpperCase()} · ${T[t].p}`})},
+  clearMarkers(){this.mk.innerHTML="";this.lab.innerHTML=""},
+  async fly(text,x0,x1,ms){this.lab.innerHTML="";const g=this.el("g",{},this.lab),t=this.el("text",{"font-family":"VT323,monospace","font-size":20,fill:"#fff","text-anchor":"middle"},g);t.textContent=`“${text.toUpperCase()}”`;
+    const w=t.getComputedTextLength?t.getComputedTextLength()+16:text.length*10+20,r=this.el("rect",{x:-w/2,y:-17,width:w,height:24,fill:"#0d1830",stroke:"#e8f1ff","stroke-width":1.5},g);g.insertBefore(r,t);t.setAttribute("y",1);
+    await tween(ms,k=>{const[X,Y]=this.proj(x0+(x1-x0)*k,34);g.setAttribute("transform",`translate(${X},${Y-18*this.ps-6-Math.sin(k*Math.PI)*26})`);if(Math.random()<.5&&k<1)sparkle(this.screen(x0+(x1-x0)*k))},e=>1-Math.pow(1-e,3))},
+  crowdFlash(n){if(SET.low||RM)return;for(let i=0;i<n;i++){const r=this.el("rect",{x:Math.random()*this.W,y:this.H*.15+Math.random()*(this.PB-68*this.D-this.H*.2),width:3,height:3,fill:"#fff"},this.flashG);setTimeout(()=>r.remove(),180+Math.random()*500)}}
+};
+function tween(ms,step,ease=e=>e){return new Promise(res=>{if(RM||ms<=0){step(1);return res()}const t0=performance.now(),f=now=>{const k=Math.min(1,(now-t0)/ms);step(ease(k));if(k<1)requestAnimationFrame(f);else res()};requestAnimationFrame(f)})}
+
+// pixel sparks and confetti on one canvas
+const fx=$("#fx"),fctx=fx.getContext("2d"),parts=[];let fxOn=false,fxLast=0;
+function burst(x,y,colors,n,o={}){if(RM||SET.low&&n>20)n=Math.min(n,12);if(RM)return;const now=performance.now();
+  for(let i=0;i<n;i++){const a=(o.angle??-Math.PI/2)+(Math.random()-.5)*(o.spread??Math.PI*.9),v=(o.speed??8)*(.4+Math.random()*.8);
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:o.gravity??.3,s:(o.size??4)*(.6+Math.random()*.7),c:colors[i%colors.length],born:now,life:(o.life??1500)*(.7+Math.random()*.5)})}
+  if(!fxOn){fxOn=true;fx.hidden=false;const d=Math.min(2,devicePixelRatio||1);fx.width=innerWidth*d;fx.height=innerHeight*d;fctx.setTransform(d,0,0,d,0,0);fxLast=now;requestAnimationFrame(fxTick)}}
+function sparkle([x,y]){burst(x,y-30,["#ffd166","#fff","#4de3ff"],1,{speed:2,spread:6.3,gravity:.05,life:500,size:3})}
+function fxTick(now){const dt=Math.min(3,Math.max(0,(now-fxLast)/16.67));fxLast=now;fctx.clearRect(0,0,innerWidth,innerHeight);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i],age=now-p.born;if(age>p.life||p.y>innerHeight+20){parts.splice(i,1);continue}
+    p.vy+=p.g*dt;p.vx*=Math.pow(.985,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;fctx.globalAlpha=Math.max(0,Math.min(1,(1-age/p.life)*1.5));fctx.fillStyle=p.c;fctx.fillRect(Math.round(p.x),Math.round(p.y),Math.round(p.s),Math.round(p.s))}
+  if(parts.length)requestAnimationFrame(fxTick);else{fxOn=false;fctx.clearRect(0,0,innerWidth,innerHeight);fx.hidden=true}}
+</script>
+<script>
+// ---------- a match: seven rounds ----------
+let G=LS.get("wd2-cur",null),CLK=null,RES=null;
+const saveG=()=>LS.set("wd2-cur",G);
+const sleep=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
+const total=res=>res.reduce((s,r)=>s+r.p,0);
+
+function startGame(mode,opt={}){
+  let order,key,title,day=null;
+  if(mode==="daily"||mode==="archive"){day=opt.day??dayNum();order=dailyOrder(day);key="d"+day;title="MATCHDAY #"+day;
+    if(RUNS[key]?.done){RES=RUNS[key];return go("results")}}
+  else if(mode==="unl"){order=shuffle(P.map((_,i)=>i)).slice(0,7);key="u";title="UNLIMITED"}
+  else{order=shuffle(P.map((_,i)=>i).filter(i=>P[i].pk===opt.pk)).slice(0,7);key="p:"+opt.pk;title=PACKS[opt.pk].n}
+  G={mode,key,day,title,pk:opt.pk||null,order,i:0,res:[],m:0,late:mode==="archive"&&day!==dayNum()};
+  saveG();SC.place(0);SC.setCam(SC.camFor(0));go("play")}
+
+function enterGame(){if(!G)return go("");SC.place(G.m);SC.setCam(SC.camFor(G.m));hud();
+  if(G.res.length>G.i){showReveal(G.res[G.i],false)}else startRound()}
+
+function hud(){$("#hm").textContent=G.m.toFixed(1);$("#hs").textContent=total(G.res);
+  $("#sq").innerHTML=G.order.map((_,k)=>{const r=G.res[k];return r?`<i data-t="${r.t}"></i>`:`<i class="${k===G.i?"cur":""}"></i>`}).join("");
+  $("#hr").textContent=G.i>=G.order.length?"FULL TIME":`ROUND ${G.i+1} OF ${G.order.length}`}
+
+function startRound(){
+  const p=P[G.order[G.i]],ai=$("#ai");stopClock();G.pend=null;
+  $("#rv").hidden=true;$("#next").hidden=true;$("#bar").hidden=false;$("#pp").hidden=false;SC.clearMarkers();
+  $("#ppr").textContent=`ROUND ${G.i+1} OF ${G.order.length}`;$("#ppq").textContent=p.q;
+  $(".pph").textContent=`${p.h} · ► rarer answers run farther ►`;
+  const pp=$("#pp");pp.style.animation="none";void pp.offsetWidth;pp.style.animation="";
+  ai.value="";ai.disabled=true;$("#shoot").disabled=true;setDial(1,ROUND);hud();
+  let n=RM?0:WARM;const fb=$("#fb");
+  const warm=()=>{if(!G||$("#game").classList.contains("on")===false)return;
+    if(n>0){fb.innerHTML=`<div class="warm">warming up · kick-off in ${n}</div>`;n--;setTimeout(warm,1000)}
+    else{fb.innerHTML="";SFX.whistle(1);ai.disabled=false;$("#shoot").disabled=false;ai.focus({preventScroll:true});startClock()}};
+  warm()}
+
+function setDial(f,secs){const d=$("#dial");d.style.setProperty("--f",f);$("#tb").style.setProperty("--f",f);$("#dn").textContent=Math.max(0,Math.ceil(secs));d.classList.toggle("low",secs<=5)}
+function startClock(){const t0=performance.now();let last=ROUND;
+  CLK=setInterval(()=>{const left=ROUND-(performance.now()-t0)/1000;setDial(Math.max(0,left/ROUND),left);
+    const s=Math.ceil(left);if(s<last&&s<=5&&s>0){SFX.tick()}last=s;if(left<=0)timeout()},100)}
+function stopClock(){clearInterval(CLK);CLK=null}
+
+$("#ai").addEventListener("input",()=>{if(G)G.pend=null;const fb=$("#fb");if(fb.querySelector(".fix,.nope"))fb.innerHTML=""});
+$("#af").addEventListener("submit",e=>{e.preventDefault();if(!G||!CLK)return;
+  const ai=$("#ai"),v=ai.value.trim(),p=P[G.order[G.i]],fb=$("#fb");
+  if(!v)return nudge(ai);
+  if(G.pend&&G.pend.v===v)return lockIn(G.pend.a,v);
+  const m=match(p,v);
+  if(m.exact)return lockIn(m.exact,v);
+  if(m.near){
+    if(!SET.corr&&m.near.length===1)return lockIn(m.near[0],m.near[0].name);
+    SFX.blip();
+    if(m.near.length===1){const a=m.near[0];ai.value=a.name;G.pend={v:a.name,a};
+      fb.innerHTML=`<div class="fix">“${esc(v)}” → <span class="to">“${esc(a.name)}”</span><small>submit again to confirm · or edit</small></div>`}
+    else{fb.innerHTML=`<div class="fix">“${esc(v)}” could be…<div class="opts">${m.near.map((a,i)=>`<button type="button" data-i="${i}">${esc(a.name)}</button>`).join("")}</div><small>tap one to confirm · or edit</small></div>`;
+      fb.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{const a=m.near[+b.dataset.i];ai.value=a.name;lockIn(a,a.name)})}
+    return}
+  SFX.buzz();fb.innerHTML=`<div class="nope">“${esc(v)}”: ${m.vague?"too vague. add more of the name":"offside. try again"}</div>`;
+  if(SET.clr)ai.value="";else ai.select();nudge(ai)});
+function nudge(el){if(RM)return;el.animate([{transform:"none"},{transform:"translateX(-6px)"},{transform:"translateX(5px)"},{transform:"none"}],{duration:280})}
+
+async function lockIn(a,guess){if(!G||!CLK)return;stopClock();
+  const p=P[G.order[G.i]],x0=G.m,x1=G.m+a.p*M_PER_PT;
+  $("#ai").disabled=true;$("#shoot").disabled=true;$("#fb").innerHTML="";
+  G.res.push({q:p.k,a:a.name,g:guess,t:a.t,p:a.p});G.m=x1;G.pend=null;saveG();
+  SFX.kick();SC.markers(x0);
+  await Promise.all([SC.fly(a.name,x0,x1,1300),sleep(260).then(()=>SC.runTo(x1,1100))]);
+  SFX.cheer(a.t);celebrate(a.t,x1);
+  await sleep(250);SC.clearMarkers();showReveal(G.res[G.i],true)}
+function timeout(){if(!G)return;stopClock();const p=P[G.order[G.i]];
+  G.res.push({q:p.k,a:null,g:$("#ai").value.trim(),t:0,p:0});G.pend=null;saveG();
+  $("#ai").disabled=true;$("#shoot").disabled=true;$("#fb").innerHTML="";SFX.whistle(2);showReveal(G.res[G.i],true)}
+function celebrate(t,x){const[X,Y]=SC.screen(x);
+  if(t>=4)burst(X,Y-40,["#ffd166","#4de3ff","#fff","#ff4f8b"],t*14,{speed:7});
+  if(t>=5)SC.crowdFlash(t===6?60:25);
+  if(t===6){burst(innerWidth*.15,innerHeight*.5,["#ffd166","#fff"],40,{angle:-Math.PI/3,speed:11});burst(innerWidth*.85,innerHeight*.5,["#ffd166","#fff"],40,{angle:-2*Math.PI/3,speed:11})}}
+
+function showReveal(r,fresh){const rv=$("#rv"),last=G.i>=G.order.length-1;
+  rv.dataset.t=r.t;$("#pp").hidden=true;$("#bar").hidden=true;
+  rv.innerHTML=`${icon(r.t,"ico")}<h2>${T[r.t].n}</h2><div class="ans">${r.a?`“${esc(r.a)}”`:"—"}</div>
+    <div class="pts"><b>+${r.p} PTS</b>${r.p?` · ${(r.p*M_PER_PT).toFixed(1)} m upfield`:""}</div><p>${esc(r.t===6?P[byK[r.q]].f:T[r.t].fl)}</p>`;
+  rv.hidden=false;if(!fresh)rv.style.animation="none";else rv.style.animation="";
+  hud();$("#hr").textContent=last?"FULL TIME":`ROUND ${G.i+2} OF ${G.order.length}`;
+  const nx=$("#next");nx.textContent=last?"FINAL WHISTLE":"PLAY ON →";nx.hidden=false;setTimeout(()=>nx.isConnected&&!nx.hidden&&nx.focus({preventScroll:true}),400)}
+$("#next").onclick=()=>{if(!G)return;G.i++;saveG();if(G.i>=G.order.length)return finish();startRound()};
+
+function finish(){SFX.whistle(3);
+  const rec={key:G.key,mode:G.mode,day:G.day,pk:G.pk,title:G.title,order:G.order,res:G.res,score:total(G.res),m:G.m,done:true,late:G.late,at:Date.now()};
+  if(G.day&&!RUNS[G.key]?.done){RUNS[G.key]=rec;saveRuns();logRun(rec)}
+  const hist=LS.get("wd2-hist",[]);hist.push(rec.score);LS.set("wd2-hist",hist.slice(-300));
+  LS.set("wd2-last",rec);G=null;LS.set("wd2-cur",null);RES=rec;RES.fresh=true;go("results")}
+
+// ---------- shared stats (optional: db capability) ----------
+let DB=null,UID=null;
+(async()=>{try{if(!window.claude?.use)return;const[db,user]=await Promise.all([claude.use("db"),claude.use("user")]);if(db&&user){const id=await user.id();if(id){DB=db;UID=id}}}catch(e){}})();
+async function logRun(rec){if(!DB||rec.late)return;try{const ref=DB.doc("runs/"+UID),s=await ref.get(),d=s.exists?{...(s.data().d||{})}:{};if(d[rec.day]!=null)return;d[rec.day]=rec.score;await ref.set({d})}catch(e){}}
+async function dayScores(day){if(!DB)return null;try{const q=await DB.collection("runs").get();return q.docs.map(s=>s.data()?.d?.[day]).filter(v=>typeof v==="number")}catch(e){return null}}
+
+// ---------- full time ----------
+function showResults(rec){const s=rec.score,fresh=rec.fresh;rec.fresh=false;
+  const band=SCOUT.find(b=>s>=b[0]&&s<=b[1])||SCOUT[0];
+  const tag=rec.day?`MATCHDAY #${rec.day}`:rec.title;
+  $("#rcol").innerHTML=`<div class="rhead"><span class="logo sm">WORLDIE</span><span>${esc(tag)} — FULL TIME</span></div>
+  <div class="big"><b id="rs">${fresh&&!RM?0:s}</b><span>/700</span><em>${rec.m.toFixed(1)} m</em></div>
+  <svg class="chart" id="dist" viewBox="0 0 560 130" role="img" aria-label="Score distribution"></svg><div class="cy" id="dtxt">&nbsp;</div>
+  <h3 class="sec">THE RUN CHART <small>FARTHER = RARER</small></h3>${runChart(rec)}
+  <h3 class="sec">THE SCOUTING REPORT</h3><div class="scout">${SCOUT.map(b=>`<div class="${b===band?"me":""}" data-t="${b[2]}">${icon(b[2])}<b>${b[0]}–${b[1]===700?"700":b[1]}</b><span><b>${b[3]}.</b> ${b[4]}</span></div>`).join("")}</div>
+  <div class="copyrow"><button class="cta pink" id="copy">COPY RESULT</button></div><div class="cy" id="cmsg" aria-live="polite"></div>
+  <h3 class="sec">THE MATCH REPORT <small>TAP A ROUND FOR EVERY ANSWER</small></h3><div class="box">${rec.res.map((r,i)=>{const p=P[byK[r.q]];
+    return `<button class="brow" data-t="${r.t}" data-i="${i}" aria-expanded="false"><span class="dim">${i+1}</span>${icon(r.t)}<span><small>${esc(p.q)}</small><span class="a">${r.a?esc(r.a):"—"}</span></span><span class="p">${r.p}</span><span class="dim">+</span></button>
+    <ul class="all" hidden>${[...p.a].sort((x,y)=>y.p-x.p||x.name.localeCompare(y.name)).map(a=>`<li data-t="${a.t}" class="${a.name===r.a?"me":""}">${icon(a.t)}<span>${esc(a.name)}${a.name===r.a?"<em>YOU</em>":""}</span><b>+${a.p}</b></li>`).join("")}</ul>`}).join("")}</div>
+  <div class="btnrow">${rec.mode==="unl"?`<button class="btn2" data-go="unlimited">PLAY AGAIN ↻</button>`:rec.mode==="pack"?`<button class="btn2" data-pack="${rec.pk}">PLAY AGAIN ↻</button>`:`<button class="btn2" data-go="unlimited">UNLIMITED ∞</button>`}
+    <button class="btn2" data-go="archive">ARCHIVE ⟲</button><button class="btn2" data-go="packs">THEMED PACKS →</button><button class="btn2" data-go="">TODAY'S MATCH →</button></div>`;
+  $("#results").scrollTop=0;
+  if(fresh&&!RM)tween(1100,k=>$("#rs").textContent=Math.round(s*k),e=>1-Math.pow(1-e,3));
+  $$("#rcol .brow").forEach(b=>b.onclick=()=>{const ul=b.nextElementSibling,open=ul.hidden;ul.hidden=!open;b.setAttribute("aria-expanded",open);b.lastElementChild.textContent=open?"–":"+"});
+  $("#copy").onclick=()=>{const head=`Worldie ⚽ ${rec.day?"#"+rec.day:rec.mode==="unl"?"∞":rec.title}`,txt=`${head}\n${s} · ${rec.m.toFixed(1)}m\n\n${rec.res.map(r=>T[r.t].e).join("")}\nworldie-fc.github.io/worldie`,msg=$("#cmsg");
+    const fall=()=>{msg.textContent="Couldn't reach the clipboard. Here it is: "+txt.replace(/\n+/g," ")};
+    try{navigator.clipboard.writeText(txt).then(()=>{msg.textContent="COPIED. PASTE IT IN THE GROUP CHAT."},fall)}catch(e){fall()}};
+  drawDist(rec);
+  if(fresh&&s>=350)setTimeout(()=>burst(innerWidth/2,innerHeight*.25,["#ffd166","#4de3ff","#ff4f8b","#fff"],90,{spread:Math.PI*1.2,speed:11}),600)}
+
+function runChart(rec){const n=rec.res.length,w=560,h=210,x0=74,dx=(w-x0-20)/Math.max(1,n-1);
+  let g=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Metres gained per round">`;
+  ["kick-off","3.75 m","7.5 m","11.25 m","15 m"].forEach((l,i)=>{const y=18+i*40;g+=`<line x1="${x0-10}" x2="${w}" y1="${y}" y2="${y}" stroke="#22345a" stroke-dasharray="2 4"/><text x="0" y="${y+5}" fill="#7d93b8" font-family="VT323,monospace" font-size="16">${l}</text>`});
+  rec.res.forEach((r,i)=>{const x=x0+i*dx,y=18+160*(r.p/100);
+    g+=`<line x1="${x}" x2="${x}" y1="18" y2="${y}" style="stroke:var(--t${r.t})" stroke-width="2"/><g transform="translate(${x-8},${y-6}) scale(2)" style="fill:var(--t${r.t})">${ICONS[r.t].split("|").map((row,yy)=>[...row].map((c,xx)=>c==="#"?`<rect x="${xx}" y="${yy}" width="1" height="1"/>`:"").join("")).join("")}</g>
+    <text x="${x}" y="${h-2}" text-anchor="middle" fill="#7d93b8" font-family="VT323,monospace" font-size="16">${i+1}</text>`});
+  return g+"</svg>"}
+
+async function drawDist(rec){const svg=$("#dist"),txt=$("#dtxt");if(!svg)return;
+  let vals=null,label="";
+  if(rec.day&&!rec.late){vals=await dayScores(rec.day);label=`MATCHDAY #${rec.day}'S`}
+  let mine=rec.score;
+  if(!vals||vals.length<2){const h=LS.get("wd2-hist",[]);if(h.length>=2){vals=h;label="YOUR"}else vals=null}
+  const X=v=>20+520*(v/700);
+  let g=`<line x1="20" x2="540" y1="104" y2="104" stroke="#22345a"/>`;
+  for(let v=0;v<=700;v+=100)g+=`<text x="${X(v)}" y="124" text-anchor="middle" fill="#7d93b8" font-family="VT323,monospace" font-size="15">${v}</text>`;
+  if(vals){const bins=Array(29).fill(0);vals.forEach(v=>bins[Math.min(28,Math.round(v/25))]++);
+    const sm=bins.map((_,i)=>[-2,-1,0,1,2].reduce((s,o)=>s+(bins[i+o]||0)*[1,4,6,4,1][o+2],0)),mx=Math.max(...sm,1);
+    const pts=sm.map((c,i)=>`${X(i*25)},${104-80*c/mx}`).join(" ");
+    g+=`<polygon points="20,104 ${pts} 540,104" fill="rgba(77,227,255,.22)" stroke="#4de3ff" stroke-width="2"/>`;
+    const below=vals.filter(v=>v<mine).length,others=vals.length-1;
+    txt.textContent=label==="YOUR"?`BETTER THAN ${Math.round(100*below/Math.max(1,others))}% OF YOUR ${vals.length} RUNS`:`BETTER THAN ${Math.round(100*below/Math.max(1,others))}% OF ${label} ${vals.length} FIRST RUNS`}
+  else txt.textContent=rec.day&&DB?`FIRST RUN LOGGED FOR MATCHDAY #${rec.day}`:"YOUR FIRST RUN. PLAY MORE TO SEE THE CURVE.";
+  g+=`<line x1="${X(mine)}" x2="${X(mine)}" y1="14" y2="104" stroke="#ff4f8b" stroke-width="2"/><rect x="${X(mine)-4}" y="10" width="8" height="8" fill="#ff4f8b"/><text x="${X(mine)}" y="124" text-anchor="middle" fill="#ff4f8b" font-family="VT323,monospace" font-size="15" style="paint-order:stroke" stroke="#050a14" stroke-width="4">YOU</text>`;
+  svg.innerHTML=g}
+</script>
+<script>
+// ---------- screens and routing ----------
+const SCREENS=["home","game","results","page"];
+function show(id){SCREENS.forEach(s=>$("#"+s).classList.toggle("on",s===id))}
+function go(h){h=h||"";if(location.hash.slice(1)===h)route();else location.hash=h}
+function route(){closeModals();stopClock();clearTimeout(KU.fuse);clearInterval(KU.speed);const h=location.hash.slice(1);
+  if(h==="play"){if(G){show("game");enterGame()}else go("");return}
+  if(h==="results"){RES=RES||LS.get("wd2-last",null);if(!RES)return go("");show("results");showResults(RES);return}
+  if(h==="unlimited"){startGame("unl");return}
+  if(["archive","packs","stats","faq","party"].includes(h)){show("page");$("#page").scrollTop=0;PAGES[h]();return}
+  show("home");renderHome()}
+function renderHome(){const d=dayNum(),rec=RUNS["d"+d];
+  $("#mdinfo").textContent=`MATCHDAY #${d} · STREAK ${streak()}`;
+  $("#kick").textContent=G&&G.day===d&&G.mode==="daily"?"► RESUME MATCH ◄":rec?.done?"► TODAY'S RESULT ◄":"► KICK OFF ◄";
+  SC.place(0);SC.setCam(SC.camFor(0))}
+$("#kick").onclick=()=>{SFX.ok();const d=dayNum();
+  if(G&&G.mode==="daily"&&G.day===d)return go("play");
+  if(RUNS["d"+d]?.done){RES=RUNS["d"+d];return go("results")}
+  startGame("daily")};
+
+// modals
+function openModal(id){closeModals();const m=$("#"+id);m.hidden=false;
+  if(id==="menu"){const h=location.hash.slice(1)||"home";$$("#menu .tile").forEach(t=>t.classList.toggle("cur",(t.dataset.go||"")===(h==="home"?"home":h)||(h==="play"&&t.dataset.go==="home")))}
+  m.querySelector("button")?.focus()}
+function closeModals(){$$(".modal").forEach(m=>m.hidden=true)}
+$("#mb").onclick=()=>openModal("menu");$("#gear").onclick=()=>openModal("set");
+$("#snd").onclick=()=>{SET.snd=!SET.snd;LS.set("wd2-set",SET);applySet();if(SET.snd)SFX.blip()};
+$$(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModals()}));
+addEventListener("keydown",e=>{if(e.key==="Escape")closeModals()});
+$$(".sw").forEach(b=>b.onclick=()=>{SET[b.dataset.k]=!SET[b.dataset.k];LS.set("wd2-set",SET);applySet()});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-go],[data-pack],[data-arch],[data-act],[data-close]");if(!b)return;
+  if(b.hasAttribute("data-close"))return closeModals();
+  if(b.dataset.act==="settings")return openModal("set");
+  SFX.ok();
+  if(b.dataset.pack)return startGame("pack",{pk:b.dataset.pack});
+  if(b.dataset.arch){const k=+b.dataset.arch,rec=RUNS["d"+k];if(rec?.done){RES=rec;return go("results")}return startGame(k===dayNum()?"daily":"archive",{day:k})}
+  const g=b.dataset.go;if(g==="unlimited")return startGame("unl");go(g==="home"?"":g)});
+
+// ---------- pages ----------
+const head=(title,sub)=>`<div class="ph"><div class="logo">${title}</div><p>${sub}</p></div>`;
+function banner(kind){const sky={club:["#06122a","#123a2a"],world:["#06102a","#0d2a52"],legends:["#120a26","#2a1340"],women:["#140a24","#2a1238"],soon:["#0a1020","#141c2e"]}[kind];
+  let s=`<svg viewBox="0 0 560 118" preserveAspectRatio="xMidYMid slice" class="px" aria-hidden="true"><defs><linearGradient id="bg-${kind}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient></defs><rect width="560" height="118" fill="url(#bg-${kind})"/>`;
+  for(let i=0;i<26;i++)s+=`<rect x="${(i*97)%560}" y="${(i*37)%60}" width="2" height="2" fill="#9fb6dd" opacity=".6"/>`;
+  if(kind==="club"){s+=`<rect y="58" width="560" height="22" fill="#0c1628"/>`;for(let x=4;x<560;x+=9)s+=`<rect x="${x}" y="${62+(x%3)*5}" width="4" height="4" fill="${["#3b4f75","#7a4a5e","#8a6a3a"][x%3]}"/>`;
+    [60,500].forEach(x=>{s+=`<rect x="${x-2}" y="14" width="4" height="46" fill="#1a2740"/><circle cx="${x}" cy="14" r="34" fill="#ffd38c" opacity=".18"/>`;for(let c=0;c<5;c++)s+=`<rect x="${x-17+c*7}" y="6" width="5" height="5" fill="#ffc56b"/>`});
+    s+=`<rect y="80" width="560" height="38" fill="#1d6a38"/>`;for(let x=0;x<560;x+=70)s+=`<rect x="${x}" y="80" width="35" height="38" fill="#237a42"/>`;s+=`<line x1="280" y1="80" x2="280" y2="118" stroke="#e8f1ff" stroke-width="2"/><ellipse cx="280" cy="99" rx="40" ry="12" fill="none" stroke="#e8f1ff" stroke-width="2"/>`}
+  if(kind==="world"){s+=`<circle cx="280" cy="70" r="44" fill="#0b3a6e" stroke="#4de3ff" stroke-width="2"/><ellipse cx="280" cy="70" rx="18" ry="44" fill="none" stroke="#4de3ff" opacity=".6"/><line x1="236" y1="70" x2="324" y2="70" stroke="#4de3ff" opacity=".6"/><line x1="242" y1="48" x2="318" y2="48" stroke="#4de3ff" opacity=".4"/><line x1="242" y1="92" x2="318" y2="92" stroke="#4de3ff" opacity=".4"/>`;
+    [[60,"#ff4f8b"],[110,"#ffd166"],[430,"#5fd38d"],[480,"#4de3ff"]].forEach(([x,c])=>s+=`<rect x="${x}" y="40" width="2" height="60" fill="#7d93b8"/><rect x="${x+2}" y="40" width="28" height="18" fill="${c}"/>`)}
+  if(kind==="legends"){s+=pixels("..########..|.#.######.#.|.#.######.#.|..#.####.#..|...######...|.....##.....|.....##.....|....####....|...######...",{"#":"#ffd166"},8).replace(/<rect /g,`<rect transform="translate(232,20)" `);[[90,30],[460,40],[150,80],[410,86]].forEach(([x,y])=>s+=`<rect x="${x}" y="${y}" width="6" height="6" fill="#ffd166"/><rect x="${x-6}" y="${y}" width="18" height="6" fill="#ffd166" opacity=".35"/>`)}
+  if(kind==="women"){s+=`<rect y="60" width="560" height="20" fill="#1a1030"/>`;for(let x=4;x<560;x+=9)s+=`<rect x="${x}" y="${63+(x%3)*5}" width="4" height="4" fill="${["#ff4f8b","#4de3ff","#b58cf0"][x%3]}" opacity=".75"/>`;
+    s+=`<rect y="80" width="560" height="38" fill="#1d6a38"/>`;for(let x=0;x<560;x+=70)s+=`<rect x="${x}" y="80" width="35" height="38" fill="#237a42"/>`;
+    s+=`<circle cx="280" cy="36" r="26" fill="#ff4f8b" opacity=".18"/>`+pixels(BALLMAP,BPAL,6).replace(/<rect /g,`<rect transform="translate(262,18)" `)}
+  if(kind==="soon")s+=`<text x="280" y="78" text-anchor="middle" font-family="Silkscreen,monospace" font-size="40" fill="#7d93b8">?</text>`;
+  return s+"</svg>"}
+const PAGES={
+  archive(){const d=dayNum();let h=head("ARCHIVE","every matchday, replayable");
+    for(let k=d;k>=1;k--){const r=RUNS["d"+k];h+=`<div class="arow"><span>MATCHDAY #${k}<small>${dayDate(k)}${k===d?" · TODAY":""}${r?.late?" · REPLAYED LATE":""}</small></span><b>${r?r.score:"—"}</b><button class="btn2" data-arch="${k}">${r?"VIEW":"PLAY"} ▸</button></div>`}
+    $("#pg").innerHTML=h+`<p class="dim" style="font-size:16px;margin-top:16px">Matchdays you play late show in your archive but don't count towards your streak.</p>`},
+  packs(){let h=head("THEMED PACKS","beyond the daily run");
+    for(const k in PACKS){const pk=PACKS[k],n=P.filter(p=>p.pk===k).length;h+=`<button class="pack" data-pack="${k}">${banner(k)}<div><span class="eyebrow">${pk.tag}</span><h4>${pk.n}</h4><p>${n} prompts · 7 rounds a game · ${pk.d}</p><span class="go">${pk.go}</span></div></button>`}
+    $("#pg").innerHTML=h+`<div class="pack soon">${banner("soon")}<div><span class="eyebrow" style="color:var(--dim)">COMING SOON</span><h4>THE AMERICAS</h4><p>Liga MX, the Copa Libertadores and more are being scouted…</p></div></div>`},
+  stats(){const runs=Object.values(RUNS).filter(r=>r.done),picks=runs.flatMap(r=>r.res),best=runs.reduce((m,r)=>Math.max(m,r.score),0),avg=runs.length?Math.round(runs.reduce((s,r)=>s+r.score,0)/runs.length):0;
+    let bs=0,c=0;for(let k=1;k<=dayNum();k++){if(RUNS["d"+k]?.done&&!RUNS["d"+k].late){c++;bs=Math.max(bs,c)}else c=0}
+    const cnt=[0,1,2,3,4,5,6].map(t=>picks.filter(p=>p.t===t).length),mx=Math.max(1,...cnt);
+    $("#pg").innerHTML=head("MY WORLDIE","your record on this device")+`<div class="stats">
+      <div class="stat"><b>${runs.length}</b><small>PLAYED</small></div><div class="stat"><b>${streak()}</b><small>STREAK</small></div><div class="stat"><b>${bs}</b><small>BEST STREAK</small></div>
+      <div class="stat"><b>${best}</b><small>BEST SCORE</small></div><div class="stat"><b>${avg}</b><small>AVERAGE</small></div><div class="stat"><b>${cnt[6]}</b><small>WORLDIES</small></div></div>
+      <h3 class="sec">YOUR FINISHES</h3><div class="tdist">${[6,5,4,3,2,1,0].map(t=>`<div data-t="${t}">${icon(t)}<span>${T[t].n.toUpperCase()}</span><i style="width:${100*cnt[t]/mx}%"></i><span>${cnt[t]}</span></div>`).join("")}</div>
+      ${runs.length?"":`<p class="dim" style="margin-top:18px">No matchdays yet. Your first finish shows up here.</p>`}
+      <div class="btnrow"><button class="btn2" data-go="archive">ARCHIVE ⟲</button><button class="btn2" data-go="">TODAY'S MATCH →</button></div>`},
+  faq(){const qa=[["HOW ARE THE ANSWER SETS MADE?","From public football records: competition winners lists, club histories and official stats, cleaned into one list per prompt. Each prompt says which years it covers."],
+    ["HOW IS RARITY DECIDED?","By hand. Each answer is rated on how often fans are likely to name it. It's an estimate, not live data from other players."],
+    ["WHAT'S A PANENKA?","The go-to \"clever\" pick that isn't actually that obscure. It feels cheeky, but the keeper saw it coming, so it only scores 15."],
+    ["WHAT'S A WORLDIE?","Every prompt hides one. It isn't always the rarest answer; it's the one that's most satisfying to land, and it comes with a bit of trivia."],
+    ["WHY WAS MY ANSWER FLAGGED OFFSIDE?","It isn't on the list for that prompt, or it falls outside the years the prompt covers. You can keep shooting until the clock runs out."],
+    ["WHY DID AUTOCORRECT PICK SOMETHING ELSE?","Answers have nicknames and aliases, so a near-miss can land on one you didn't expect. You always confirm before it counts, or switch corrections off in settings."],
+    ["DOES ANYTHING COST MONEY?","No. Unlimited, the archive and every pack are free."],
+    ["WHERE IS MY PROGRESS SAVED?","On this device, in your browser. Where shared stats are switched on, your first run each matchday also joins the matchday curve."],
+    ["IS THIS KRILLION?","No. Worldie is an unofficial football game inspired by Krillion's daily format. It isn't affiliated with Krillion or its creator."]];
+    $("#pg").innerHTML=head("FAQ","the small print")+`<div class="faq">${qa.map(([q,a])=>`<h4>${q}</h4><p>${a}</p>`).join("")}</div><div class="btnrow"><button class="btn2" data-go="">BACK TO THE PITCH</button></div>`},
+  party(){KU.setup()}};
+
+// ---------- keepy-uppy: pass-and-play ----------
+const KU={players:LS.get("wd2-ku",["PLAYER 1","PLAYER 2"]),
+  setup(){clearTimeout(this.fuse);clearInterval(this.speed);
+    $("#pg").innerHTML=head("KEEPY-UPPY","pass the ball · don't let it drop on you")+`<p style="font-size:19px;text-align:center;margin:0 0 18px">One phone, 2–8 players. Name an answer and pass the ball before it drops. Repeat an answer and you keep it. Last one standing wins.</p>
+    <div class="sect">WHO'S PLAYING</div><div id="kul">${this.players.map((n,i)=>`<div class="field"><input value="${esc(n)}" maxlength="14" aria-label="Player ${i+1} name" data-i="${i}">${this.players.length>2?`<button data-rm="${i}" aria-label="Remove player">×</button>`:""}</div>`).join("")}</div>
+    ${this.players.length<8?`<button class="btn2" id="kuadd" style="width:100%">+ ADD PLAYER</button>`:""}
+    <button class="cta" id="kugo" style="margin-top:14px">► KICK OFF ◄</button>`;
+    $$("#kul input").forEach(inp=>inp.oninput=()=>{this.players[+inp.dataset.i]=inp.value.toUpperCase();LS.set("wd2-ku",this.players)});
+    $$("#kul [data-rm]").forEach(b=>b.onclick=()=>{this.players.splice(+b.dataset.rm,1);LS.set("wd2-ku",this.players);this.setup()});
+    $("#kuadd")&&($("#kuadd").onclick=()=>{this.players.push("PLAYER "+(this.players.length+1));LS.set("wd2-ku",this.players);this.setup()});
+    $("#kugo").onclick=()=>{SFX.ok();this.names=this.players.map((n,i)=>n.trim()||"PLAYER "+(i+1));this.alive=this.names.map(()=>true);this.cur=0;this.round=0;this.next()}},
+  next(){this.round++;const pool=P.filter(p=>p.a.length>=12&&p.k!==this.k);this.k=pool[Math.floor(Math.random()*pool.length)].k;this.used=[];this.t0=performance.now();
+    this.len=12000+Math.random()*16000;clearTimeout(this.fuse);this.fuse=setTimeout(()=>this.drop(),this.len);
+    clearInterval(this.speed);this.speed=setInterval(()=>{const k=Math.min(1,(performance.now()-this.t0)/28000);$(".kball")?.style.setProperty("--kt",(.7-.38*k).toFixed(2)+"s")},500);
+    SFX.whistle(1);this.draw()},
+  draw(msg=""){const p=P[byK[this.k]];
+    $("#pg").innerHTML=head("KEEPY-UPPY",`round ${this.round} · ${this.alive.filter(Boolean).length} still up`)+`<div class="eyebrow">THE PROMPT</div><div class="pq">${esc(p.q)}</div><div class="dim" style="font-size:16px">${esc(p.h)}</div>
+    <div class="ku"><svg class="kball px" viewBox="0 0 6 6">${pixels(BALLMAP,BPAL)}</svg><div class="who">${esc(this.names[this.cur])}</div></div>
+    <div class="fb">${msg}</div><form class="af" id="kf" autocomplete="off"><input id="ki" placeholder="name one, then pass" aria-label="Your answer" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"><button class="shoot">PASS</button></form>
+    <div class="sect" style="margin-top:18px">KEPT UP</div><div class="chips">${this.used.map(a=>`<span class="chip" data-t="${a.t}" style="border-color:var(--tc)">${esc(a.name)}</span>`).join("")||`<span class="dim" style="font-size:16px">nothing yet</span>`}</div>
+    <div class="sect" style="margin-top:14px">PLAYERS</div><div class="chips">${this.names.map((n,i)=>`<span class="chip ${!this.alive[i]?"out":i===this.cur?"on":""}">${esc(n)}</span>`).join("")}</div>`;
+    $("#ki").focus({preventScroll:true});
+    $("#kf").onsubmit=e=>{e.preventDefault();const v=$("#ki").value.trim();if(!v)return;const m=match(p,v);let a=m.exact||(m.near&&m.near.length===1&&m.conf<=.3?m.near[0]:null);
+      if(!a){SFX.buzz();return this.draw(`<div class="nope">“${esc(v)}”: ${m.near?"which one? add more":m.vague?"too vague":"offside"}. keep it up!</div>`)}
+      if(this.used.includes(a)){SFX.buzz();return this.draw(`<div class="nope">${esc(a.name)} is already up. try another!</div>`)}
+      this.used.push(a);SFX.kick();do{this.cur=(this.cur+1)%this.names.length}while(!this.alive[this.cur]);
+      this.draw(a.name!==v&&!m.exact?`<div class="warm">corrected to ${esc(a.name)}</div>`:"")}},
+  drop(){clearInterval(this.speed);const b=$(".kball");if(!b)return;b.classList.add("drop");SFX.whistle(2);SFX.buzz();
+    const out=this.cur;this.alive[out]=false;const left=this.alive.map((v,i)=>v?i:-1).filter(i=>i>=0);
+    $("#ki").disabled=true;
+    setTimeout(()=>{if(left.length===1){burst(innerWidth/2,innerHeight*.35,["#ffd166","#4de3ff","#ff4f8b","#fff"],90,{spread:Math.PI*1.2,speed:11});SFX.cheer(6);
+        $("#pg").innerHTML=head("KEEPY-UPPY","full time")+`<div class="rv" data-t="6" style="position:static;transform:none;margin:0 auto">${icon(6,"ico")}<h2>${esc(this.names[left[0]])}</h2><div class="ans">kept it up longest</div><p>${esc(this.names[out])} dropped the last one.</p></div><div class="btnrow"><button class="cta" id="kuagain" style="max-width:320px">► PLAY AGAIN ◄</button></div>`;
+        $("#kuagain").onclick=()=>this.setup()}
+      else{const f=$("#pg .fb");f.innerHTML=`<div class="nope">${esc(this.names[out])} dropped it! they're out.</div>`;
+        const btn=document.createElement("button");btn.className="cta";btn.style.marginTop="12px";btn.textContent="► NEXT ROUND ◄";btn.onclick=()=>{do{this.cur=(this.cur+1)%this.names.length}while(!this.alive[this.cur]);this.next()};$("#kf").replaceWith(btn);btn.focus()}},900)}
+};
+
+// ---------- boot ----------
+$("#partyball").innerHTML=`<g transform="translate(1,1)">${pixels(BALLMAP,BPAL)}</g>`;
+applySet();SC.build();
+let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{SC.build();SC.setCam(SC.camFor(SC.px))},150)});
+addEventListener("pointerdown",()=>SFX.ok(),{once:true});
+addEventListener("hashchange",route);
+route();
+</script>
+
+<script>if("serviceWorker"in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script>
+</body>
+</html>
